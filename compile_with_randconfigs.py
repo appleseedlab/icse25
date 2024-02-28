@@ -87,7 +87,13 @@ def generate_randconfigs(kernel_src, output_dir):
 
 def main():
     args = parse_args()
-    generate_randconfigs(args.kernel_src)
+    loglevel = args.verbose
+    numeric_level = getattr(logging, loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError("Invalid log level: %s" % loglevel)
+
+    logging.basicConfig(level=loglevel)
+    generate_randconfigs(args.kernel_src, args.output_dir)
 
 
 if __name__ == "__main__":
