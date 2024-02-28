@@ -51,6 +51,15 @@ def git_clean(kernel_src):
             shutil.rmtree(file_path)
 
 
+def save_to_csv(output_dir, seed, probability, config_path):
+    with open(
+        f"{output_dir}/randconfig_experiment_results.csv", "w", newline=" "
+    ) as csv_file:
+        csvwriter = csv.writer(csv_file)
+
+    csvwriter.writerow([seed, probability, config_path])
+
+
 
 
 def main():
