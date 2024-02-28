@@ -60,6 +60,29 @@ def save_to_csv(output_dir, seed, probability, config_path):
     csvwriter.writerow([seed, probability, config_path])
 
 
+def generate_randconfigs(kernel_src, output_dir):
+    config_path = f"{kernel_src}/.config"
+    for prob in range(10, 100, 10):
+        git_clean(kernel_src)
+
+        seed = int(time.time())
+        command = f"KCONFIG_SEED={seed} KCONFIG_PROBABILTIY={prob} make randconfig"
+        logging.debug(f"Seed: {seed}, Probability: {prob}")
+
+        output_config_path = f"{output_dir}/{seed}_{prob}.config"
+        try:
+            result = subprocess.run(
+                command, shell=True, cwd=kernel_src, check=True, capture_output=True
+            )
+            logging.debug(result.stdout)
+
+        except Exception as e:
+            logging.error(e)
+
+        logging.debug(f"Copying config file from {config_path} to {output_config_path}")
+        shutil.copy(config_path, output_config_path)
+
+        save_to_csv(output_dir, seed, prob, output_config_path)
 
 
 def main():
