@@ -53,7 +53,7 @@ def git_clean(kernel_src):
 
 def save_to_csv(output_dir, seed, probability, config_path):
     with open(
-        f"{output_dir}/randconfig_experiment_results.csv", "w", newline=" "
+        f"{output_dir}/randconfig_experiment_results.csv", "w", newline=""
     ) as csv_file:
         csvwriter = csv.writer(csv_file)
 
