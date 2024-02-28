@@ -56,8 +56,7 @@ def save_to_csv(output_dir, seed, probability, config_path):
         f"{output_dir}/randconfig_experiment_results.csv", "w", newline=""
     ) as csv_file:
         csvwriter = csv.writer(csv_file)
-
-    csvwriter.writerow([seed, probability, config_path])
+        csvwriter.writerow([seed, probability, config_path])
 
 
 def generate_randconfigs(kernel_src, output_dir):
