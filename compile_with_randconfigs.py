@@ -38,17 +38,19 @@ def parse_args():
     return args
 
 
-def generate_randconfigs(kernel_src):
-    command = "KCONFIG_PROBABILTIY=10 make randconfig"
+def git_clean(kernel_src):
+    repo = git.Repo(kernel_src)
 
-    try:
-        result = subprocess.run(
-            command, shell=True, cwd=kernel_src, check=True, capture_output=True
-        )
-        logging.info(result.stdout)
+    untracked_files = repo.untracked_files
 
-    except Exception as e:
-        logging.error(e)
+    for file in untracked_files:
+        file_path = os.path.join(kernel_src, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+        elif os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+
 
 
 def main():
