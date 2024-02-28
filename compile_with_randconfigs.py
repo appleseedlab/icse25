@@ -1,6 +1,11 @@
 import argparse
 import subprocess
 import logging
+import time
+import shutil
+import git
+import os
+import csv
 
 
 def parse_args():
@@ -13,6 +18,20 @@ def parse_args():
         type=str,
         required=True,
         help="Path to the kernel source directory",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        type=str,
+        required=False,
+        help="Logging level",
+    )
+    parser.add_argument(
+        "-o",
+        "--output_dir",
+        type=str,
+        required=True,
+        help="Output directory",
     )
 
     args = parser.parse_args()
