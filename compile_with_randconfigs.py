@@ -179,6 +179,25 @@ def prepare_syzkaller_configs(
     return kernel_src_list, syzkaller_config_list
 
 
+def run_syzkaller_in_parallel(syzkaller_config_list: list):
+    logging.debug("Running syzkaller in parallel")
+    for syzkaller_config in syzkaller_config_list:
+        command = f"./bin/syz-manager -config={syzkaller_config}"
+
+        syzkaller_path = "/home/sanan/Documents/syzkaller"
+        try:
+            result = subprocess.Popen(
+                command,
+                cwd=syzkaller_path,
+                shell=True,
+            )
+
+            logging.debug(f"Running syzkaller with pid: {result.pid}")
+            if result.returncode != 0:
+                logging.error(result.stderr)
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+
 
 def main():
     args = parse_args()
