@@ -103,6 +103,39 @@ def generate_randconfigs(kernel_src, output_dir):
     return generated_config_files
 
 
+def compile_kernel(kernel_src_list, generated_config_files, output_dir):
+    config_not_compiled = []
+    for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
+        git_clean(kernel_src)
+        logging.debug(f"Working on config file: {config_file}")
+        command = f"KCONFIG_CONFIG={config_file} make -C {kernel_src} -j$(nproc)"
+        try:
+            result = subprocess.run(
+                command,
+                shell=True,
+                cwd=kernel_src,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            logging.debug(result.stdout)
+
+            if result.returncode != 0:
+                logging.error(result.stderr)
+            # else:
+            #     bzimage_path = f"{kernel_src}/arch/x86/boot/bzImage"
+            #     try:
+            #         shutil.copy(bzimage_path, output_dir)
+            #     except shutil.Error as e:
+            #         logging.error(e)
+
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            config_not_compiled.append(config_file)
+
+    return config_not_compiled
+
+
 
 def main():
     args = parse_args()
