@@ -76,6 +76,8 @@ def save_to_csv(output_dir, seed, probability, config_path):
 
 def generate_randconfigs(kernel_src, output_dir):
     config_path = f"{kernel_src}/.config"
+    generated_config_files = []
+
     for prob in range(10, 100, 10):
         git_clean(kernel_src)
 
@@ -95,8 +97,11 @@ def generate_randconfigs(kernel_src, output_dir):
 
         logging.debug(f"Copying config file from {config_path} to {output_config_path}")
         shutil.copy(config_path, output_config_path)
-
+        generated_config_files.append(output_config_path)
         save_to_csv(output_dir, seed, prob, output_config_path)
+
+    return generated_config_files
+
 
 
 def main():
