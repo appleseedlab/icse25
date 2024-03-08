@@ -201,13 +201,31 @@ def run_syzkaller_in_parallel(syzkaller_config_list: list):
 
 def main():
     args = parse_args()
+
     loglevel = args.verbose
     numeric_level = getattr(logging, loglevel.upper(), None)
     if not isinstance(numeric_level, int):
         raise ValueError("Invalid log level: %s" % loglevel)
-
     logging.basicConfig(level=loglevel)
-    generate_randconfigs(args.kernel_src, args.output_dir)
+
+    generated_config_files = generate_randconfigs(args.kernel_src, args.output_dir)
+    # compile_kernel(args.kernel_src, generated_config_files, args.output_dir)
+
+    kernel_src_list, syzkaller_config_list = prepare_syzkaller_configs(
+        args.kernel_src, args.syzkaller_config, args.output_config_list
+    )
+
+    failed_to_compile = compile_kernel(
+        kernel_src_list, generated_config_files, args.output_dir
+    )
+
+    if len(failed_to_compile) != 0:
+        logging.warning(f"Some configs failed to be compiled: {failed_to_compile}")
+
+    # for i in range(len(kernel_src_list)):
+    #     logging.debug(f"Kernel src: {kernel_src_list[i]}")
+
+    run_syzkaller_in_parallel(syzkaller_config_list)
 
 
 if __name__ == "__main__":
