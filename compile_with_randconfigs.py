@@ -136,6 +136,49 @@ def compile_kernel(kernel_src_list, generated_config_files, output_dir):
     return config_not_compiled
 
 
+def prepare_syzkaller_configs(
+    kernel_src: str, syzkaller_config_path: str, output_syzkaller_config_list: list
+) -> tuple[list, list]:
+    kernel_src_list = []
+    kernel_src_list.append(kernel_src)
+
+    syzkaller_config_list = []
+
+    syzkaller_config_dirname = os.path.dirname(syzkaller_config_path)
+
+    for i in range(2, 10):
+        kernel_src_list.append(f"{kernel_src}-{i}")
+        logging.debug(f"Appended {kernel_src_list[-1]} to the list")
+
+    syzkaller_port = 56742
+    for kernel_folder in kernel_src_list:
+        syzkaller_output_path = (
+            syzkaller_config_dirname + f"/{os.path.basename(kernel_folder)}.cfg"
+        )
+        syzkaller_config_list.append(syzkaller_output_path)
+
+        with open(syzkaller_config_path, "r") as file:
+            data = json.load(file)
+
+        data["http"] = f"127.0.0.1:{syzkaller_port}"
+        data["kernel_obj"] = kernel_folder
+        data["vm"]["kernel"] = f"{kernel_folder}/arch/x86/boot/bzImage"
+        data["vm"]["count"] = 2
+        data["vm"]["mem"] = 2048
+        data["vm"]["cpu"] = 2
+        data["workdir"] = f"{kernel_folder}_{time.time()}_workdir"
+        logging.debug(f"Workdir: {data['workdir']}")
+        logging.debug(f"Kernel object: {data['kernel_obj']}")
+        logging.debug(f"VM object: {data['vm']['kernel']}")
+
+        with open(syzkaller_output_path, "w") as outfile:
+            json.dump(data, outfile, indent=4)
+
+        syzkaller_port += 1
+
+    return kernel_src_list, syzkaller_config_list
+
+
 
 def main():
     args = parse_args()
