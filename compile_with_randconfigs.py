@@ -6,6 +6,7 @@ import shutil
 import git
 import os
 import csv
+import json
 
 
 def parse_args():
@@ -25,6 +26,20 @@ def parse_args():
         type=str,
         required=False,
         help="Logging level",
+    )
+    parser.add_argument(
+        "-sc",
+        "--syzkaller_config",
+        type=str,
+        required=True,
+        help="Path to syzkaller syz-manager configuration file",
+    )
+    parser.add_argument(
+        "-ocl",
+        "--output_config_list",
+        type=str,
+        required=True,
+        help="Path to save output syzkaller syz-manager configuration file list",
     )
     parser.add_argument(
         "-o",
