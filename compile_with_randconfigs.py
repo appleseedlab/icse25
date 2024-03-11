@@ -204,24 +204,82 @@ def prepare_syzkaller_configs(
     return kernel_src_list, syzkaller_config_list
 
 
-def run_syzkaller_in_parallel(syzkaller_config_list: list):
+def run_syzkaller_in_parallel(
+    syzkaller_config_list: list, timeout_duration: str = "1"
+) -> list:
     logging.debug("Running syzkaller in parallel")
-    for syzkaller_config in syzkaller_config_list:
-        command = f"./bin/syz-manager -config={syzkaller_config}"
+    tmux_sessions_list = []
 
+    for syzkaller_config in syzkaller_config_list:
         syzkaller_path = "/home/sanan/Documents/syzkaller"
+        command = f"cd {syzkaller_path}; ./bin/syz-manager -config={syzkaller_config}"
+
+        tmux_session_name = syzkaller_config.replace(".", "_")
+
+        logging.debug(f"Session name: {tmux_session_name}")
+
+        result = subprocess.Popen(
+            ["tmux", "new-session", "-d", "-s", tmux_session_name],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        stdout, stderr = result.communicate()
+
+        logging.debug(
+            f"tmux create command result: {stdout.decode('utf-8')}, {stderr.decode('utf-8')}"
+        )
+
+        tmux_sessions_list.append(tmux_session_name)
+
         try:
             result = subprocess.Popen(
-                command,
+                [
+                    "tmux",
+                    "send-keys",
+                    "-t",
+                    tmux_session_name,
+                    command,
+                    "C-m",
+                ],
                 cwd=syzkaller_path,
-                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
+            stdout, stderr = result.communicate()
 
-            logging.debug(f"Running syzkaller with pid: {result.pid}")
-            if result.returncode != 0:
-                logging.error(result.stderr)
+            logging.debug(
+                f"send initial command result: {stdout.decode('utf-8')}, {stderr.decode('utf-8')}"
+            )
         except subprocess.CalledProcessError as e:
-            logging.error(e)
+            logging.error(f"tmux send-keys failed with exception: {e}")
+            sys.exit(1)
+
+        # try:
+        #     result = subprocess.run(
+        #         ["tmux", "send-keys", "-t", tmux_session_name, "C-c"],
+        #         text=True,
+        #         check=True,
+        #     )
+        #     logging.debug(f"result: {result.stdout}, {result.stderr}")
+        # except Exception as e:
+        #     logging.error(f"tmux errored out with exception: {e}")
+
+    return tmux_sessions_list
+    # try:
+    #     result = subprocess.Popen(
+    #         command,
+    #         cwd=syzkaller_path,
+    #         shell=True,
+    #     )
+    #
+    #     logging.debug(f"Running syzkaller with pid: {result.pid}")
+    #     if result.returncode != 0:
+    #         logging.error(result.stderr)
+    # except subprocess.CalledProcessError as e:
+    #     logging.error(e)
+
+
 
 
 def main():
