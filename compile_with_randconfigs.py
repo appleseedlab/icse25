@@ -7,6 +7,8 @@ import git
 import os
 import csv
 import json
+import sys
+import requests
 
 
 def parse_args():
@@ -340,16 +342,20 @@ def main():
     )
 
     failed_to_compile = compile_kernel(
-        kernel_src_list, generated_config_files, args.output_dir
+        kernel_src_list, generated_config_files, args.output_dir, args.gitref
     )
 
     if len(failed_to_compile) != 0:
-        logging.warning(f"Some configs failed to be compiled: {failed_to_compile}")
+        logging.debug(f"Some configs failed to be compiled: {failed_to_compile}")
 
     # for i in range(len(kernel_src_list)):
     #     logging.debug(f"Kernel src: {kernel_src_list[i]}")
 
-    run_syzkaller_in_parallel(syzkaller_config_list)
+    tmux_sessions_list = run_syzkaller_in_parallel(syzkaller_config_list)
+    logging.debug(f"Tmux sessions list: {tmux_sessions_list}")
+
+    timeout_to_download_html(args.timeout, args.output_dir, syzkaller_config_list)
+    terminate_syzkaller_sessions(tmux_sessions_list)
 
 
 if __name__ == "__main__":
