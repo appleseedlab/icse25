@@ -119,6 +119,12 @@ def generate_randconfigs(kernel_src, output_dir):
 
 
 def compile_kernel(kernel_src_list, generated_config_files, output_dir):
+def git_checkout_commit(kernel_src: str, commit_hash: str):
+    repo = git.Repo(kernel_src)
+    repo.git.checkout(commit_hash)
+    return repo.head.commit.hexsha
+
+
     config_not_compiled = []
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
