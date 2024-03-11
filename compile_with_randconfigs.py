@@ -118,16 +118,19 @@ def generate_randconfigs(kernel_src, output_dir):
     return generated_config_files
 
 
-def compile_kernel(kernel_src_list, generated_config_files, output_dir):
 def git_checkout_commit(kernel_src: str, commit_hash: str):
     repo = git.Repo(kernel_src)
     repo.git.checkout(commit_hash)
     return repo.head.commit.hexsha
 
 
+def compile_kernel(kernel_src_list, generated_config_files, output_dir, commit_hash):
     config_not_compiled = []
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
+        head_commit = git_checkout_commit(kernel_src, commit_hash)
+        logging.debug(f"HEAD commit: {head_commit}")
+
         logging.debug(f"Working on config file: {config_file}")
         command = f"KCONFIG_CONFIG={config_file} make -C {kernel_src} -j$(nproc)"
         try:
@@ -139,6 +142,7 @@ def git_checkout_commit(kernel_src: str, commit_hash: str):
                 capture_output=True,
                 text=True,
             )
+            logging.debug("Output of kernel compilation:")
             logging.debug(result.stdout)
 
             if result.returncode != 0:
