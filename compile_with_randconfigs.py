@@ -298,6 +298,29 @@ def timeout_to_download_html(
         download_html(saved_coverage_file_path, config_path, coverage_port)
 
 
+def terminate_syzkaller_sessions(tmux_sessions_list: list):
+    for session in tmux_sessions_list:
+        try:
+            result = subprocess.run(
+                ["tmux", "send-keys", "-t", session, "C-c"],
+                text=True,
+                check=True,
+            )
+            logging.debug(f"result: {result.stdout}, {result.stderr}")
+        except Exception as e:
+            logging.error(f"tmux errored out with exception: {e}")
+
+
+def download_html(saved_coverage_file_path, coverage_file_name, coverage_port):
+    url = f"http://127.0.0.1:{coverage_port}/rawcover"
+    response = requests.get(url)
+
+    saved_coverage_file_path += "/" + os.path.basename(coverage_file_name)
+
+    logging.debug(f"new saved_coverage_file_path: {saved_coverage_file_path}")
+
+    with open(saved_coverage_file_path, "wb") as file:
+        file.write(response.content)
 
 
 def main():
