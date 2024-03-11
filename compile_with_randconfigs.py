@@ -48,7 +48,22 @@ def parse_args():
         required=True,
         help="Output directory",
     )
-
+    parser.add_argument(
+        "-gr",
+        "--gitref",
+        type=str,
+        default="v6.7",
+        required=False,
+        help="Git reference to checkout to",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        type=str,
+        default="3",
+        required=False,
+        help="Timeout duration",
+    )
     args = parser.parse_args()
     return args
 
