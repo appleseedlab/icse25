@@ -280,6 +280,24 @@ def run_syzkaller_in_parallel(
     #     logging.error(e)
 
 
+def timeout_to_download_html(
+    timeout_duration: int, saved_coverage_file_path: str, config_path_list: list
+):
+    timeout_duration_hours = int(timeout_duration) * 60
+    buffer_time = 60
+
+    wait_duration = timeout_duration_hours - buffer_time
+    time.sleep(wait_duration)
+
+    logging.debug(f"Timeout duration: {timeout_duration}")
+    for config_path in config_path_list:
+        with open(config_path, "r") as file:
+            data = json.load(file)
+
+        coverage_port = data["http"].split(":")[-1]
+        download_html(saved_coverage_file_path, config_path, coverage_port)
+
+
 
 
 def main():
