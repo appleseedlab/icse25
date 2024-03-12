@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>compile_with_randconfigs Documentation &#8212; ICSE25 03/12/2024 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=12dfc556" />
+    <script src="_static/documentation_options.js?v=2a76be2f"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-compile_with_randconfigs">
+<span id="compile-with-randconfigs-documentation"></span><h1>compile_with_randconfigs Documentation<a class="headerlink" href="#module-compile_with_randconfigs" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.compile_kernel">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">compile_kernel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_src_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_config_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_hash</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#compile_with_randconfigs.compile_kernel" title="Link to this definition">¶</a></dt>
+<dd><p>This function compiles the kernel with the generated configuration files
+It first git cleans the kernel source, then checks out to the commit hash
+Then it builds the kernel with the generated configuration files
+Args:
+kernel_src_list: list of kernel source paths
+generated_config_files: list of generated configuration files
+output_dir: output directory
+commit_hash: commit hash to checkout to
+Returns: list of configuration files that failed to compile</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.download_html">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">download_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saved_coverage_file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage_file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coverage_port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.download_html" title="Link to this definition">¶</a></dt>
+<dd><p>This function downloads the coverage file from the syzkaller manager
+args:
+saved_coverage_file_path: path to save the coverage file
+coverage_file_name: name of the coverage file
+coverage_port: port number of the syzkaller manager</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.generate_randconfigs">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">generate_randconfigs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#compile_with_randconfigs.generate_randconfigs" title="Link to this definition">¶</a></dt>
+<dd><p>This function generates random configurations for the kernel
+It uses the randconfig make target to generate random configurations with seeds of current time and probability from 10 to 90
+Then it copies the generated configuration files to the output directory
+Later, it saves the seed, probability and config path to a csv file
+Args:
+kernel_src: path to the kernel source
+output_dir: output directory
+Returns: list of generated configuration files
+Raises: Exception</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.git_checkout_commit">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">git_checkout_commit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_hash</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.git_checkout_commit" title="Link to this definition">¶</a></dt>
+<dd><p>This function checks out to a commit hash in the git repository
+Args:
+kernel_src: path to the kernel source
+commit_hash: commit hash to checkout to</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.git_clean">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">git_clean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_src</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.git_clean" title="Link to this definition">¶</a></dt>
+<dd><p>This function performs git clean on the provided kernel source
+Args:
+kernel_src: Path to the linux kernel source</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.main">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.main" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.parse_args">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">parse_args</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.parse_args" title="Link to this definition">¶</a></dt>
+<dd><p>This function parses the command line arguments and returns them
+Returns: parsed arguments</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.prepare_syzkaller_configs">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">prepare_syzkaller_configs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">kernel_src</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">syzkaller_config_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_syzkaller_config_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">list</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">list</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#compile_with_randconfigs.prepare_syzkaller_configs" title="Link to this definition">¶</a></dt>
+<dd><p>This function prepares syzkaller configuration files for each kernel source
+The function reads the default syzkaller configuration file template, modifies cpu, mem, kernel_obj, vm, http and workdir fields for each syzkaller session
+It also generates paths to linux kernel source files for each syzkaller session
+Args:
+kernel_src: path to the linux kernel source
+syzkaller_config_path: path to the syzkaller configuration file
+output_syzkaller_config_list: list of output syzkaller configuration files
+Returns: list of kernel source paths, list of syzkaller configuration files</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.run_syzkaller_in_parallel">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">run_syzkaller_in_parallel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">syzkaller_config_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'1'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#compile_with_randconfigs.run_syzkaller_in_parallel" title="Link to this definition">¶</a></dt>
+<dd><p>This function runs multiple syzkaller instances in parallel and saves their output to a log file
+Args:
+syzkaller_config_list: list of syzkaller configuration files
+output_dir: output directory to write the log files
+Returns: list of tmux sessions</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.save_to_csv">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">save_to_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.save_to_csv" title="Link to this definition">¶</a></dt>
+<dd><p>This function saves the seed, probability and config path to a csv file
+Args:
+output_dir: output directory
+seed: seed used to generate the configuration
+probability: probability used to generate the configuration
+config_path: path to the generated configuration file</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.terminate_syzkaller_sessions">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">terminate_syzkaller_sessions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tmux_sessions_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.terminate_syzkaller_sessions" title="Link to this definition">¶</a></dt>
+<dd><p>This function terminates the syzkaller sessions
+args:
+tmux_sessions_list: list of tmux sessions
+Raises: Exception</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="compile_with_randconfigs.timeout_to_download_html">
+<span class="sig-prename descclassname"><span class="pre">compile_with_randconfigs.</span></span><span class="sig-name descname"><span class="pre">timeout_to_download_html</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timeout_duration</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saved_coverage_file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config_path_list</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#compile_with_randconfigs.timeout_to_download_html" title="Link to this definition">¶</a></dt>
+<dd><p>This function waits for the timeout duration and then downloads the coverage file for each syzkaller session.
+Args:
+timeout_duration: timeout duration
+saved_coverage_file_path: path to save the coverage file
+config_path_list: list of syzkaller configuration files</p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">ICSE25</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Sanan Hasanov.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="_sources/compile_with_randconfigs.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
