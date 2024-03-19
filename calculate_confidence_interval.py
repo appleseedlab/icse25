@@ -18,3 +18,11 @@ def parse_args():
     return parser.parse_args()
 
 
+def generate_list_from_file(file_path):
+    with open(file_path, "r") as file:
+        lines = file.readlines()
+        lines = [line.strip() for line in lines]
+        lines = [float(line) for line in lines if line]
+    return lines
+
+
