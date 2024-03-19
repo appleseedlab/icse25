@@ -2,6 +2,8 @@ import numpy as np
 import scipy.stats
 import argparse
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import matplotlib.lines as mlines
 
 
 def parse_args():
@@ -53,10 +55,49 @@ def plot_confidence_interval(means, ci_diffs):
 
 def plot_box_and_whisker(syzkaller_data, krepair_data):
     fig, ax = plt.subplots()
-    ax.boxplot([syzkaller_data, krepair_data])
+    # Customizing the box plot appearance
+    boxprops = dict(linestyle="-", linewidth=3, color="k")
+    whiskerprops = dict(linestyle="-", linewidth=2, color="k")
+    medianprops = dict(linestyle="-", linewidth=2.5, color="firebrick")
+    meanlineprops = dict(linestyle="--", linewidth=2.5, color="purple")
+
+    # Plotting the box plot
+    bp = ax.boxplot(
+        [syzkaller_data, krepair_data],
+        patch_artist=True,
+        showmeans=True,
+        meanline=True,
+        boxprops=boxprops,
+        whiskerprops=whiskerprops,
+        medianprops=medianprops,
+        meanprops=meanlineprops,
+    )
+
     ax.set_xticklabels(["Syzkaller", "Krepair"])
-    ax.set_ylabel("Mean Value")
+    ax.set_ylabel("Values")
     ax.set_title("Box and Whisker Plot of Two Datasets")
+
+    # Coloring the boxes
+    colors = ["lightblue", "lightgreen"]
+    for patch, color in zip(bp["boxes"], colors):
+        patch.set_facecolor(color)
+
+    # Creating custom legends
+    mean_legend = mlines.Line2D(
+        [], [], color="purple", linestyle="--", linewidth=2.5, label="Mean"
+    )
+    median_legend = mlines.Line2D(
+        [], [], color="firebrick", linestyle="-", linewidth=2.5, label="Median"
+    )
+    box_legend = mpatches.Patch(color="lightblue", label="Interquartile Range (IQR)")
+    whisker_legend = mlines.Line2D(
+        [], [], color="black", linestyle="-", linewidth=2, label="Whiskers (Range)"
+    )
+
+    plt.legend(
+        handles=[mean_legend, median_legend, box_legend, whisker_legend], loc="best"
+    )
+
     plt.show()
 
 
