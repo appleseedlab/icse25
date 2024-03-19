@@ -51,3 +51,12 @@ def plot_confidence_interval(means, ci_diffs):
     plt.show()
 
 
+def plot_box_and_whisker(syzkaller_data, krepair_data):
+    fig, ax = plt.subplots()
+    ax.boxplot([syzkaller_data, krepair_data])
+    ax.set_xticklabels(["Syzkaller", "Krepair"])
+    ax.set_ylabel("Mean Value")
+    ax.set_title("Box and Whisker Plot of Two Datasets")
+    plt.show()
+
+
