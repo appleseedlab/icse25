@@ -60,3 +60,31 @@ def plot_box_and_whisker(syzkaller_data, krepair_data):
     plt.show()
 
 
+def main():
+    args = parse_args()
+    syzkaller_data = generate_list_from_file(args.syzkaller_file)
+    krepair_data = generate_list_from_file(args.krepair_file)
+
+    mean_syzkaller, ci_lower_syzkaller, ci_upper_syzkaller = mean_confidence_interval(
+        syzkaller_data, confidence=args.confidence
+    )
+    mean_krepair, ci_lower_krepair, ci_upper_krepair = mean_confidence_interval(
+        krepair_data, confidence=args.confidence
+    )
+
+    print(
+        f"Mean Syzkaller: {mean_syzkaller}, CI: ({ci_lower_syzkaller}, {ci_upper_syzkaller})"
+    )
+    print(f"Mean Krepair: {mean_krepair}, CI: ({ci_lower_krepair}, {ci_upper_krepair})")
+
+    means = [mean_syzkaller, mean_krepair]
+    ci_diffs = [
+        (mean_syzkaller - ci_lower_syzkaller, ci_upper_syzkaller - mean_syzkaller),
+        (mean_krepair - ci_lower_krepair, ci_upper_krepair - mean_krepair),
+    ]
+    # plot_confidence_interval(means, ci_diffs)
+    plot_box_and_whisker(syzkaller_data, krepair_data)
+
+
+if __name__ == "__main__":
+    main()
