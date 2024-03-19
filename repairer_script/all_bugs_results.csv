@@ -1,0 +1,159 @@
+Unique bugs in Column 1
+INFO: task hung in del_device_store
+KASAN: user-memory-access Write in zram_submit_bio
+WARNING: can't access registers at entry_SYSCALL_64_after_hwframe
+WARNING in user_reset_fdc
+general protection fault in write_special_inodes
+KASAN: use-after-free Read in lbmIODone
+kernel BUG in __pskb_pull_tail
+INFO: task hung in __floppy_read_block_0
+BUG: soft lockup in net_rx_action
+KASAN: slab-use-after-free Write in sco_sock_timeout
+kernel BUG in btrfs_global_root_insert
+kernel BUG in ext4_map_blocks
+INFO: task hung in do_exit
+KASAN: use-after-free Read in f2fs_iget
+INFO: rcu detected stall in scsi_error_handler
+WARNING in get_floppy_geometry
+WARNING in nilfs_dat_commit_end
+WARNING in firmware_fallback_sysfs
+kernel BUG in ext4_enable_quotas
+general protection fault in nl802154_trigger_scan
+KASAN: use-after-free Read in ntfs_test_inode
+INFO: task hung in sync_inodes_sb
+WARNING in split_huge_page_to_list
+general protection fault in erofs_bread
+WARNING in j1939_session_deactivate_activate_next
+INFO: task hung in nbd_ioctl
+BUG: unable to handle kernel NULL pointer dereference in rcu_core
+WARNING in ieee80211_link_release_channel
+kernel BUG in vmf_insert_pfn_prot
+WARNING in __rate_control_send_low
+UBSAN: shift-out-of-bounds in fbcon_set_font
+kernel BUG in dbFindLeaf
+INFO: task hung in addrconf_verify_work
+KASAN: use-after-free Read in diFree
+INFO: task hung in new_device_store
+WARNING in drm_wait_one_vblank
+possible deadlock in sco_sock_timeout
+KASAN: slab-use-after-free Write in sco_chan_del
+WARNING in send_hsr_supervision_frame
+INFO: task hung in blkdev_get_by_dev
+KASAN: null-ptr-deref Read in do_journal_end
+kernel BUG in lbmIODone
+INFO: task hung in f2fs_issue_checkpoint
+KASAN: slab-out-of-bounds Read in ntfs_test_inode
+
+Unique bugs in Column 2
+""
+possible deadlock in ntfs_read_folio
+general protection fault in __tipc_sendstream
+KASAN: use-after-free Read in dbAdjTree
+general protection fault in mincore_page
+general protection fault in corrupted
+kernel BUG in unmap_page_range
+WARNING in inet_sock_destruct
+kernel BUG in btree_readpage_end_io_hook
+WARNING in nilfs_sufile_set_segment_usage
+INFO: task hung in map_mft_record
+possible deadlock in collapse_file
+WARNING in cfg80211_connect
+WARNING: ODEBUG bug in cancel_delayed_work
+BUG: unable to handle kernel paging request in path_openat
+general protection fault in __call_rcu_common
+WARNING in kvm_vcpu_reset
+KASAN: slab-out-of-bounds Read in fbcon_get_font
+INFO: trying to register non-static key in skb_dequeue
+WARNING in vkms_vblank_simulate
+KASAN: null-ptr-deref Write in vhci_shutdown_connection
+general protection fault in detach_extent_buffer_page
+kernel BUG in ntfs_read_folio
+INFO: task hung in register_netdevice_notifier
+kernel BUG in gfs2_glock_nq
+KASAN: slab-out-of-bounds Read in ntfs_attr_find
+INFO: task hung in devlink_free
+INFO: task hung in jbd2_journal_commit_transaction
+INFO: task hung in process_one_work
+possible deadlock in console_unlock
+WARNING: ODEBUG bug in netdev_freemem
+KASAN: use-after-free Read in ieee802154_tx
+general protection fault in vhost_task_start
+INFO: task hung in __sync_dirty_buffer
+WARNING in ea_get
+INFO: task hung in fuse_simple_request
+INFO: task hung in eventpoll_release_file
+BUG: unable to handle kernel paging request in wait_consider_task
+INFO: task hung in iterate_supers
+BUG: soft lockup in watchdog_timer_fn
+KASAN: slab-out-of-bounds Read in ea_get
+
+Common bugs in both columns
+WARNING in __folio_mark_dirty
+WARNING: ODEBUG bug in netdev_run_todo
+general protection fault in blkg_destroy_all
+kernel BUG in erofs_iget
+kernel BUG in jfs_evict_inode
+KASAN: slab-use-after-free Read in lbmIODone
+WARNING in btrfs_block_rsv_release
+BUG: sleeping function called from invalid context in console_lock
+KASAN: slab-use-after-free Read in hci_conn_hash_flush
+WARNING in mark_buffer_dirty
+WARNING in wait_til_done
+WARNING in _copy_from_iter
+possible deadlock in l2tp_tunnel_register
+INFO: task hung in io_ring_exit_work
+WARNING in fd_locked_ioctl
+WARNING in __floppy_read_block_0
+WARNING in is_valid_gup_args
+kernel BUG in do_journal_end
+general protection fault in reset_interrupt
+WARNING in ieee80211_link_info_change_notify
+UBSAN: array-index-out-of-bounds in f2fs_iget
+WARNING in floppy_queue_rq
+WARNING in get_vaddr_frames
+general protection fault in start_motor
+general protection fault in pause_prepare_data
+WARNING in sta_info_insert_rcu
+WARNING in nla_get_range_unsigned
+general protection fault in ext4_update_overhead
+WARNING in blkdev_put
+general protection fault in efivar_lock
+KASAN: null-ptr-deref Read in filemap_fault
+possible deadlock in __jbd2_log_wait_for_space
+possible deadlock in ext4_bmap
+kernel BUG in f2fs_evict_inode
+KASAN: stack-out-of-bounds Read in unwind_next_frame
+WARNING in udf_truncate_extents
+kernel BUG in page_add_anon_rmap
+general protection fault in s_show
+BUG: workqueue lockup
+general protection fault in floppy_ready
+WARNING in floppy_interrupt
+INFO: task hung in hub_event
+INFO: task hung in __filemap_get_folio
+WARNING in __split_vma
+WARNING in untrack_pfn
+WARNING in put_pmu_ctx
+possible deadlock in hci_cmd_sync_clear
+BUG: soft lockup in smp_call_function
+possible deadlock in reiserfs_ioctl
+possible deadlock in j1939_sk_queue_drop_all
+possible deadlock in jbd2_journal_lock_updates
+WARNING in devl_port_unregister
+WARNING in ieee80211_bss_info_change_notify
+kernel BUG in ntfs_perform_write
+WARNING in floppy_shutdown
+possible deadlock in sco_conn_del
+possible deadlock in freeze_super
+WARNING in process_fd_request
+WARNING in vma_merge
+possible deadlock in hci_conn_hash_flush
+INFO: task hung in usb_get_descriptor
+WARNING in invalidate_drive
+INFO: task hung in blkdev_put
+KASAN: slab-out-of-bounds Read in f2fs_iget
+INFO: task hung in hub_port_init
+kernel BUG in btrfs_free_tree_block
+BUG: Bad page state
+WARNING in hci_conn_timeout
+UBSAN: shift-out-of-bounds in extAlloc

@@ -1,0 +1,31 @@
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
+
+# Total number of bugs found by each tool and their overlap
+tool1_bugs = 267  # Tool 1 found 35 bugs
+tool2_bugs = 228  # Tool 2 found 11 bugs that overlap with Tool 1 and 2 that don't
+overlap_bugs = 31  # The number of bugs found by both tools
+
+# The number of new bugs found by each tool
+tool1_new_bugs = 24  # Tool 1 found 24 new bugs
+tool2_new_bugs = 11  # Tool 2 found 11 new bugs
+overlap_new_bugs = 2  # The number of bugs found by both tools
+
+# Creating the Venn diagram
+venn2(
+    subsets=(tool1_bugs, tool2_bugs, overlap_bugs), set_labels=("KonfFuzz", "Syzkaller")
+)
+
+# Display the plot
+# plt.title("Venn Diagram of Bugs Found by Tools")
+pdf_filename = "all_bugs_venn_diagram.pdf"
+plt.savefig(pdf_filename)
+plt.clf()
+
+venn2(
+    subsets=(tool1_new_bugs, tool2_new_bugs, overlap_new_bugs),
+    set_labels=("KonfFuzz", "Syzkaller"),
+)
+
+pdf_filename_new = "new_bugs_venn_diagram.pdf"
+plt.savefig(pdf_filename_new)
