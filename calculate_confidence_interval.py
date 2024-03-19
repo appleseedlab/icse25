@@ -26,3 +26,7 @@ def generate_list_from_file(file_path):
     return lines
 
 
+def calculate_std(data):
+    return np.std(data)
+
+
