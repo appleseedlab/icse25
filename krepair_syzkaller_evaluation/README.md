@@ -1,48 +1,94 @@
-# Content
-#TODO
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-# Figures
+- [Evaluation](#evaluation)
+  - [Sampling patches](#sampling-patches)
+    - [Filtering out non-source code patches](#filtering-out-non-source-code-patches)
+  - [Running experiments](#running-experiments)
+    - [Get patch coverage and build times](#get-patch-coverage-and-build-times)
+    - [Get krepair runtimes](#get-krepair-runtimes)
+    - [Run randconfig experiments](#run-randconfig-experiments)
+  - [Collecting data](#collecting-data)
 
-## Figure (Distribution of kernel bug types found by KonfFuzz.)
-In this figure, you can see the types of bugs found by KonfFuzz. The most common type of bug found is the kernel warnings, followed by the various kernel bugs and general protection faults.
-To get the figure, you can run the following command:
-```Python
-python3 categorize_bugs_bar_chart.py
-```
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-This script uses list of the names of new bugs found by KonfFuzz obtained from data_tables/Table_of_all_crashes.xlsx and categorizes them.
+# Evaluation
 
-## Figure (12-hour total bugs found by KonfFuzz and Syzkaller and 12-hour new bugs found by KonfFuzz and Syzkaller.)
-In the first figure, you can see the total number of bugs found by KonfFuzz and Syzkaller in 12 hours. 
-In the second figure, you can see the new bugs found by KonfFuzz and Syzkaller in 12 hours.
+## Sampling patches
 
-The following command can be used to get the both figures:
-```Python
-python3 venn_diagram.py
-```
+- Clone the stable linux repo: git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
+- Get commits from the last year
+- Filter in only those that touch code (.c/.h)
+  - git log --until=2022-09-18 --since=2021-09-19 --no-merges
+  - ... | grep ^commit | wc -l was 71,896
+  - https://www.calculator.net/sample-size-calculator.html?type=1&cl=99&ci=5&pp=50&ps=71896&x=84&y=21
+    - sample size 660 for 99% confidence in a 5% margin of error for a population of 71,896
+- Take a random sample
+  - head -n660 /dev/urandom > randfile  # randfile already generated and saved
+  - git log --until=2022-09-18 --since=2021-09-19 --no-merges --pretty=format:%H | shuf --random-source=randfile | head -n660 > sample
 
-This script uses the quantity of total and new bugs found both by KonfFuzz and Syzkaller obtained from data_tables/Table_of_all_crashes.xlsx and provides two Venn diagrams that describe the intersection of these two sets in terms of total and new bugs.
 
-## Table (12-hour previously-unreported kernel bugs found by KonfFuzz, and their current post-reporting status)
-The table depicts the previously unreported kernel bugs found by KonfFuzz and their current post-reporting status. The table is obtained from data_tables/Table_of_all_crashes.xlsx.
+### Filtering out non-source code patches
 
-## Figure (12-hour test cases executed by KonfFuzz and Syzkaller.)
-The figure shows the number of test cases executed by KonfFuzz and Syzkaller over 10 runs that lasted 12 hours each.
-To get the figure, you can run the following command:
-```Python
-python3 syscall_exec_bar_chart.py
-```
-The script uses the quantity of test cases executed by KonfFuzz and Syzkaller obtained from data_tables/Table_of_all_crashes.xlsx.
+    # run the experiment on defconfig
+    linuxdir=/data1/test_experiment/inputs/linux1; cat /data1/paul/kmax/scripts/krepair_evaluation/paper/sample | while read commit; do bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 formulacache /data1/test_experiment/outdir_manyD/${commit}; done |& tee /data1/test_experiment/manyD.out
 
-## Figure (12-hour basic block coverage of KonfFuzz and Syzkaller.)
-This figure shows the basic block coverage of KonfFuzz and Syzkaller over 10 runs that lasted 12 hours each.
-To get the figure, you can run the following command:
-```Python
-python3 block_coverage_bar_chart.py
-```
+    # get those configs that have coverable lines in them
+    ls /data*/test_experiment/outdir_manyD/*/defconfig/results/koverage_outfile | while read i; do egrep "(INCLUDED|EXCLUDED)" $i >/dev/null 2>&1; if [[ $? -eq 0 ]]; then echo $i; fi; done > coverable_patches
+    cat coverable_patches | wc -l
+    507
 
-## Table (10-day fuzzing bug-finding and performance of KONFFUZZ versus Syzkaller. We report code coverage as measured in basic blocks, and throughput as the total system call sequences executed)
-#TODO
 
-## Table (Bugs confirmed to be found with configuration-dependent paths.)
-#TODO
+- Run koverage on each commit
+- Check whether any lines exist included in the coverage report
+- Results in 507 patches
+
+## Running experiments
+
+### Get patch coverage and build times
+
+Run the full experiment, building using `-j8` for an 8-thread parallelized build
+
+    # start the filename server
+    java superc.util.FilenameService -server 45678 /data2/test_experiment/coverable_patches
+
+    # run the experiment for all configs
+    for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j8_krepair_out${instance}; log=/data${sdd}/test_experiment/j8_krepair_out${instance}.log; source=localhost:45678; bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
+
+
+Re-run the experiment to collect single-threaded build times 
+
+    java superc.util.FilenameService -server 45678 /data2/test_experiment/coverable_patches
+
+    for sdd in {1..3}; do for instance in {0..15}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j1_krepair_out${instance}; log=/data${sdd}/test_experiment/j1_krepair_out${instance}.log; source=localhost:45678; bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j1 > ${log} 2>&1 & sleep 1; done; done
+
+### Get krepair runtimes
+
+Be sure that the formula cache directory is empty so that krepair runs uncached first
+
+    linuxdir=/data1/test_experiment/inputs/linux1; cat /data2/test_experiment/coverable_patches | while read commit; do
+      bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 ${linuxdir}/formulacache /data1/test_experiment/krepair_only_uncached/${commit}
+    done |& tee /data1/test_experiment/krepair_only_uncached.out
+
+Run the experiment again using the same formula cache directory to get the cached krepair runtimes
+
+    linuxdir=/data1/test_experiment/inputs/linux1; cat /data2/test_experiment/coverable_patches | while read commit; do
+      bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 /data2/test_experimenta/formulacache /data1/test_experiment/krepair_only_cached/${commit}
+    done |& tee /data1/test_experiment/krepair_only_cached.log
+
+
+### Run randconfig experiments
+
+    mkdir randconfig; cat /data2/test_experiment/coverable_patches | while read commit; do bash /data1/paul/kmax/scripts/krepair_evaluation/paper/randconfig.sh linux2/ $commit x86_64 3 /data2/test_experiment/randconfig/$commit; done |& tee /data2/test_experiment/out.randconfig
+
+## Collecting data
+
+Use the `data_summaries.sh` script to extract the data into csv files.  `summaries.md` describes the csv file data that will be produced.  The data collected includes:
+
+- patch coverage and build times for defconfig, defconfig after repair, and allyesconfig for both 1 and 8 build threads
+- runtimes for krepair, both with and without the cache
+- how much change krepair incurred when repairing defconfig and allnoconfig
+- coverage of randomly-generated configuration files
+
+Build errors can be identified with help from the `broken_builds.sh` script
+
