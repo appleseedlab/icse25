@@ -10,7 +10,7 @@
 
 # example:
 
-# experiment@church:/data2/test_experiment$ ls /data*/test_experiment/outdir_manyE*/*/defconfig/results/repaired_build.out | bash /data1/paul/kmax/scripts/krepair_evaluation/paper/broken_builds.sh | wc -l
+# experiment@church:/data2/test_experiment$ ls /data*/test_experiment/outdir_manyE*/*/defconfig/results/repaired_build.out | bash /data1/anon/kmax/scripts/krepair_evaluation/paper/broken_builds.sh | wc -l
 # 34
 
 

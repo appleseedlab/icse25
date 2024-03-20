@@ -31,7 +31,7 @@
 ### Filtering out non-source code patches
 
     # run the experiment on defconfig
-    linuxdir=/data1/test_experiment/inputs/linux1; cat /data1/paul/kmax/scripts/krepair_evaluation/paper/sample | while read commit; do bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 formulacache /data1/test_experiment/outdir_manyD/${commit}; done |& tee /data1/test_experiment/manyD.out
+    linuxdir=/data1/test_experiment/inputs/linux1; cat /data1/anon/kmax/scripts/krepair_evaluation/paper/sample | while read commit; do bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 formulacache /data1/test_experiment/outdir_manyD/${commit}; done |& tee /data1/test_experiment/manyD.out
 
     # get those configs that have coverable lines in them
     ls /data*/test_experiment/outdir_manyD/*/defconfig/results/koverage_outfile | while read i; do egrep "(INCLUDED|EXCLUDED)" $i >/dev/null 2>&1; if [[ $? -eq 0 ]]; then echo $i; fi; done > coverable_patches
@@ -53,33 +53,33 @@ Run the full experiment, building using `-j8` for an 8-thread parallelized build
     java superc.util.FilenameService -server 45678 /data2/test_experiment/coverable_patches
 
     # run the experiment for all configs
-    for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j8_krepair_out${instance}; log=/data${sdd}/test_experiment/j8_krepair_out${instance}.log; source=localhost:45678; bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
+    for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j8_krepair_out${instance}; log=/data${sdd}/test_experiment/j8_krepair_out${instance}.log; source=localhost:45678; bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
 
 
 Re-run the experiment to collect single-threaded build times 
 
     java superc.util.FilenameService -server 45678 /data2/test_experiment/coverable_patches
 
-    for sdd in {1..3}; do for instance in {0..15}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j1_krepair_out${instance}; log=/data${sdd}/test_experiment/j1_krepair_out${instance}.log; source=localhost:45678; bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j1 > ${log} 2>&1 & sleep 1; done; done
+    for sdd in {1..3}; do for instance in {0..15}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/j1_krepair_out${instance}; log=/data${sdd}/test_experiment/j1_krepair_out${instance}.log; source=localhost:45678; bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 formulacache ${outdir} -j1 > ${log} 2>&1 & sleep 1; done; done
 
 ### Get krepair runtimes
 
 Be sure that the formula cache directory is empty so that krepair runs uncached first
 
     linuxdir=/data1/test_experiment/inputs/linux1; cat /data2/test_experiment/coverable_patches | while read commit; do
-      bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 ${linuxdir}/formulacache /data1/test_experiment/krepair_only_uncached/${commit}
+      bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 ${linuxdir}/formulacache /data1/test_experiment/krepair_only_uncached/${commit}
     done |& tee /data1/test_experiment/krepair_only_uncached.out
 
 Run the experiment again using the same formula cache directory to get the cached krepair runtimes
 
     linuxdir=/data1/test_experiment/inputs/linux1; cat /data2/test_experiment/coverable_patches | while read commit; do
-      bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 /data2/test_experimenta/formulacache /data1/test_experiment/krepair_only_cached/${commit}
+      bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_evaluate_config.sh -k ${linuxdir} ${commit} x86_64 /data2/test_experimenta/formulacache /data1/test_experiment/krepair_only_cached/${commit}
     done |& tee /data1/test_experiment/krepair_only_cached.log
 
 
 ### Run randconfig experiments
 
-    mkdir randconfig; cat /data2/test_experiment/coverable_patches | while read commit; do bash /data1/paul/kmax/scripts/krepair_evaluation/paper/randconfig.sh linux2/ $commit x86_64 3 /data2/test_experiment/randconfig/$commit; done |& tee /data2/test_experiment/out.randconfig
+    mkdir randconfig; cat /data2/test_experiment/coverable_patches | while read commit; do bash /data1/anon/kmax/scripts/krepair_evaluation/paper/randconfig.sh linux2/ $commit x86_64 3 /data2/test_experiment/randconfig/$commit; done |& tee /data2/test_experiment/out.randconfig
 
 ## Collecting data
 

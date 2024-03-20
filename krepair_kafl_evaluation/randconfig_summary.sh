@@ -16,7 +16,7 @@ done
 # total=$(cat ${scriptsdir}/coverable_patches | wc -l)
 
 # for upto in {1..10}; do
-#     notcovered=$(cat ${scriptsdir}/coverable_patches | while read p; do i=${experimentdir}/$p; python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/total_coverage.py $(for s in $(seq 1 $upto); do echo $i/$s/out; done) | grep EXCLUDED | head -n1; done | grep EXCLUDED | wc -l);
+#     notcovered=$(cat ${scriptsdir}/coverable_patches | while read p; do i=${experimentdir}/$p; python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py $(for s in $(seq 1 $upto); do echo $i/$s/out; done) | grep EXCLUDED | head -n1; done | grep EXCLUDED | wc -l);
 #     coveredpct=$(echo "($total - $notcovered)/$total" | bc -lq)
 #     echo ${upto},${coveredpct}
 # done
