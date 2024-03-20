@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Path to the kernel directory containing .c and .i files
-KERNEL_DIR="/home/sanan/linux"
+KERNEL_DIR="/home/anon/linux"
 
 # Navigate to the kernel directory
 cd "$KERNEL_DIR" || {

@@ -21,25 +21,25 @@ config_file=$3
 current_date=$(date +'%m%d%Y')
 
 # Path to Linux directory
-dir_linux_next=/home/sanan/linux-next
+dir_linux_next=/home/anon/linux-next
 
 # Path to Syzkaller directory
-dir_syzkaller=/home/sanan/opt/syzkaller
+dir_syzkaller=/home/anon/opt/syzkaller
 
 #source ~/env_kmax/bin/activate
 
 
 
 # Path to saved diff files that are used
-output_of_diff=/home/sanan/research/coverage_commit_diff_files/;
+output_of_diff=/home/anon/research/coverage_commit_diff_files/;
 
 # Path to saved koverage result files
-output_of_koverage=/home/sanan/research/coverage_commit_koverage_files/;
+output_of_koverage=/home/anon/research/coverage_commit_koverage_files/;
 
 # Path to saved repaired koverage result files
-output_of_repaired_koverage_path=/home/sanan/research/coverage_commit_configuration_files/;
+output_of_repaired_koverage_path=/home/anon/research/coverage_commit_configuration_files/;
 
-#output_of_repaired_koverage_file_path=/home/sanan/research/coverage_commit_repaired_koverage_files;
+#output_of_repaired_koverage_file_path=/home/anon/research/coverage_commit_repaired_koverage_files;
 
 
 
@@ -59,10 +59,10 @@ get_commits(){
         d=$1
         time1=$2
         time2=$3
-        output_of_diff=/home/sanan/research/coverage_commit_diff_files/;
-        output_of_koverage=/home/sanan/research/coverage_commit_koverage_files/;
-        output_of_repaired_koverage_path=/home/sanan/research/coverage_commit_repaired_koverage_files/;
-        output_of_repaired_koverage_file_path=/home/sanan/research/coverage_commit_configuration_files/;
+        output_of_diff=/home/anon/research/coverage_commit_diff_files/;
+        output_of_koverage=/home/anon/research/coverage_commit_koverage_files/;
+        output_of_repaired_koverage_path=/home/anon/research/coverage_commit_repaired_koverage_files/;
+        output_of_repaired_koverage_file_path=/home/anon/research/coverage_commit_configuration_files/;
         config_file=$4
 
         config_name=$(basename "$config_file")
@@ -233,39 +233,39 @@ do
                 fi
 
 
-                mkdir /home/sanan/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')
-                workdir_name="/home/sanan/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')"
+                mkdir /home/anon/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')
+                workdir_name="/home/anon/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')"
 
                 echo "[+] Creating new config file for repaired config"
                 # create new config file for syzkaller config
-                echo '{' > /home/sanan/opt/syzkaller/my.cfg
-                echo '  "target": "linux/amd64",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "http": "127.0.0.1:56741",' >> /home/sanan/opt/syzkaller/my.cfg
+                echo '{' > /home/anon/opt/syzkaller/my.cfg
+                echo '  "target": "linux/amd64",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "http": "127.0.0.1:56741",' >> /home/anon/opt/syzkaller/my.cfg
 
-                printf '        "workdir": "%s",\n' "$workdir_name" >> /home/sanan/opt/syzkaller/my.cfg
+                printf '        "workdir": "%s",\n' "$workdir_name" >> /home/anon/opt/syzkaller/my.cfg
 
-                echo '  "kernel_obj": "/home/sanan/linux-next",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "image": "/home/sanan/Documents/opt/my-image/stretch.img",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "sshkey": "/home/sanan/Documents/opt/my-image/stretch.id_rsa",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "syzkaller": "/home/sanan/opt/syzkaller",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "procs": 8,' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "type": "qemu",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  "vm": {' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '          "count": 8,' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '          "kernel": "/home/sanan/linux-next/arch/x86/boot/bzImage",' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '          "cpu": 8,' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '          "mem": 4098' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '  }' >> /home/sanan/opt/syzkaller/my.cfg
-                echo '}' >> /home/sanan/opt/syzkaller/my.cfg
+                echo '  "kernel_obj": "/home/anon/linux-next",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "image": "/home/anon/Documents/opt/my-image/stretch.img",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "sshkey": "/home/anon/Documents/opt/my-image/stretch.id_rsa",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "syzkaller": "/home/anon/opt/syzkaller",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "procs": 8,' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "type": "qemu",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  "vm": {' >> /home/anon/opt/syzkaller/my.cfg
+                echo '          "count": 8,' >> /home/anon/opt/syzkaller/my.cfg
+                echo '          "kernel": "/home/anon/linux-next/arch/x86/boot/bzImage",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '          "cpu": 8,' >> /home/anon/opt/syzkaller/my.cfg
+                echo '          "mem": 4098' >> /home/anon/opt/syzkaller/my.cfg
+                echo '  }' >> /home/anon/opt/syzkaller/my.cfg
+                echo '}' >> /home/anon/opt/syzkaller/my.cfg
 
                 echo "[*] MOVING TO SYZKALLER DIRECTORY"
                 cd $dir_syzkaller
 
                 
-                rep_syz_term_out=/home/sanan/research/rep_syzkaller_terminal_output/rep_${config_name}_${commit_hash}_${current_date}
+                rep_syz_term_out=/home/anon/research/rep_syzkaller_terminal_output/rep_${config_name}_${commit_hash}_${current_date}
                 
                 echo "[+] Creating new tmux sesion"
-                tmux new-session -d -s rep_${commit_hash} "timeout 12h /home/sanan/opt/syzkaller/bin/syz-manager -config=my.cfg 2>&1 | tee ${rep_syz_term_out}; exec $SHELL"
+                tmux new-session -d -s rep_${commit_hash} "timeout 12h /home/anon/opt/syzkaller/bin/syz-manager -config=my.cfg 2>&1 | tee ${rep_syz_term_out}; exec $SHELL"
                 
                 echo "[+] All steps completed successfully!"
                 exit 1

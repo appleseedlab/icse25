@@ -279,7 +279,7 @@ def run_syzkaller_in_parallel(
     tmux_sessions_list = []
 
     for syzkaller_config in syzkaller_config_list:
-        syzkaller_path = "/home/sanan/Documents/syzkaller"
+        syzkaller_path = "/home/anon/Documents/syzkaller"
         command = f"cd {syzkaller_path}; ./bin/syz-manager -config={syzkaller_config} 2>&1 | tee {output_dir}/{os.path.basename(syzkaller_config)}.log"
 
         tmux_session_name = syzkaller_config.replace(".", "_")

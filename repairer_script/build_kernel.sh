@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Path to the CSV file
-csv_file="/home/sanan/research/config_tag.csv"
+csv_file="/home/anon/research/config_tag.csv"
 
 # Directory to store kernel images
-output_dir="/home/sanan/research/kernel_images/"
+output_dir="/home/anon/research/kernel_images/"
 
-linux_next_dir="/home/sanan/linux-next/"
+linux_next_dir="/home/anon/linux-next/"
 
 # Ensure the output directory exists
 mkdir -p "$output_dir"
@@ -28,7 +28,7 @@ do
     
     # Replace the generated .config with the specified configuration file
     echo "Replacing the generated .config with $config_file"
-    cp "/home/sanan/research/syzbot_configuration_files/$config_file" $linux_next_dir.config
+    cp "/home/anon/research/syzbot_configuration_files/$config_file" $linux_next_dir.config
     
     make kvm_guest.config
 

@@ -253,7 +253,7 @@ def run_qemu(bzimage_paths, output_dir, csv_file_path):
             "-append",
             "console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0",
             "-drive",
-            "file=/home/sanan/debian_image/bullseye.img,format=raw",
+            "file=/home/anon/debian_image/bullseye.img,format=raw",
             "-net",
             "user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22",
             "-net",
@@ -329,7 +329,7 @@ def main():
     )
     logging.debug(generated_config_files)
 
-    kernel_src_list = ["/home/sanan/linux-next" for i in range(100)]
+    kernel_src_list = ["/home/anon/linux-next" for i in range(100)]
     bzimage_paths = compile_kernel(
         kernel_src_list,
         generated_config_files,

@@ -67,4 +67,4 @@ touch $syzkaller_output
 
 echo "[+] creating tmux session and running syzkaller"
 # creating tmux session and running syzkaller in it
-tmux new-session -d -s syzkaller_10day_experiment "timeout 240h ~/opt/syzkaller/bin/syz-manager -config=/home/sanan/opt/syzkaller/my.cfg 2>&1 | tee ${syzkaller_output}; exec $SHELL"
+tmux new-session -d -s syzkaller_10day_experiment "timeout 240h ~/opt/syzkaller/bin/syz-manager -config=/home/anon/opt/syzkaller/my.cfg 2>&1 | tee ${syzkaller_output}; exec $SHELL"

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Create the directories if they don't exist
-mkdir -p /home/sanan/research/guild_reproducers/c_reproducers
-mkdir -p /home/sanan/research/guild_reproducers/syz_reproducers
+mkdir -p /home/anon/research/guild_reproducers/c_reproducers
+mkdir -p /home/anon/research/guild_reproducers/syz_reproducers
 
 # Read the CSV file line by line
 while IFS=, read -r description type location; do
@@ -13,14 +13,14 @@ while IFS=, read -r description type location; do
 
     # Determine the type and copy the file to the appropriate folder
     if [ "$type" == "C reproducer" ]; then
-        cp "$location/repro.cprog" "/home/sanan/research/guild_reproducers/c_reproducers/"
+        cp "$location/repro.cprog" "/home/anon/research/guild_reproducers/c_reproducers/"
     elif [ "$type" == "Syz reproducer" ]; then
         if [ -f "$location/repro.prog" ]; then
-        cp "$location/repro.prog" "/home/sanan/research/guild_reproducers/syz_reproducers/"
+        cp "$location/repro.prog" "/home/anon/research/guild_reproducers/syz_reproducers/"
         elif [ -f "$location/repro0" ]; then
-            cp "$location/repro0" "/home/sanan/research/guild_reproducers/syz_reproducers/"
+            cp "$location/repro0" "/home/anon/research/guild_reproducers/syz_reproducers/"
         elif [ -f "$location/repro" ]; then
-            cp "$location/repro" "/home/sanan/research/guild_reproducers/syz_reproducers/"
+            cp "$location/repro" "/home/anon/research/guild_reproducers/syz_reproducers/"
         else
             echo "No Syz reproducer found in $location"
         fi
