@@ -55,7 +55,7 @@ config_outdir=${outdir}/kafl_config
 mkdir ${config_outdir}
 
 config=${config_outdir}/config
-mv ${kafl_config_src} ${config}
+cp ${kafl_config_src} ${config}
 
 results=${config_outdir}/results
 
