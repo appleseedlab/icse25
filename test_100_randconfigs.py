@@ -324,18 +324,24 @@ def main():
         raise ValueError("Invalid log level: %s" % loglevel)
     logging.basicConfig(level=loglevel)
 
-    generated_config_files = generate_randconfigs(args.kernel_src, args.output_dir)
+    generated_config_files, csv_file_path = generate_randconfigs(
+        args.kernel_src, args.output_dir
+    )
     logging.debug(generated_config_files)
 
     kernel_src_list = ["/home/sanan/linux-next" for i in range(100)]
     bzimage_paths = compile_kernel(
-        kernel_src_list, generated_config_files, args.output_dir, args.gitref
+        kernel_src_list,
+        generated_config_files,
+        args.output_dir,
+        args.gitref,
+        csv_file_path,
     )
 
     logging.debug("Bzimage paths:")
     logging.debug(bzimage_paths)
 
-    run_qemu(bzimage_paths, args.output_dir)
+    run_qemu(bzimage_paths, args.output_dir, csv_file_path)
 
 
 if __name__ == "__main__":
