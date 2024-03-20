@@ -168,7 +168,7 @@ def git_checkout_commit(kernel_src: str, commit_hash: str):
 
 
 def compile_kernel(
-    kernel_src_list, generated_config_files, output_dir, commit_hash
+    kernel_src_list, generated_config_files, output_dir, commit_hash, csv_file_path
 ) -> list:
     """
     This function compiles the kernel with the generated configuration files
@@ -179,12 +179,12 @@ def compile_kernel(
     generated_config_files: list of generated configuration files
     output_dir: output directory
     commit_hash: commit hash to checkout to
+    csv_file_path: path to the csv file
     Returns: list of configuration files that failed to compile
     """
     config_not_compiled = []
     bzimage_paths = []
 
-    # counter = 0
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
         # logging.debug(f"counter: {counter}")
@@ -208,6 +208,7 @@ def compile_kernel(
             if result.returncode != 0:
                 logging.error(result.stderr)
             else:
+                add_to_csv(csv_file_path, config_file, "Compiled", True)
                 bzimage_save_dir = (
                     f"{output_dir}/{os.path.basename(config_file)}.bzImage"
                 )
@@ -221,12 +222,8 @@ def compile_kernel(
         except subprocess.CalledProcessError as e:
             logging.error(e)
             config_not_compiled.append(config_file)
-
-        # if counter > 2:
-        #     logging.error("Too many errors in kernel compilation")
-        #     break
-
-        # counter += 1
+            add_to_csv(csv_file_path, config_file, "Compiled", False)
+            add_to_csv(csv_file_path, config_file, "Booted", False)
 
     # if len(config_not_compiled) > 0:
     #     logging.error(f"Config files that failed to compile: {config_not_compiled}")
