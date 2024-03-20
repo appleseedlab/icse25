@@ -4,9 +4,9 @@ import argparse
 import json
 # import kmax.koverage.LineCoverage
 
-# example: ls -d outdir_many9/*/defconfig/results/koverage_outfile | while read i; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/patch_coverage.py $i; done | sort -h -t' ' -k4 | tee krepair.coverag
+# example: ls -d outdir_many9/*/defconfig/results/koverage_outfile | while read i; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/patch_coverage.py $i; done | sort -h -t' ' -k4 | tee krepair.coverag
 
-# example: ls -d randconfig_total/* | while read i; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/patch_coverage.py $i; done | sort -h -t' ' -k4 | tee randconfig.coverage
+# example: ls -d randconfig_total/* | while read i; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/patch_coverage.py $i; done | sort -h -t' ' -k4 | tee randconfig.coverage
 
 
 argparser = argparse.ArgumentParser(description='Compute the ratio of lines in the patch that are covered.  Ouput is in the format "patch_coverage covered_lines total_lines ratio"')

@@ -14,7 +14,7 @@ for configfile in defconfig; do
 	
 	if [[ -e ${configdir}/patch_uncovered ]]; then
 	    for repaired_olddefconfig in ${configdir}/repaired_olddefconfig*; do
-		changes=$(python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/measure_change.py --original-config ${commitdir}/${configfile}/config ${repaired_olddefconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
+		changes=$(python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/measure_change.py --original-config ${commitdir}/${configfile}/config ${repaired_olddefconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
 		echo -n ${commit},
 		echo -n ${configfile},
 		echo -n ${changes}

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# example: bash /data1/paul/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh /data1/paul/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
+# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
 
-# example: bash /data1/paul/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh localhost:45678 linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
+# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh localhost:45678 linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
 
 # example:
-# java superc.util.FilenameService -server 45678 /data1/paul/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches &
-# for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/krepair_out${instance}; log=/data${sdd}/test_experiment/krepair_out${instance}.log; source=localhost:45678; bash /data1/paul/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 /data1/paul/kmax/scripts/krepair_evaluation/assets_linuxv513/build_targets.json formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
+# java superc.util.FilenameService -server 45678 /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches &
+# for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/krepair_out${instance}; log=/data${sdd}/test_experiment/krepair_out${instance}.log; source=localhost:45678; bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 /data1/anon/kmax/scripts/krepair_evaluation/assets_linuxv513/build_targets.json formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
 
 set -x
 

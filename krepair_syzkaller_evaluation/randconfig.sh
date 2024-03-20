@@ -1,11 +1,11 @@
 #!/bin/bash
 
 
-# example: cat /data1/paul/kmax/scripts/krepair_evaluation/paper/sample | while read sample; do echo bash /data1/paul/kmax/scripts/krepair_evaluation/paper/randconfig.sh linux2/ $commit x86_64 /data1/paul/kmax/scripts/krepair_evaluation/assets_linuxv513/build_targets.json 3 randconfig/$commit; done
+# example: cat /data1/anon/kmax/scripts/krepair_evaluation/paper/sample | while read sample; do echo bash /data1/anon/kmax/scripts/krepair_evaluation/paper/randconfig.sh linux2/ $commit x86_64 /data1/anon/kmax/scripts/krepair_evaluation/assets_linuxv513/build_targets.json 3 randconfig/$commit; done
 
-# quick summary: ls -d randconfig/* | wc -l; for upto in {1..10}; do for i in randconfig/*; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/total_coverage.py $(for s in $(seq 1 $upto); do echo $i/$s/out; done) | grep EXCLUDED | head -n1; done | grep EXCLUDED | wc -l; done
+# quick summary: ls -d randconfig/* | wc -l; for upto in {1..10}; do for i in randconfig/*; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py $(for s in $(seq 1 $upto); do echo $i/$s/out; done) | grep EXCLUDED | head -n1; done | grep EXCLUDED | wc -l; done
 
-# summary: for i in randconfig_test/*; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..3}/out | grep EXCLUDED | head -n1 ; done | tee 3; for i in randconfig_test/*; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..6}/out | grep EXCLUDED | head -n1 ; done | tee 6; for i in randconfig_test/*; do python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..10}/out | grep EXCLUDED | head -n1 ; done | tee 10
+# summary: for i in randconfig_test/*; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..3}/out | grep EXCLUDED | head -n1 ; done | tee 3; for i in randconfig_test/*; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..6}/out | grep EXCLUDED | head -n1 ; done | tee 6; for i in randconfig_test/*; do python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py $i/{1..10}/out | grep EXCLUDED | head -n1 ; done | tee 10
 
 # this is an already-cloned linux source directory that only this run
 linuxsrclone=${1}

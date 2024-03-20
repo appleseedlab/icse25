@@ -23,7 +23,7 @@ for configfile in allnoconfig; do
 		cp ${repaired_config} ${linuxsrclone}/.config >&2
 	    	(cd ${linuxsrclone}; make.cross ARCH=${discovered_arch} olddefconfig) >&2  # clean the repo
 	    	cp ${linuxsrclone}/.config ${repaired_olddefconfig} >&2
-		changes=$(python3 /data1/paul/kmax/scripts/krepair_evaluation/paper/measure_change.py --original-config ${commitdir}/${configfile}/config ${repaired_olddefconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
+		changes=$(python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/measure_change.py --original-config ${commitdir}/${configfile}/config ${repaired_olddefconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
 		echo -n ${commit},
 		echo -n ${configfile},
 		echo -n ${changes}

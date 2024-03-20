@@ -6,9 +6,9 @@
 # java superc.util.FilenameService -server 55679 patchlist &
 # # java superc.util.FilenameService -server 55679 patchlist_3 &
 # mkdir repair_results
-# bash /data1/paul/kmax/scripts/krepair_evaluation/randconfig_client.sh localhost 45678 randconfig_test patchconditions build_targets.json inputs/linux0 x86_64
+# bash /data1/anon/kmax/scripts/krepair_evaluation/randconfig_client.sh localhost 45678 randconfig_test patchconditions build_targets.json inputs/linux0 x86_64
 
-# example:  experiment@church:/data2/test_experiment$ # bash /data1/paul/kmax/scripts/krepair_evaluation/randconfig_client.sh localhost 45678 randconfig_test patchconditions build_targets.json inputs/linux0 x86_64
+# example:  experiment@church:/data2/test_experiment$ # bash /data1/anon/kmax/scripts/krepair_evaluation/randconfig_client.sh localhost 45678 randconfig_test patchconditions build_targets.json inputs/linux0 x86_64
 
 set -x
 
