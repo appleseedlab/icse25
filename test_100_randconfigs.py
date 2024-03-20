@@ -231,7 +231,7 @@ def compile_kernel(
     return bzimage_paths
 
 
-def run_qemu(bzimage_paths, output_dir):
+def run_qemu(bzimage_paths, output_dir, csv_file_path):
     """
     This function runs the bzImage files in qemu
     Args:
@@ -239,39 +239,39 @@ def run_qemu(bzimage_paths, output_dir):
     """
     for bzimage_path in bzimage_paths:
         logname = f"{output_dir}/{os.path.basename(bzimage_path)}.log"
-        pidname = f"{os.path.basename(bzimage_path)}.pid"
+        pidname = f"{output_dir}{os.path.basename(bzimage_path)}.pid"
+        config_path = logname.replace(".bzImage.log", "")
 
-        # with open(pidname, "w") as pidfile:
-        #     pass
-        # qemu_process = ""
-        command = f"""
-        qemu-system-x86_64 \
-            -m 2G \
-            -smp 2 \
-            -kernel {bzimage_path} \
-            -append "console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0" \
-            -drive file=/home/sanan/debian_image/bullseye.img,format=raw \
-            -net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22 \
-            -net nic,model=e1000 \
-            -enable-kvm \
-            -nographic \
-            -pidfile vm.pid \
-            -s \
-            2>&1 | tee {logname}
-        """
-        # try:
+        command = [
+            "qemu-system-x86_64",
+            "-m",
+            "2G",
+            "-smp",
+            "2",
+            "-kernel",
+            bzimage_path,
+            "-append",
+            "console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0",
+            "-drive",
+            "file=/home/sanan/debian_image/bullseye.img,format=raw",
+            "-net",
+            "user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22",
+            "-net",
+            "nic,model=e1000",
+            "-enable-kvm",
+            "-nographic",
+            "-pidfile",
+            pidname,
+            "-s",
+        ]
+
         logging.debug(f"Running qemu with bzImage: {bzimage_path}")
-        # result = subprocess.run(
-        #     command, shell=True, check=True, capture_output=True, text=True
-        # )
-        qemu_process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        logging.debug(qemu_process.stdout)
+        logfile = open(logname, "w")
+        qemu_process = subprocess.Popen(
+            command, stdout=logfile, stderr=subprocess.STDOUT
+        )
 
-        # except subprocess.CalledProcessError as e:
-        #     logging.error(e)
-
-        time.sleep(30)
-
+        time.sleep(200)
         booted = False
         with open(logname, "r") as logfile:
             for line in logfile:
@@ -279,22 +279,19 @@ def run_qemu(bzimage_paths, output_dir):
                     logging.debug("Qemu booted successfully")
                     booted = True
 
+        logfile.close()
         unbootable_images = []
         if not booted:
             logging.error(f"Qemu failed to boot with bzImage: {bzimage_path}")
             unbootable_images.append(bzimage_path)
-            qemu_process.kill()
-            # with open(pidname, "r") as pidfile:
-            #     pid = pidfile.read()
-            #     os.system(f"kill -9 {pid}")
+            # qemu_process.kill()
+            add_to_csv(csv_file_path, config_path, "Booted", False)
+            logging.debug(f"Qemu process id inside if: {qemu_process.pid}")
+            os.kill(qemu_process.pid, signal.SIGKILL)
         else:
-            qemu_process.terminate()
-            # with open(pidname, "r") as pidfile:
-            #     pid = pidfile.read()
-            #     os.system(f"kill -9 {pid}")
+            os.kill(qemu_process.pid, signal.SIGKILL)
+            add_to_csv(csv_file_path, config_path, "Booted", True)
 
-        if len(unbootable_images) > 0:
-            logging.error(f"Unbootable images: {unbootable_images}")
 
 
 def main():
