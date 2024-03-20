@@ -293,6 +293,27 @@ def run_qemu(bzimage_paths, output_dir, csv_file_path):
             add_to_csv(csv_file_path, config_path, "Booted", True)
 
 
+def add_to_csv(csv_file_path, config_path, type, bootable):
+    with open(csv_file_path, "r") as csv_file:
+        csvreader = csv.DictReader(csv_file)
+        fieldnames = csvreader.fieldnames
+        data = [row for row in csvreader]
+
+    if fieldnames is None:
+        fieldnames = ["Seed", "Probability", "Config Path", "Compiled", "Booted"]
+
+    for row in data:
+        if row["Config Path"] == config_path:
+            if type == "Compiled":
+                row["Compiled"] = bootable
+            elif type == "Booted":
+                row["Booted"] = bootable
+
+    with open(csv_file_path, "w") as csv_file:
+        csvwriter = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        csvwriter.writeheader()
+        csvwriter.writerows(data)
+
 
 def main():
     args = parse_args()
