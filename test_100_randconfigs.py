@@ -9,6 +9,7 @@ import csv
 import json
 import sys
 import requests
+import signal
 
 
 def parse_args():
@@ -79,7 +80,7 @@ def git_clean(kernel_src):
         logging.error(e)
 
 
-def save_to_csv(output_dir, seed, probability, config_path, csvname_seed):
+def save_to_csv(csv_file_path, seed, probability, config_path, csvname_seed) -> str:
     """
     This function saves the seed, probability and config path to a csv file
     Args:
@@ -87,14 +88,27 @@ def save_to_csv(output_dir, seed, probability, config_path, csvname_seed):
     seed: seed used to generate the configuration
     probability: probability used to generate the configuration
     config_path: path to the generated configuration file
+    Returns: path to the csv file
     """
+    columns = ["Seed", "Probability", "Config Path", "Compiled", "Booted"]
+
+    # Check if file is empty or does not exist to decide on writing the headers
+    file_exists = os.path.exists(csv_file_path)
+    is_empty = not os.path.getsize(csv_file_path) if file_exists else True
+
     with open(
-        f"{output_dir}/randconfig_experiment_results_{csvname_seed}.csv",
+        csv_file_path,
         "a",
         newline="",
     ) as csv_file:
         csvwriter = csv.writer(csv_file)
-        csvwriter.writerow([seed, probability, config_path])
+
+        if is_empty:
+            csvwriter.writerow(columns)
+
+        csvwriter.writerow([seed, probability, config_path, "", ""])
+
+    return csv_file_path
 
 
 def generate_randconfigs(kernel_src, output_dir) -> list:
