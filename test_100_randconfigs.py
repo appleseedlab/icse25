@@ -111,7 +111,7 @@ def save_to_csv(csv_file_path, seed, probability, config_path, csvname_seed) -> 
     return csv_file_path
 
 
-def generate_randconfigs(kernel_src, output_dir) -> list:
+def generate_randconfigs(kernel_src, output_dir) -> tuple[list, str]:
     """
     This function generates random configurations for the kernel
     It uses the randconfig make target to generate random configurations with seeds of current time and probability from 10 to 90
@@ -126,6 +126,8 @@ def generate_randconfigs(kernel_src, output_dir) -> list:
     config_path = f"{kernel_src}/.config"
     generated_config_files = []
     csvname_seed = int(time.time())
+
+    csv_file_path = f"{output_dir}/randconfig_experiment_results_{csvname_seed}.csv"
 
     for i in range(0, 100):
         git_clean(kernel_src)
@@ -148,9 +150,9 @@ def generate_randconfigs(kernel_src, output_dir) -> list:
         logging.debug(f"Copying config file from {config_path} to {output_config_path}")
         shutil.copy(config_path, output_config_path)
         generated_config_files.append(output_config_path)
-        save_to_csv(output_dir, seed, prob, output_config_path, csvname_seed)
+        save_to_csv(csv_file_path, seed, prob, output_config_path, csvname_seed)
 
-    return generated_config_files
+    return generated_config_files, csv_file_path
 
 
 def git_checkout_commit(kernel_src: str, commit_hash: str):
