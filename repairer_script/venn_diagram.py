@@ -13,7 +13,8 @@ overlap_new_bugs = 2  # The number of bugs found by both tools
 
 # Creating the Venn diagram
 venn2(
-    subsets=(tool1_bugs, tool2_bugs, overlap_bugs), set_labels=("KonfFuzz", "Syzkaller")
+    subsets=(tool1_bugs, tool2_bugs, overlap_bugs),
+    set_labels=("Our approach", "Original"),
 )
 
 # Display the plot
@@ -24,7 +25,7 @@ plt.clf()
 
 venn2(
     subsets=(tool1_new_bugs, tool2_new_bugs, overlap_new_bugs),
-    set_labels=("KonfFuzz", "Syzkaller"),
+    set_labels=("Our approach", "Original"),
 )
 
 pdf_filename_new = "new_bugs_venn_diagram.pdf"
