@@ -48,16 +48,30 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m - h, m + h
 
 
-def plot_confidence_interval(means, ci_diffs):
+# def plot_confidence_interval(means, ci_diffs):
+#     fig, ax = plt.subplots()
+#     bars = ax.bar(
+#         ["Dataset Syzkaller Config", "Dataset Krepair"],
+#         means,
+#         yerr=np.transpose(ci_diffs),
+#         capsize=10,
+#     )
+#     ax.set_ylabel("Mean Value")
+#     ax.set_title("Mean and Confidence Interval of Two Datasets")
+#     plt.show()
+def plot_confidence_interval(means, ci_diffs, labels):
     fig, ax = plt.subplots()
     bars = ax.bar(
-        ["Dataset Syzkaller Config", "Dataset Krepair"],
+        labels,
         means,
         yerr=np.transpose(ci_diffs),
         capsize=10,
     )
     ax.set_ylabel("Mean Value")
-    ax.set_title("Mean and Confidence Interval of Two Datasets")
+    ax.set_title("Mean and Confidence Interval of Datasets")
+    plt.xticks(
+        rotation=0, fontsize=9
+    )  # Optional: improves readability of x-axis labels
     plt.show()
 
 
