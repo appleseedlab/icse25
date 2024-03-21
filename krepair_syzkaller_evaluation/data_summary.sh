@@ -32,7 +32,7 @@ cat ${coverable_patches} | while read commit; do
 			echo -n $(python3 ${scriptsdir}/patch_coverage.py ${configdir}/repaired_koverage_outfile | cut -d' ' -f4),
 			# echo -n $(cat ${commitdir}/syzkaller_config/results/repaired_build.time | head -n1)
 		else
-			echo -n n/a,
+			# echo -n n/a,
 			ls ${configdir}/repaired_koverage_outfile.* >/dev/null 2>/dev/null
 			echo -n $(python3 ${scriptsdir}/patch_coverage.py <(python3 /data1/anon/kmax/scripts/krepair_evaluation/paper/total_coverage.py ${configdir}/repaired_koverage_outfile.*) | cut -d' ' -f4),
 			echo -n $(ls ${configdir}/repaired_build.time.* | xargs cat | grep -v Command | paste -sd+ | bc -lq)
