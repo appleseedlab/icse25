@@ -128,25 +128,23 @@ def main():
     syzkaller_data = generate_list_from_file(args.syzkaller_file)
     krepair_data = generate_list_from_file(args.krepair_file)
 
-    mean_syzkaller, ci_lower_syzkaller, ci_upper_syzkaller = mean_confidence_interval(
-        syzkaller_data, confidence=args.confidence
-    )
-    mean_krepair, ci_lower_krepair, ci_upper_krepair = mean_confidence_interval(
-        krepair_data, confidence=args.confidence
-    )
+    kafl_data = generate_list_from_file(args.kafl_file)
+    kafl_krepair_data = generate_list_from_file(args.kafl_krepair_file)
 
-    print(
-        f"Mean Syzkaller: {mean_syzkaller}, CI: ({ci_lower_syzkaller}, {ci_upper_syzkaller})"
-    )
-    print(f"Mean Krepair: {mean_krepair}, CI: ({ci_lower_krepair}, {ci_upper_krepair})")
+    datasets = [syzkaller_data, krepair_data, kafl_data, kafl_krepair_data]
+    labels = ["Syzkaller", "Repaired Syzkaller Configs", "KAFL", "Repaired KAFL Config"]
+    means = []
+    ci_diffs = []
 
-    means = [mean_syzkaller, mean_krepair]
-    ci_diffs = [
-        (mean_syzkaller - ci_lower_syzkaller, ci_upper_syzkaller - mean_syzkaller),
-        (mean_krepair - ci_lower_krepair, ci_upper_krepair - mean_krepair),
-    ]
-    # plot_confidence_interval(means, ci_diffs)
-    plot_box_and_whisker(syzkaller_data, krepair_data)
+    for data in datasets:
+        mean, ci_lower, ci_upper = mean_confidence_interval(
+            data, confidence=args.confidence
+        )
+        means.append(mean)
+        ci_diffs.append((mean - ci_lower, ci_upper - mean))
+
+    # Plotting the confidence intervals for all datasets
+    plot_confidence_interval(means, ci_diffs, labels)
 
 
 if __name__ == "__main__":
