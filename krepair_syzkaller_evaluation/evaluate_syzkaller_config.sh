@@ -15,6 +15,8 @@ fi
 make_timeout=600
 superc_timeout=600
 
+build_after=true
+
 # this is an already-cloned linux source directory that only this run
 linuxsrclone=$1
 linuxsrclone=$(realpath ${linuxsrclone})
