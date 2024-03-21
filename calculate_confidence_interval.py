@@ -40,7 +40,7 @@ def generate_list_from_file(file_path):
     with open(file_path, "r") as file:
         lines = file.readlines()
         lines = [line.strip() for line in lines]
-        lines = [float(line) for line in lines if line]
+        lines = [float(line) for line in lines if line and line != "n/a"]
     return lines
 
 
