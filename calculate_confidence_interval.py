@@ -128,14 +128,35 @@ def main():
     kafl_data = generate_list_from_file(args.kafl_file)
     kafl_krepair_data = generate_list_from_file(args.kafl_krepair_file)
 
-    datasets = [syzkaller_data, krepair_data, kafl_data, kafl_krepair_data]
-    labels = ["Syzkaller", "Repaired Syzkaller Configs", "KAFL", "Repaired KAFL Config"]
+    defconfig_data = generate_list_from_file(args.defconfig_file)
+    defconfig_krepair_data = generate_list_from_file(args.defconfig_krepair_file)
+
+    datasets = [
+        syzkaller_data,
+        krepair_data,
+        kafl_data,
+        kafl_krepair_data,
+        defconfig_data,
+        defconfig_krepair_data,
+    ]
+    labels = [
+        "Syzkaller",
+        "Repaired Syzkaller Configs",
+        "KAFL",
+        "Repaired KAFL Config",
+        "Defconfig",
+        "Repaired Defconfig Configs",
+    ]
     means = []
     ci_diffs = []
 
-    for data in datasets:
+    for data, label in zip(datasets, labels):
         mean, ci_lower, ci_upper = mean_confidence_interval(
             data, confidence=args.confidence
+        )
+
+        print(
+            f"Dataset: {label}, Mean: {mean}, CI Lower: {ci_lower}, CI Upper: {ci_upper}"
         )
         means.append(mean)
         ci_diffs.append((mean - ci_lower, ci_upper - mean))
