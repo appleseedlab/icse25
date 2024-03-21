@@ -15,6 +15,14 @@ def parse_args():
         "--krepair_file", type=str, help="Path to the krepair file with the data"
     )
     parser.add_argument(
+        "--kafl_file", type=str, help="Path to the kafl file with the data"
+    )
+    parser.add_argument(
+        "--kafl_krepair_file",
+        type=str,
+        help="Path to the kafl krepair file with the data",
+    )
+    parser.add_argument(
         "--confidence", type=float, default=0.95, help="Confidence level"
     )
     return parser.parse_args()
