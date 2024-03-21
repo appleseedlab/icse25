@@ -23,6 +23,14 @@ def parse_args():
         help="Path to the kafl krepair file with the data",
     )
     parser.add_argument(
+        "--defconfig_file", type=str, help="Path to the defconfig file with the data"
+    )
+    parser.add_argument(
+        "--defconfig_krepair_file",
+        type=str,
+        help="Path to the defconfig repair file with the data",
+    )
+    parser.add_argument(
         "--confidence", type=float, default=0.95, help="Confidence level"
     )
     return parser.parse_args()
