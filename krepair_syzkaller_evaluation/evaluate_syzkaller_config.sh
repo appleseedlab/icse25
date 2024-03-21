@@ -95,7 +95,30 @@ if [[ "$?" == "0" ]]; then
 			else
 				touch ${outdir}/repaired_patch_uncovered
 			fi
-
+			# added here
+			if [[ "${build_after}" != "" ]]; then
+				# 5. build
+				repaired_build_time=${outdir}/repaired_build.time
+				repaired_build_size=${outdir}/repaired_build.size
+				repaired_build_out=${outdir}/repaired_build.out
+				repaired_build_errcode=${outdir}/repaired_build.errcode
+				repaired_olddefconfig=${outdir}/repaired_olddefconfig
+				(
+					cd ${linuxsrclone}
+					git clean -dfx
+				) # clean the repo
+				cp ${repaired_config} ${linuxsrclone}/.config
+				sed -i 's/CONFIG_PHYSICAL_START=0/CONFIG_PHYSICAL_START=0x1000000/' ${linuxsrclone}/.config
+				(
+					cd ${linuxsrclone}
+					make.cross ARCH=${discovered_arch} olddefconfig
+				) # clean the repo
+				cp ${linuxsrclone}/.config ${repaired_olddefconfig}
+				#(cd ${linuxsrclone}; /usr/bin/time -f %e -o ${repaired_build_time} make.cross ${build_flags} ARCH=${discovered_arch} > ${repaired_build_out} 2>&1; echo ${?} > ${repaired_build_errcode})
+				# measure size of build
+				#(cd ${linuxsrclone}; ls -lSrh arch/*/boot; find | grep "\.ko$" | xargs ls -lSrh) > ${repaired_build_size}
+			fi
+			# added here
 		else
 			touch ${outdir}/krepair_not_one
 
@@ -122,7 +145,34 @@ if [[ "$?" == "0" ]]; then
 			else
 				touch ${outdir}/repaired_patch_uncovered
 			fi
-
+			# added here
+			if [[ "${build_after}" != "" ]]; then
+				ls ${krepair_configs}/*.config | while IFS= read -r repaired_config; do
+					discovered_arch=$(echo $repaired_config | xargs basename | cut -f1 -d\. | cut -f2 -d-)
+					basename=$(basename $repaired_config)
+					# 5. build
+					repaired_build_time=${outdir}/repaired_build.time.${basename}
+					repaired_build_size=${outdir}/repaired_build.size.${basename}
+					repaired_build_out=${outdir}/repaired_build.out.${basename}
+					repaired_build_errcode=${outdir}/repaired_build.errcode.${basename}
+					repaired_olddefconfig=${outdir}/repaired_olddefconfig.${basename}
+					(
+						cd ${linuxsrclone}
+						git clean -dfx
+					) # clean the repo
+					cp ${repaired_config} ${linuxsrclone}/.config
+					sed -i 's/CONFIG_PHYSICAL_START=0/CONFIG_PHYSICAL_START=0x1000000/' ${linuxsrclone}/.config
+					(
+						cd ${linuxsrclone}
+						make.cross ARCH=${discovered_arch} olddefconfig
+					) # clean the repo
+					cp ${linuxsrclone}/.config ${repaired_olddefconfig}
+					# (cd ${linuxsrclone}; /usr/bin/time -f %e -o ${repaired_build_time} make.cross ${build_flags} ARCH=${discovered_arch} > ${repaired_build_out} 2>&1)
+					# measure size of build
+					# (cd ${linuxsrclone}; ls -lSrh arch/*/boot; find | grep "\.ko$" | xargs ls -lSrh) > ${repaired_build_size}
+				done
+			fi
+			# added here
 		fi
 	else
 		touch ${outdir}/krepair_errored
