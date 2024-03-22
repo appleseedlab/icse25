@@ -48,8 +48,10 @@ ind = np.arange(n_runs)
 width = 0.35
 
 # Plotting the bars
-plt.bar(ind, sorted_guild_coverage, width, label="Our approach")
-plt.bar(ind + width, sorted_syzkaller_coverage, width, label="Original")
+plt.bar(ind, sorted_guild_coverage, width, label="Repaired", color="#1f77b4")
+plt.bar(
+    ind + width, sorted_syzkaller_coverage, width, label="Original", color="#ff7f0e"
+)
 
 # Adding labels and title
 plt.xlabel("Fuzzer Runs", fontsize=18)
