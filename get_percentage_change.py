@@ -1,6 +1,9 @@
 import csv
 import numpy as np
 import argparse
+import pandas as pd
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
 
 
 def parse_args():
@@ -39,6 +42,7 @@ def calculate_percentage_changes(file_path):
 
 def calculate_statistics(values):
     statistics = {
+        "Change Summary": "Syzkaller configuration",
         "min": np.min(values),
         "25th_percentile": np.percentile(values, 25),
         "median": np.median(values),
@@ -47,6 +51,8 @@ def calculate_statistics(values):
         "max": np.max(values),
     }
     return statistics
+
+
 
 
 def create_pdf_table(stats):
@@ -109,6 +115,8 @@ def create_pdf_table(stats):
 
     # Close the figure
     plt.close(fig)
+
+
 def main():
     args = parse_args()
     percentage_changes = calculate_percentage_changes(args.change_of_summaries_csv)
