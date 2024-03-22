@@ -53,8 +53,6 @@ def calculate_statistics(values):
     return statistics
 
 
-
-
 def create_pdf_table(stats):
     # Create DataFrame with stats wrapped in a list for a single-row DataFrame
     df = pd.DataFrame([stats])
@@ -91,15 +89,6 @@ def create_pdf_table(stats):
                 table[(0, col)].visible_edges = "BR"
             else:
                 table[(0, col)].visible_edges = "B"
-
-        # # Explicitly set borders for header cells
-        # for col in range(len(df.columns)):
-        #     cell = table[(0, col)]
-        #     cell.set_edgecolor("black")
-        #     cell.set_linewidth(1)
-        #     cell.set_linestyle("-")  # Ensure the line is solid
-        #     # Explicitly hide top, left, and right borders if needed
-        #     cell.visible_edges = "B"  # Show only the bottom edge
 
         # Add right border to the first column for all rows
         # Start from 1 because (0, 0) is the header cell which already has its bottom border set

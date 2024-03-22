@@ -228,6 +228,7 @@ def main():
         print(
             f"Dataset: {label}, Mean: {mean}, CI Lower: {ci_lower}, CI Upper: {ci_upper}"
         )
+
         means.append(mean)
         ci_diffs.append((mean - ci_lower, ci_upper - mean))
 
