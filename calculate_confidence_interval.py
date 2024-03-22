@@ -57,19 +57,89 @@ def mean_confidence_interval(data, confidence=0.95):
 
 
 def plot_confidence_interval(means, ci_diffs, labels):
-    fig, ax = plt.subplots()
-    bars = ax.bar(
-        labels,
-        means,
-        yerr=np.transpose(ci_diffs),
-        capsize=10,
+    fig, ax = plt.subplots(figsize=(6.4, 3.3))
+
+    # Convert means to percentages
+    means_percent = [x * 100 for x in means]
+    ci_diffs_percent = [(ci_diff[0] * 100, ci_diff[1] * 100) for ci_diff in ci_diffs]
+
+    plt.rcParams.update({"font.size": 10})
+
+    # Number of groups and number of bars in each group
+    n_groups = 3  # For example, Syzkaller, KAFL, Defconfig
+    n_bars_in_group = 2  # Original and Repaired
+
+    # Bar width, spacing, and initial position
+    bar_width = 0.1
+    space_between_bars = 0.00001
+
+    # Calculate the positions for the groups
+    n_groups = len(labels) // 2
+    n_bars_in_group = 2
+    group_width = n_bars_in_group * (bar_width + space_between_bars)
+    initial_left = np.arange(n_groups) * (group_width + bar_width)
+
+    # Colors for the bars
+    colors = ["#1f77b4", "#ff7f0e"]
+
+    # Plotting each bar
+    for i in range(n_bars_in_group):
+        bar_positions = [
+            left + (bar_width + space_between_bars) * i for left in initial_left
+        ]
+        means_subset = means_percent[i::n_bars_in_group]
+        ci_diffs_subset = np.transpose(ci_diffs_percent[i::n_bars_in_group])
+
+        error_bar_capsize = 5
+        additional_offset = 2
+
+        bars = ax.bar(
+            bar_positions,
+            means_subset,
+            0.1,
+            yerr=ci_diffs_subset,
+            label=labels[i::n_bars_in_group][0],
+            color=colors[i],
+        )
+
+        # Label bars with the updated mean values in percentage
+        for bar, mean_value in zip(bars, means_subset):
+            # Adjust the y coordinate for the text to avoid the error bar
+            text_y_position = (
+                bar.get_height() + error_bar_capsize / 2 + additional_offset
+            )
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                text_y_position,
+                f"{mean_value:.1f}%",
+                ha="center",
+                va="bottom",
+                fontsize=10,
+            )
+
+    ax.set_ylabel("Patch Coverage (%)")
+
+    # Setting the x-ticks and labels
+    group_labels = [
+        "Syzkaller",
+        "KAFL",
+        "Defconfig",
+    ]  # This assumes a certain ordering in your datasets and labels
+    ax.set_xticks(initial_left + group_width / 2 - bar_width / 2)
+    ax.set_xticklabels(group_labels)
+
+    max_mean_plus_ci = max(
+        [mean + ci[1] for mean, ci in zip(means_percent, ci_diffs_percent)]
     )
-    ax.set_ylabel("Mean Value")
-    ax.set_title("Mean and Confidence Interval of Datasets")
-    plt.xticks(
-        rotation=0, fontsize=9
-    )  # Optional: improves readability of x-axis labels
-    plt.show()
+    label_padding = 10
+    ax.set_ylim(0, max_mean_plus_ci + label_padding)
+
+    ax.legend(loc="upper left", bbox_to_anchor=(0.76, 1.22), fontsize=10)
+
+    plt.xticks(rotation=45)
+
+    plt.savefig("patchcoverage_comparison.pdf", format="pdf", bbox_inches="tight")
+    # plt.show()
 
 
 def plot_box_and_whisker(syzkaller_data, krepair_data):
@@ -140,8 +210,8 @@ def main():
         defconfig_krepair_data,
     ]
     labels = [
-        "Syzkaller",
-        "Repaired Syzkaller Configs",
+        "Original",
+        "Repaired",
         "KAFL",
         "Repaired KAFL Config",
         "Defconfig",
