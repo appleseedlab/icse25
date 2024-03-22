@@ -48,8 +48,16 @@ fig, ax = plt.subplots(figsize=(12, 8))
 index = np.arange(num_runs)
 bar_width = 0.35
 
-rects1 = ax.bar(index, sorted_konffuz_data, bar_width, label="Our approach")
-rects2 = ax.bar(index + bar_width, sorted_syzkaller_data, bar_width, label="Original")
+rects1 = ax.bar(
+    index, sorted_konffuz_data, bar_width, label="Repaired", color="#1f77b4"
+)
+rects2 = ax.bar(
+    index + bar_width,
+    sorted_syzkaller_data,
+    bar_width,
+    label="Original",
+    color="#ff7f0e",
+)
 
 ax.set_xlabel("Fuzzer Runs", fontsize=18)
 ax.set_ylabel("Throughput (# of system call sequences executed)", fontsize=18)
