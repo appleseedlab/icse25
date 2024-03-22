@@ -121,6 +121,8 @@ def main():
     print(f"99th Percentile: {stats['99th_percentile']:.2f}")
     print(f"Maximum: {stats['max']:.2f}")
 
+    create_pdf_table(stats)
+
 
 if __name__ == "__main__":
     main()
