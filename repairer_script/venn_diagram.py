@@ -8,8 +8,8 @@ overlap_bugs = 31  # The number of bugs found by both tools
 
 # The number of new bugs found by each tool
 tool1_new_bugs = 24  # Tool 1 found 24 new bugs
-tool2_new_bugs = 11  # Tool 2 found 11 new bugs
-overlap_new_bugs = 2  # The number of bugs found by both tools
+tool2_new_bugs = 2  # Tool 2 found 2 new bugs
+overlap_new_bugs = 11  # The number of bugs found by both tools
 
 plt.figure(figsize=(8, 4))
 # Creating the Venn diagram
