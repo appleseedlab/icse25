@@ -11,11 +11,24 @@ tool1_new_bugs = 24  # Tool 1 found 24 new bugs
 tool2_new_bugs = 11  # Tool 2 found 11 new bugs
 overlap_new_bugs = 2  # The number of bugs found by both tools
 
+plt.figure(figsize=(8, 4))
 # Creating the Venn diagram
-venn2(
+venn = venn2(
     subsets=(tool1_bugs, tool2_bugs, overlap_bugs),
-    set_labels=("Our approach", "Original"),
+    set_labels=("Repaired", "Original"),
 )
+
+for text in venn.set_labels:
+    if text:
+        text.set_fontsize(18)
+
+for text in venn.subset_labels:
+    if text:
+        text.set_fontsize(18)
+
+venn.get_patch_by_id("10").set_color("#1f77b4")  # Tool 1 unique color
+venn.get_patch_by_id("01").set_color("#ff7f0e")  # Tool 2 unique color
+venn.get_patch_by_id("11").set_color("red")  # Overlap color
 
 # Display the plot
 # plt.title("Venn Diagram of Bugs Found by Tools")
@@ -23,10 +36,25 @@ pdf_filename = "all_bugs_venn_diagram.pdf"
 plt.savefig(pdf_filename)
 plt.clf()
 
-venn2(
+plt.figure(figsize=(8, 4))
+
+venn_new = venn2(
     subsets=(tool1_new_bugs, tool2_new_bugs, overlap_new_bugs),
-    set_labels=("Our approach", "Original"),
+    set_labels=("Repaired", "Original"),
 )
+
+
+for text in venn_new.set_labels:
+    if text:
+        text.set_fontsize(18)
+
+for text in venn_new.subset_labels:
+    if text:
+        text.set_fontsize(18)
+
+venn_new.get_patch_by_id("10").set_color("#1f77b4")  # Tool 1 unique color
+venn_new.get_patch_by_id("01").set_color("#ff7f0e")  # Tool 2 unique color
+venn_new.get_patch_by_id("11").set_color("red")  # Overlap color
 
 pdf_filename_new = "new_bugs_venn_diagram.pdf"
 plt.savefig(pdf_filename_new)
