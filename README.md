@@ -41,7 +41,7 @@ We later convert those program counters to source code lines and check if those 
 
 We also analyze and deduplicate the alarms found during the experiments with and without configuration variety using the scripts find_unique_crash.py and bugs_unique_and_common.py.
 With the help of these scripts we also check the bugs found that are unique to each experiment and the bugs that are common to both experiments.
-These results can be found in data_tables/repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx and data_tables/repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx.
+These results can be found in data_tables/Repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx and data_tables/Repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx.
 
 Overall, more information about the experiments and the results can be found in data_tables/Table_of_all_crashes.xlsx.
 
@@ -111,8 +111,8 @@ data_tables/Table_of_all_crashes.xlsx - this file contains the data about all al
 - "Developers Patched" - whether the Linux kernel developers patched the bug
 - "CVE Issued" - whether a CVE was issued for the bug
 
-data_tables/repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx - this file contains the data about deduplicated alarms found during experiments with and without configuration variety.
-data_tables/repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx - this file contains the data about all alarms found during experiments with and without configuration variety. It contains the name of the crash with the call trace of the crash.
+data_tables/Repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx - this file contains the data about deduplicated alarms found during experiments with and without configuration variety.
+data_tables/Repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx - this file contains the data about all alarms found during experiments with and without configuration variety. It contains the name of the crash with the call trace of the crash.
 ## repairer_script folder
 
 - addr2line_inside_ifdef.py - This script compares two text files to identify lines that are different between them and determines whether these differing lines are located within conditional compilation blocks marked by #ifdef or #if in the source code. It reads the files, computes the differences, and then checks if each differing line is inside an #ifdef or #if block, printing the results.
