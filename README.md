@@ -41,7 +41,7 @@ We later convert those program counters to source code lines and check if those 
 
 We also analyze and deduplicate the alarms found during the experiments with and without configuration variety using the scripts find_unique_crash.py and bugs_unique_and_common.py.
 With the help of these scripts we also check the bugs found that are unique to each experiment and the bugs that are common to both experiments.
-These results can be found in data_tables/GUILD-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx and data_tables/GUILD-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx.
+These results can be found in data_tables/repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx and data_tables/repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx.
 
 Overall, more information about the experiments and the results can be found in data_tables/Table_of_all_crashes.xlsx.
 
@@ -101,7 +101,7 @@ data_tables/Table_of_all_crashes.xlsx - this file contains the data about all al
 - "Time taken to find" - the time taken by the fuzzer to find the crash
 - "Reproducer available" - whether a reproducer was available for the crash
 - "Reproducer type" - the type of reproducer available for the crash (Can be either a C reproducer or Syz reproducer, a syzkaller reproducer program)
-- "Reproducer crashed on GUILD config" - whether the reproducer crashed on the kernel build with repaired configuration file
+- "Reproducer crashed on repaired config" - whether the reproducer crashed on the kernel build with repaired configuration file
 - "Reproducer crashed on Syzkaller config" - whether the reproducer crashed on the kernel build with the original syzkaller configuration file
 - "Previously unreported" - whether the crash was previously unreported at the time of the experiment
 - "Reported" - whether the crash was reported to the Linux kernel maintainers by us
@@ -111,8 +111,8 @@ data_tables/Table_of_all_crashes.xlsx - this file contains the data about all al
 - "Developers Patched" - whether the Linux kernel developers patched the bug
 - "CVE Issued" - whether a CVE was issued for the bug
 
-data_tables/GUILD-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx - this file contains the data about deduplicated alarms found during experiments with and without configuration variety.
-data_tables/GUILD-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx - this file contains the data about all alarms found during experiments with and without configuration variety. It contains the name of the crash with the call trace of the crash.
+data_tables/repaired-SYZKALLER Deduplicated Crash name+Trace(Bug Finding+Coverage).xlsx - this file contains the data about deduplicated alarms found during experiments with and without configuration variety.
+data_tables/repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx - this file contains the data about all alarms found during experiments with and without configuration variety. It contains the name of the crash with the call trace of the crash.
 ## repairer_script folder
 
 - addr2line_inside_ifdef.py - This script compares two text files to identify lines that are different between them and determines whether these differing lines are located within conditional compilation blocks marked by #ifdef or #if in the source code. It reads the files, computes the differences, and then checks if each differing line is inside an #ifdef or #if block, printing the results.
@@ -120,21 +120,21 @@ data_tables/GUILD-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx - t
 - bugs_unique_and_common.py - This script is used for comparing unique and common crash names found by fuzzing with and without configuration variety. It needs crash names belonging to fuzzing with configuration variety at column 1 and crash names belonging to fuzzing without configuration variety at column 2.
 - build_kernel.sh - This script is used to build the Linux kernel with a given configuration file and commit hash. Built kernel images are needed to run them in QEMU to test whether reproducers of crashes crash on kernels built with and without configuration variety.
 - categorize_bugs_bar_chart.py - This script is used for categorizing all crashes found by fuzzing with configuration variability based on their types. It reads the names of the crashes from the provided csv file and categorizes them into different types, then visualizes the results as a bar chart and saves it to a PDF file named 'categorized_bugs_bar_chart.pdf'.
-- collect_reproducers.sh - This script reads the names and paths to the reproducers of crashes from guild_reproducers.csv file and checks the type of the reproducer. It puts C reproducers to /home/anon/research/guild_reproducers/c_reproducers and Syzkaller reproducers to /home/anon/research/guild_reproducers/syz_reproducers.
-- find_reproducers.sh - this scripts is used for finding reproducers and their types (C or syz) in guild_bugs folders, the folder that stores folders of bug found during fuzzing with configuration variety. It generates reproducers.csv file and stores them there.
+- collect_reproducers.sh - This script reads the names and paths to the reproducers of crashes from repaired_reproducers.csv file and checks the type of the reproducer. It puts C reproducers to /home/anon/research/repaired_reproducers/c_reproducers and Syzkaller reproducers to /home/anon/research/repaired_reproducers/syz_reproducers.
+- find_reproducers.sh - this scripts is used for finding reproducers and their types (C or syz) in repaired_bugs folders, the folder that stores folders of bug found during fuzzing with configuration variety. It generates reproducers.csv file and stores them there.
 - find_unique_crash.py - This script is used to find unique alarm name + call trace pairs from results of fuzzing with and without configuration variety. It reads the results from the provided csv file and finds unique alarm name + call trace pairs, then saves them to a new csv file.
 - fuzzing_syzkaller_default.sh - This script is used to perform fuzzing without configuration variety using Syzkaller. It uses configuration file arbitrarily selected from syzbot dashboard and a linux-next tag to checkout to build the kernel and starts fuzzing with Syzkaller while saving the outputs.
 - get_call_trace.py - This Python script automates the process of extracting call traces from Syzkaller bug reports, categorizing them based on uniqueness, and compiling bug statistics.
 - get_source_lines_of_code_default.sh - This script is used to get the number of source lines of code of the Linux kernel binary built with configuration file without configuration variety.
 - get_source_lines_of_code_repaired.sh - This script is used to get the number of source lines of code of the Linux kernel binary built with configuration file with configuration variety.
-- guild_bugs.csv - a csv file that contains the names of all crashes found by fuzzing with configuration variety.
-- guild_bugs2.csv - a csv file that contains the names of all previously unreported crashes found by fuzzing with configuration variety.
-- guild_reproducers.csv - a csv file that contains the names of all crashes found by fuzzing with configuration variety that has reproducers. It stores the names of the crashes, reproducer types, and paths to the reproducers.
+- repaired_bugs.csv - a csv file that contains the names of all crashes found by fuzzing with configuration variety.
+- repaired_bugs2.csv - a csv file that contains the names of all previously unreported crashes found by fuzzing with configuration variety.
+- repaired_reproducers.csv - a csv file that contains the names of all crashes found by fuzzing with configuration variety that has reproducers. It stores the names of the crashes, reproducer types, and paths to the reproducers.
 - ifdef_find_bug_relevance.py - this script checks whether configuration options related to files that contain definitions of functions found in the call trace of a bug's Syzkaller report or configuration options related to conditional blocks that may cover the call of those functions exist in configuration files with and without configuration variety.
 - kernel_size_and_modules.py - This script automates the process of compiling the Linux kernel with different configurations, measuring the size of the resulting kernel images and modules, and logging the results to a CSV file. It iterates over rows in an input CSV file, each specifying a commit ID and paths to Syzkaller and repaired configuration files. For each row, the script checks out the specified commit, cleans the kernel directory, applies both configurations (with and without configuration variety, Syzkaller and repaired) one after the other, compiles the kernel, and calculates the size of the compiled kernel image (bzImage) and modules. The sizes are then logged in the CSV file along with the commit ID and configuration file names, facilitating the comparison of kernel sizes across different configurations and commits.
 - source_lines.csv - this csv is used by get_source_lines_of_code_default.sh and get_source_lines_of_code_repaired.sh to get configuration file names, commit IDs, and linux-next tags.
 - source_lines.sh - This script is designed to process C source files (*.c) in a specified Linux kernel directory, attempting to find corresponding preprocessed files (*.i). For each .c file with a matching .i file, it extracts lines from the .i file that originated from the .c file, saving these lines to a new text file. The script is used by get_source_lines_of_code_default.sh and get_source_lines_of_code_repaired.sh to extract source lines of code from the Linux kernel binary.
-- start_guild_10day_experiment.sh - this script is used to perform 10 day fuzzing with configuration variety using Our Approach. It uses configuration file arbitrarily selected from syzbot dashboard, a randomly selected linux-next patch id to repair the syzbot configuration file with, and a linux-next tag to checkout to build the kernel and starts fuzzing with our approach while saving the outputs.
+- start_repaired_10day_experiment.sh - this script is used to perform 10 day fuzzing with configuration variety using Our Approach. It uses configuration file arbitrarily selected from syzbot dashboard, a randomly selected linux-next patch id to repair the syzbot configuration file with, and a linux-next tag to checkout to build the kernel and starts fuzzing with our approach while saving the outputs.
 - start_syzkaller_10day_experiment.sh - this script is used to perform 10 day fuzzing without configuration variety using Syzkaller. It uses configuration file arbitrarily selected from syzbot dashboard and a linux-next tag to checkout to build the kernel and starts fuzzing with Syzkaller while saving the outputs.
 - syscall_exec_bar_chart.py - this script is used to generate bar chart to compare throughput of fuzzing with and without configuration variety. It uses throughput data manually obtained from data_tables/Table_of_all_crashes.xlsx.
 - time_taken_scatterplot.py - This script is used to visualize time taken to find bugs found by fuzzing with and without configuration variety.
