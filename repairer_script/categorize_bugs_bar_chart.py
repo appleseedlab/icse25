@@ -4,11 +4,12 @@ from collections import Counter
 
 # Read kernel bugs from CSV file into a list
 kernel_bugs = []
-with open('guild_bugs2.csv', 'r') as csvfile:
+with open("repaired_bugs2.csv", "r") as csvfile:
     csvreader = csv.reader(csvfile)
     for row in csvreader:
         if row:  # Check if row is not empty
             kernel_bugs.append(row[0])
+
 
 # Function to categorize bugs
 def categorize_bug(bug):
@@ -58,6 +59,7 @@ def categorize_bug(bug):
         return "NULL Pointer Dereference"
     return "Others"
 
+
 # Categorize and count
 categories = [categorize_bug(bug) for bug in kernel_bugs]
 category_counts = Counter(categories)
@@ -83,26 +85,31 @@ plt.yticks(fontsize=12)  # Increase font size for y-axis labels
 
 # Remove x-axis tick marks and labels
 plt.tick_params(
-    axis='x',          # changes apply to the x-axis
-    which='both',      # both major and minor ticks are affected
-    bottom=False,      # ticks along the bottom edge are off
-    top=False,         # ticks along the top edge are off
-    labelbottom=False  # labels along the bottom edge are off
+    axis="x",  # changes apply to the x-axis
+    which="both",  # both major and minor ticks are affected
+    bottom=False,  # ticks along the bottom edge are off
+    top=False,  # ticks along the top edge are off
+    labelbottom=False,  # labels along the bottom edge are off
 )
 
 # Turn off the top, right, and bottom axis lines, keep the left
 ax = plt.gca()
-ax.spines['top'].set_visible(False)
-ax.spines['right'].set_visible(False)
-ax.spines['bottom'].set_visible(False)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["bottom"].set_visible(False)
 
 # Optional: Adding value labels next to the bars with increased space
 for bar in bars:
     width = bar.get_width()
-    plt.text(width + 1, bar.get_y() + bar.get_height()/2, f'{round(width, 1)}%', va='center')  # Add a small buffer of +1 after width
+    plt.text(
+        width + 1,
+        bar.get_y() + bar.get_height() / 2,
+        f"{round(width, 1)}%",
+        va="center",
+    )  # Add a small buffer of +1 after width
 
 # Save the plot as a PDF file
-plt.savefig('kernel_bug_categories_bar_chart.pdf', format='pdf', bbox_inches='tight')
+plt.savefig("kernel_bug_categories_bar_chart.pdf", format="pdf", bbox_inches="tight")
 
 # Show the plot
 plt.show()
