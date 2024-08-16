@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -x
+
+KERNEL_SRC=/home/sanan/linux-next
+SRC_CSV_FILE=repaired_configs.csv
+
+# Read config_name, kernel_id, commit_id from csv file
+
+while IFS=, read -r commit_id config_name kernel_id
+do
+    # clean the repo
+    (cd $KERNEL_SRC; git clean -dfx)
+
+    # git checkout to kernel_id
+    (cd $KERNEL_SRC; git checkout -f $kernel_id)
+
+    # get patch diff
+    (cd $KERNEL_SRC; git show $commit_id > patch.diff)
+
+    # use klocalizer to repair the config file and measure the time
+    klocalizer_config_time=$(cd $KERNEL_SRC; (time -p klocalizer -v -a x86_64 --repair /home/sanan/research/syzbot_configuration_files/$config_name --include-mutex $KERNEL_SRC/patch.diff --formulas ../formulacache --define CONFIG_KCOV --define CONFIG_DEBUG_INFO_DWARF4 --define CONFIG_KASAN --define CONFIG_KASAN_INLINE --define CONFIG_CONFIGFS_FS --define CONFIG_SECURITYFS --define CONFIG_CMDLINE_BOOL; rm -rf koverage_files/;) 2>&1 | grep "^real" | awk -F' ' '{print $2}' )
+
+    # copy repaired config file to .config
+    (cd $KERNEL_SRC; cp 0-x86_64.config $KERNEL_SRC/.config)
+
+    # make olddefconfig
+    olddefconfig_config_time=$(cd $KERNEL_SRC; (time -p make olddefconfig) 2>&1 | grep "^real" | awk -F' ' '{print $2}')
+
+    config_time=$(echo "$klocalizer_config_time + $olddefconfig_config_time" | bc)
+
+    echo "$config_name,$kernel_id,$commit_id,$config_time" >> config_times.csv
+
+    # grep the build time from time command output, and save it to a file
+    # if the build fails, save commit_id, kernel_id, and build time as -1
+    build_time=$(cd $KERNEL_SRC; (time -p make -j$(nproc)) 2>&1 | grep "^real" | awk '{print $2}')
+
+    if [ $? -eq 0 ]; then
+        echo "$config_name,$kernel_id,$commit_id,$build_time" >> build_times.csv
+    else
+        echo "$config_name,$kernel_id,$commit_id,-1" >> build_times.csv
+    fi
+
+done < $SRC_CSV_FILE
