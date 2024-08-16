@@ -83,13 +83,17 @@ labels = list(set(category_counts_repaired.keys()) | set(category_counts_default
 sizes_repaired = [category_counts_repaired.get(label, 0) / total_bugs_repaired * 100 for label in labels]
 sizes_default = [category_counts_default.get(label, 0) for label in labels]
 
+# Replace "Out of Bounds Access" with "Out-of-Bounds" in labels
+labels = ["Out-of-Bounds" if label == "Out of Bounds Access" else
+          "BUG_ON()" if label == "Unspecified Kernel Bug" else label for label in labels]
+
 # Sort the labels and sizes from smallest to largest and then reverse
 sorted_data = sorted(zip(sizes_repaired, sizes_default, labels), reverse=True)
 sizes_repaired, sizes_default, labels = zip(*sorted_data)
 sizes_repaired, sizes_default, labels = sizes_repaired[::-1], sizes_default[::-1], labels[::-1]
 
 # Plot horizontal bar chart with adjusted figure size
-plt.figure(figsize=(10, 7))  # Adjusted figure size to make the chart wider
+plt.figure(figsize=(8, 12))  # Adjusted figure size to make the chart wider
 
 # Define the bar width and positions
 bar_width = 0.35
@@ -101,7 +105,7 @@ bars1 = plt.barh(r1, sizes_repaired, height=bar_width, label='Repaired')
 bars2 = plt.barh(r2, sizes_default, height=bar_width, label='Original')
 
 # Increase label text size
-plt.yticks([r + bar_width/2 for r in range(len(labels))], labels, fontsize=16)
+plt.yticks([r + bar_width/2 for r in range(len(labels))], labels, fontsize=18)
 
 # Remove x-axis tick marks and labels
 plt.tick_params(
@@ -118,20 +122,40 @@ ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 ax.spines["bottom"].set_visible(False)
 
-# Optional: Adding value labels next to the bars with increased space
-for bars, sizes in zip([bars1, bars2], [sizes_repaired, sizes_default]):
-    for bar in bars:
-        width = bar.get_width()
+# Function to add labels with consistent positioning relative to the longest bar
+def add_labels(bars1, bars2, sizes1, sizes2, offset=5):
+    for bar1, bar2, size1, size2 in zip(bars1, bars2, sizes1, sizes2):
+        # Determine the maximum width of the two bars
+        max_width = max(bar1.get_width(), bar2.get_width())
+
+        # Calculate label positions
+        label_y_pos1 = bar1.get_y() + bar1.get_height() / 2 - 0.05
+        label_y_pos2 = bar2.get_y() + bar2.get_height() / 2 - 0.05
+
+        # Place the labels at the same distance from the longest bar
         plt.text(
-            width + 1,
-            bar.get_y() + bar.get_height() / 2,
-            f"{round(width, 1)}%",
+            max_width + offset - 5,
+            label_y_pos1,
+            f"{round(bar1.get_width(), 1)}%",
             va="center",
-            fontsize=16
-        )  # Add a small buffer of +1 after width
+            ha="left",
+            fontsize=18
+        )
+        plt.text(
+            max_width + offset - 5,
+            label_y_pos2,
+            f"{round(bar2.get_width(), 1)}%",
+            va="center",
+            ha="left",
+            fontsize=18
+        )
+
+# Add value labels to the bars
+# Add value labels to the bars
+add_labels(bars1, bars2, sizes_repaired, sizes_default, offset=7)
 
 # Add legend
-plt.legend(loc='lower right', fontsize=16)
+plt.legend(loc='lower right', fontsize=18)
 
 # Save the plot as a PDF file
 plt.savefig("kernel_bug_categories_comparison_bar_chart.pdf", format="pdf", bbox_inches="tight")
