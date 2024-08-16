@@ -19,9 +19,7 @@ do
     cp /home/sanan/research/syzbot_configuration_files/$config_name $KERNEL_SRC/.config
 
     # make olddefconfig
-    config_time=$(cd $KERNEL_SRC; (time -p make olddefconfig) 2>&1 | grep "^real" | awk -F' ' '{print $2}')
-
-    echo "$config_name,$kernel_id,$commit_id,$config_time" >> config_times.csv
+    (cd $KERNEL_SRC; make olddefconfig)
 
     # grep the build time from time command output, and save it to a file
     # if the build fails, save commit_id, kernel_id, and build time as -1
