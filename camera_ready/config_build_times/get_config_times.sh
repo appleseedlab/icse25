@@ -2,18 +2,18 @@
 
 set -x
 
-KERNEL_SRC=/home/sanan/linux-next
-SRC_CSV_FILE=repaired_configs.csv
+KERNEL_SRC=$1
+SRC_CSV_FILE=$2
 
 # Read config_name, kernel_id, commit_id from csv file
 
 while IFS=, read -r commit_id config_name kernel_id
 do
-    # git clean
-    (cd $KERNEL_SRC; git clean -dfx)
-
     # checkout to the kernel_id
     (cd $KERNEL_SRC; git checkout $kernel_id)
+
+    # make defconfig
+    (cd $KERNEL_SRC; make defconfig)
 
     # copy config file to .config
     cp /home/sanan/research/syzbot_configuration_files/$config_name $KERNEL_SRC/.config
