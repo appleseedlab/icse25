@@ -93,7 +93,7 @@ sizes_repaired, sizes_default, labels = zip(*sorted_data)
 sizes_repaired, sizes_default, labels = sizes_repaired[::-1], sizes_default[::-1], labels[::-1]
 
 # Plot horizontal bar chart with adjusted figure size
-plt.figure(figsize=(12, 8))  # Adjusted figure size to make the chart wider
+plt.figure(figsize=(8, 12))  # Adjusted figure size to make the chart wider
 
 # Define the bar width and positions
 bar_width = 0.35
@@ -105,7 +105,7 @@ bars1 = plt.barh(r1, sizes_repaired, height=bar_width, label='Repaired')
 bars2 = plt.barh(r2, sizes_default, height=bar_width, label='Original')
 
 # Increase label text size
-plt.yticks([r + bar_width/2 for r in range(len(labels))], labels, fontsize=16)
+plt.yticks([r + bar_width/2 for r in range(len(labels))], labels, fontsize=18)
 
 # Remove x-axis tick marks and labels
 plt.tick_params(
@@ -139,7 +139,7 @@ def add_labels(bars1, bars2, sizes1, sizes2, offset=5):
             f"{round(bar1.get_width(), 1)}%",
             va="center",
             ha="left",
-            fontsize=16
+            fontsize=18
         )
         plt.text(
             max_width + offset - 5,
@@ -147,7 +147,7 @@ def add_labels(bars1, bars2, sizes1, sizes2, offset=5):
             f"{round(bar2.get_width(), 1)}%",
             va="center",
             ha="left",
-            fontsize=16
+            fontsize=18
         )
 
 # Add value labels to the bars
