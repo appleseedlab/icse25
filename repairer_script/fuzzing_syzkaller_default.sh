@@ -1,4 +1,4 @@
-if [ "$#" -ne 5 ]; then
+if [ "$#" -ne 6 ]; then
         echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> \
         <path to syzbot configs> <path to output folder>"
         echo "[-] Exiting..."
