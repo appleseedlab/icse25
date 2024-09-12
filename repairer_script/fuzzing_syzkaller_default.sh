@@ -66,9 +66,9 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     make -j`nproc`
     echo "[+] Compiled the kernel!"
 
-    mkdir -p $output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
+    mkdir -p $output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
 
-    workdir_name="$output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
+    workdir_name="$output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
     echo "[+] Creating new config file for syzkaller config"
     # create new config file for syzkaller config
@@ -92,8 +92,8 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo '  }' >> "$syzkaller_path/my.cfg"
     echo '}' >> "$syzkaller_path/my.cfg"
 
-    mkdir -p $output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
-    fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
+    mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
+    fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
 
