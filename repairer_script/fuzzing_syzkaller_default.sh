@@ -70,7 +70,7 @@ echo "[+] Compiling the kernel..."
 make -j`nproc`
 echo "[+] Compiled the kernel!"
 
-mkdir $output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
+mkdir -p $output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
 
 workdir_name="$output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
@@ -96,6 +96,7 @@ echo '          "mem": 4098' >> $syzkaller_path/my.cfg
 echo '  }' >> $syzkaller_path/my.cfg
 echo '}' >> $syzkaller_path/my.cfg
 
+mkdir -p $output_path/fuzzing_instance_logs/
 fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
 timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
