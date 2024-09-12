@@ -17,6 +17,8 @@ syzkaller_path=$5
 syzbot_config_files_path=$6
 output_path=$7
 
+unix_time=$(printf '%(%s)T\n' -1)
+
 echo "[+] Read Config Name: $syzbot_config_name"
 
 # go to linux-next directory
@@ -68,9 +70,9 @@ echo "[+] Compiling the kernel..."
 make -j`nproc`
 echo "[+] Compiled the kernel!"
 
-mkdir $output_path/fuzzing_results_$(date+%s)/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
+mkdir $output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
 
-workdir_name="$output_path/fuzzing_results_$(date+%s)/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
+workdir_name="$output_path/fuzzing_results_$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
 echo "[+] Creating new config file for syzkaller config"
 # create new config file for syzkaller config
@@ -83,7 +85,7 @@ printf '        "workdir": "%s",\n' "$workdir_name" >> $syzkaller_path/my.cfg
 echo '  "kernel_obj": "/home/anon/linux-next",' >> $syzkaller_path/my.cfg
 echo '  "image": "/home/anon/Documents/opt/my-image/stretch.img",' >> $syzkaller_path/my.cfg
 echo '  "sshkey": "/home/anon/Documents/opt/my-image/stretch.id_rsa",' >> $syzkaller_path/my.cfg
-echo '  "syzkaller": "$syzkaller_path",' >> /home/anon/opt/syzkaller/my.cfg
+echo '  "syzkaller": "$syzkaller_path",' >> $syzkaller_path/my.cfg
 echo '  "procs": 8,' >> $syzkaller_path/my.cfg
 echo '  "type": "qemu",' >> $syzkaller_path/my.cfg
 echo '  "vm": {' >> $syzkaller_path/my.cfg
