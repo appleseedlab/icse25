@@ -72,25 +72,25 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Creating new config file for syzkaller config"
     # create new config file for syzkaller config
-    echo '{' > $syzkaller_path/my.cfg
-    echo '  "target": "linux/amd64",' >> $syzkaller_path/my.cfg
-    echo '  "http": "127.0.0.1:56741",' >> $syzkaller_path/my.cfg
+    echo '{' > "$syzkaller_path/my.cfg"
+    echo '  "target": "linux/amd64",' >> "$syzkaller_path/my.cfg"
+    echo '  "http": "127.0.0.1:56741",' >> "$syzkaller_path/my.cfg"
 
-    printf '        "workdir": "%s",\n' "$workdir_name" >> $syzkaller_path/my.cfg
+    printf '  "workdir": "%s",\n' "$workdir_name" >> "$syzkaller_path/my.cfg"
 
-    echo '  "kernel_obj": $linux-next,' >> $syzkaller_path/my.cfg
-    echo '  "image": "$debian_image_path/bullseye.img",' >> $syzkaller_path/my.cfg
-    echo '  "sshkey": "$debian_image_path/bullseye.id_rsa",' >> $syzkaller_path/my.cfg
-    echo '  "syzkaller": "$syzkaller_path",' >> $syzkaller_path/my.cfg
-    echo '  "procs": 8,' >> $syzkaller_path/my.cfg
-    echo '  "type": "qemu",' >> $syzkaller_path/my.cfg
-    echo '  "vm": {' >> $syzkaller_path/my.cfg
-    echo '          "count": 8,' >> $syzkaller_path/my.cfg
-    echo '          "kernel": "/home/anon/linux-next/arch/x86/boot/bzImage",' >> $syzkaller_path/my.cfg
-    echo '          "cpu": 8,' >> $syzkaller_path/my.cfg
-    echo '          "mem": 4098' >> $syzkaller_path/my.cfg
-    echo '  }' >> $syzkaller_path/my.cfg
-    echo '}' >> $syzkaller_path/my.cfg
+    echo "  \"kernel_obj\": \"$linux-next\"," >> "$syzkaller_path/my.cfg"
+    echo "  \"image\": \"$debian_image_path/bullseye.img\"," >> "$syzkaller_path/my.cfg"
+    echo "  \"sshkey\": \"$debian_image_path/bullseye.id_rsa\"," >> "$syzkaller_path/my.cfg"
+    echo "  \"syzkaller\": \"$syzkaller_path\"," >> "$syzkaller_path/my.cfg"
+    echo '  "procs": 8,' >> "$syzkaller_path/my.cfg"
+    echo '  "type": "qemu",' >> "$syzkaller_path/my.cfg"
+    echo '  "vm": {' >> "$syzkaller_path/my.cfg"
+    echo '          "count": 8,' >> "$syzkaller_path/my.cfg"
+    echo "          \"kernel\": \"$linux-next/arch/x86/boot/bzImage\"," >> "$syzkaller_path/my.cfg"
+    echo '          "cpu": 8,' >> "$syzkaller_path/my.cfg"
+    echo '          "mem": 4098' >> "$syzkaller_path/my.cfg"
+    echo '  }' >> "$syzkaller_path/my.cfg"
+    echo '}' >> "$syzkaller_path/my.cfg"
 
     mkdir -p $output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
