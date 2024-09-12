@@ -97,6 +97,8 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
 
+    sleep 43320
+
     echo "[+] All steps completed!"
 
 done < "$csv_file"
