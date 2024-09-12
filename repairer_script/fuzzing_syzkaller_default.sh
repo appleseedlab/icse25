@@ -1,5 +1,7 @@
-if [ "$#" -ne 3 ]; then
-        echo "[!] Usage: ./program <commit-hash> <syzbot-config-name> <date>"
+if [ "$#" -ne 7 ]; then
+        echo "[!] Usage: ./program <patch-commit-id> <default-config-file-used> \
+        <fuzzed-linux-commit-id> <path to linux-next> <path to syzkaller> \
+        <path to syzbot configs> <path to output folder>"
         echo "[-] Exiting..."
         exit 9
 fi
@@ -9,13 +11,15 @@ commit_hash=$1
 echo "[+] Read Commit Hash: $commit_hash"
 
 syzbot_config_name=$2
-
-git_tag="next-"$3
+git_tag=$3
+dir_linux_next=$4
+syzkaller_path=$5
+syzbot_config_files_path=$6
+output_path=$7
 
 echo "[+] Read Config Name: $syzbot_config_name"
 
 # go to linux-next directory
-dir_linux_next=/home/anon/linux-next
 cd $dir_linux_next
 
 echo "[+] Switching to linux-next directory: $dir_linux_next"
@@ -31,13 +35,12 @@ echo "[+] Checking out to the tag $git_tag"
 git checkout -f $git_tag
 
 # bring syzbot config file to the linux-next directory
-cp /home/anon/research/syzbot_configuration_files/${syzbot_config_name} /home/anon/linux-next
+cp ${syzbot_config_files_path}/${syzbot_config_name} $dir_linux_next
 
 echo "[+] Starting making defconfig..."
 make defconfig
 
 echo "[+] Made defconfig. Now making kvm_guest.config..."
-#cp .config /home/anon/research/raw_coverage_default_configuration_files
 
 cp ${syzbot_config_name} .config
 
@@ -65,36 +68,34 @@ echo "[+] Compiling the kernel..."
 make -j`nproc`
 echo "[+] Compiled the kernel!"
 
-mkdir /home/anon/opt/syzkaller/syzkaller_default_${syzbot_config_name}_${commit_hash}_$(date +'%m%d%Y')
+mkdir $output_path/fuzzing_results_$(date+%s)/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
 
-workdir_name="/home/anon/opt/syzkaller/syzkaller_default_${syzbot_config_name}_${commit_hash}_$(date +'%m%d%Y')"
+workdir_name="$output_path/fuzzing_results_$(date+%s)/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
 echo "[+] Creating new config file for syzkaller config"
 # create new config file for syzkaller config
-echo '{' > /home/anon/opt/syzkaller/my.cfg
-echo '  "target": "linux/amd64",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "http": "127.0.0.1:56741",' >> /home/anon/opt/syzkaller/my.cfg
+echo '{' > $syzkaller_path/my.cfg
+echo '  "target": "linux/amd64",' >> $syzkaller_path/my.cfg
+echo '  "http": "127.0.0.1:56741",' >> $syzkaller_path/my.cfg
 
-printf '        "workdir": "%s",\n' "$workdir_name" >> /home/anon/opt/syzkaller/my.cfg
+printf '        "workdir": "%s",\n' "$workdir_name" >> $syzkaller_path/my.cfg
 
-echo '  "kernel_obj": "/home/anon/linux-next",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "image": "/home/anon/Documents/opt/my-image/stretch.img",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "sshkey": "/home/anon/Documents/opt/my-image/stretch.id_rsa",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "syzkaller": "/home/anon/opt/syzkaller",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "procs": 8,' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "type": "qemu",' >> /home/anon/opt/syzkaller/my.cfg
-echo '  "vm": {' >> /home/anon/opt/syzkaller/my.cfg
-echo '          "count": 8,' >> /home/anon/opt/syzkaller/my.cfg
-echo '          "kernel": "/home/anon/linux-next/arch/x86/boot/bzImage",' >> /home/anon/opt/syzkaller/my.cfg
-echo '          "cpu": 8,' >> /home/anon/opt/syzkaller/my.cfg
-echo '          "mem": 4098' >> /home/anon/opt/syzkaller/my.cfg
-echo '  }' >> /home/anon/opt/syzkaller/my.cfg
-echo '}' >> /home/anon/opt/syzkaller/my.cfg
+echo '  "kernel_obj": "/home/anon/linux-next",' >> $syzkaller_path/my.cfg
+echo '  "image": "/home/anon/Documents/opt/my-image/stretch.img",' >> $syzkaller_path/my.cfg
+echo '  "sshkey": "/home/anon/Documents/opt/my-image/stretch.id_rsa",' >> $syzkaller_path/my.cfg
+echo '  "syzkaller": "$syzkaller_path",' >> /home/anon/opt/syzkaller/my.cfg
+echo '  "procs": 8,' >> $syzkaller_path/my.cfg
+echo '  "type": "qemu",' >> $syzkaller_path/my.cfg
+echo '  "vm": {' >> $syzkaller_path/my.cfg
+echo '          "count": 8,' >> $syzkaller_path/my.cfg
+echo '          "kernel": "/home/anon/linux-next/arch/x86/boot/bzImage",' >> $syzkaller_path/my.cfg
+echo '          "cpu": 8,' >> $syzkaller_path/my.cfg
+echo '          "mem": 4098' >> $syzkaller_path/my.cfg
+echo '  }' >> $syzkaller_path/my.cfg
+echo '}' >> $syzkaller_path/my.cfg
 
-current_date=$(date +'%m%d%Y')
-raw_syz_term_out="/home/anon/research/syzkaller_default_terminal_output/raw_${syzbot_config_name}_${commit_hash}_${current_date}"
+fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
-echo "[+] Creating new tmux sesion"
-tmux new-session -d -s raw_${commit_hash} "timeout 12h ~/opt/syzkaller/bin/syz-manager -config=/home/anon/opt/syzkaller/my.cfg 2>&1 | tee ${raw_syz_term_out}; exec $SHELL"
+timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
 
 echo "[+] All steps completed!"
