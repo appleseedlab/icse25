@@ -78,7 +78,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     printf '  "workdir": "%s",\n' "$workdir_name" >> "$syzkaller_path/my.cfg"
 
-    echo "  \"kernel_obj\": \"$linux-next\"," >> "$syzkaller_path/my.cfg"
+    echo "  \"kernel_obj\": \"$dir_linux_next\"," >> "$syzkaller_path/my.cfg"
     echo "  \"image\": \"$debian_image_path/bullseye.img\"," >> "$syzkaller_path/my.cfg"
     echo "  \"sshkey\": \"$debian_image_path/bullseye.id_rsa\"," >> "$syzkaller_path/my.cfg"
     echo "  \"syzkaller\": \"$syzkaller_path\"," >> "$syzkaller_path/my.cfg"
@@ -86,7 +86,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo '  "type": "qemu",' >> "$syzkaller_path/my.cfg"
     echo '  "vm": {' >> "$syzkaller_path/my.cfg"
     echo '          "count": 8,' >> "$syzkaller_path/my.cfg"
-    echo "          \"kernel\": \"$linux-next/arch/x86/boot/bzImage\"," >> "$syzkaller_path/my.cfg"
+    echo "          \"kernel\": \"$dir_linux_next/arch/x86/boot/bzImage\"," >> "$syzkaller_path/my.cfg"
     echo '          "cpu": 8,' >> "$syzkaller_path/my.cfg"
     echo '          "mem": 4098' >> "$syzkaller_path/my.cfg"
     echo '  }' >> "$syzkaller_path/my.cfg"
