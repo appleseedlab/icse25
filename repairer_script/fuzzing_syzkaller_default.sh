@@ -70,6 +70,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     workdir_name="$output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
+    echo "[+] Created workdir ${workdir_name} for the current session"
     echo "[+] Creating new config file for syzkaller config"
     # create new config file for syzkaller config
     echo '{' > "$syzkaller_path/my.cfg"
@@ -95,6 +96,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
+    echo "[+] Writing logs to ${fuzzing_instance_log_path}"
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
 
     sleep 43320
