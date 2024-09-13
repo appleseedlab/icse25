@@ -21,33 +21,35 @@ config_file=$3
 current_date=$(date +'%m%d%Y')
 
 # Path to Linux directory
-dir_linux_next=/home/anon/linux-next
+dir_linux_next=$4
 
 # Path to Syzkaller directory
-dir_syzkaller=/home/anon/opt/syzkaller
+syzkaller_path=$5
 
-#source ~/env_kmax/bin/activate
+debian_image_path=$6
 
+# Output folder
+output_dir=$7
 
+unix_time=$(printf '%(%s)T\n' -1)
 
 # Path to saved diff files that are used
-output_of_diff=/home/anon/research/coverage_commit_diff_files/;
+output_of_diff=$output_dir/$unix_time/coverage_commit_diff_files/;
+mkdir -p $output_of_diff
 
 # Path to saved koverage result files
-output_of_koverage=/home/anon/research/coverage_commit_koverage_files/;
+output_of_koverage=$output_dir/$unix_time/coverage_commit_koverage_files/;
+mkdir -p $output_of_koverage
 
 # Path to saved repaired koverage result files
-output_of_repaired_koverage_path=/home/anon/research/coverage_commit_configuration_files/;
-
-#output_of_repaired_koverage_file_path=/home/anon/research/coverage_commit_repaired_koverage_files;
-
-
+output_of_repaired_koverage_path=$output_dir/$unix_time/coverage_commit_configuration_files/;
+mkdir -p $output_of_repaired_koverage_path
 
 total_excluded=0
 total_repaired_excluded=0
 
-if [ $# -ne 3 ]; then
-                echo "[!] Usage: ./program start_date end_date config_file"
+if [ $# -ne 7 ]; then
+                echo "[!] Usage: ./program start_date end_date config_file path_to_linux-next path_to_syzkaller debian_image_path path_to_output"
                 exit 1
 fi
 
@@ -59,10 +61,6 @@ get_commits(){
         d=$1
         time1=$2
         time2=$3
-        output_of_diff=/home/anon/research/coverage_commit_diff_files/;
-        output_of_koverage=/home/anon/research/coverage_commit_koverage_files/;
-        output_of_repaired_koverage_path=/home/anon/research/coverage_commit_repaired_koverage_files/;
-        output_of_repaired_koverage_file_path=/home/anon/research/coverage_commit_configuration_files/;
         config_file=$4
 
         config_name=$(basename "$config_file")
@@ -166,12 +164,12 @@ do
                 if [ -f "$FILE" ]; then
                         echo "SATISFYING CONDITION IS FOUND"
                         mv 0-x86_64.config $output_of_klocalizer
-        
+
         commit_hash=${second_arr[$k]}
         echo "[!] COMMIT HASH: ${commit_hash}"
         mv $output_of_klocalizer $output_of_repaired_koverage_path
         echo -e "[*] ${RED}STARTING KOVERAGE AGAIN TO CHECK FOR REPAIR..."
-        
+
         # mov kov was here
 
         echo "[*] CHECK PATCH: $output_of_diff$output_of_diff_path"
@@ -180,7 +178,7 @@ do
 
         output_of_repaired_koverage_file="${second_arr[$k]}.diff.repaired.json"
         koverage -v --arch x86_64 --config $output_of_repaired_koverage_path$output_of_klocalizer --check-patch $output_of_diff$output_of_diff_path -o $output_of_repaired_koverage_file_path$output_of_repaired_koverage_file
-        
+
 
 
         echo -e "${NC} [+] Moving REPAIRED KOVERAGE FILE..."
@@ -190,12 +188,12 @@ do
         #total_repaired_excluded+=$repaired_excluded_count
         echo "[*] REPAIRED EXCLUDED COUNT: $repaired_excluded_count"
         if [ $repaired_excluded_count == 0 ]; then
-                
+
                 echo "${NC}[+] WE REPAIRED THE FILE, GOING TO FUZZ IT"
 
                 #echo "[+] Copying repaired config file to ${RED}${dir_linux_next}${NC}"
                 #cp $output_of_repaired_koverage_path/$output_of_klocalizer $dir_linux_next
-                
+
                 cd $dir_linux_next
 
                 echo "[+] Switching to linux-next directory: $dir_linux_next"
@@ -238,35 +236,35 @@ do
 
                 echo "[+] Creating new config file for repaired config"
                 # create new config file for syzkaller config
-                echo '{' > /home/anon/opt/syzkaller/my.cfg
-                echo '  "target": "linux/amd64",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "http": "127.0.0.1:56741",' >> /home/anon/opt/syzkaller/my.cfg
+                echo '{' > "$syzkaller_path/my.cfg"
+                echo '  "target": "linux/amd64",' >> "$syzkaller_path/my.cfg"
+                echo '  "http": "127.0.0.1:56741",' >> "$syzkaller_path/my.cfg"
 
-                printf '        "workdir": "%s",\n' "$workdir_name" >> /home/anon/opt/syzkaller/my.cfg
+                printf '  "workdir": "%s",\n' "$workdir_name" >> "$syzkaller_path/my.cfg"
 
-                echo '  "kernel_obj": "/home/anon/linux-next",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "image": "/home/anon/Documents/opt/my-image/stretch.img",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "sshkey": "/home/anon/Documents/opt/my-image/stretch.id_rsa",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "syzkaller": "/home/anon/opt/syzkaller",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "procs": 8,' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "type": "qemu",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  "vm": {' >> /home/anon/opt/syzkaller/my.cfg
-                echo '          "count": 8,' >> /home/anon/opt/syzkaller/my.cfg
-                echo '          "kernel": "/home/anon/linux-next/arch/x86/boot/bzImage",' >> /home/anon/opt/syzkaller/my.cfg
-                echo '          "cpu": 8,' >> /home/anon/opt/syzkaller/my.cfg
-                echo '          "mem": 4098' >> /home/anon/opt/syzkaller/my.cfg
-                echo '  }' >> /home/anon/opt/syzkaller/my.cfg
-                echo '}' >> /home/anon/opt/syzkaller/my.cfg
+                echo "  \"kernel_obj\": \"$dir_linux_next\"," >> "$syzkaller_path/my.cfg"
+                echo "  \"image\": \"$debian_image_path/bullseye.img\"," >> "$syzkaller_path/my.cfg"
+                echo "  \"sshkey\": \"$debian_image_path/bullseye.id_rsa\"," >> "$syzkaller_path/my.cfg"
+                echo "  \"syzkaller\": \"$syzkaller_path\"," >> "$syzkaller_path/my.cfg"
+                echo '  "procs": 8,' >> "$syzkaller_path/my.cfg"
+                echo '  "type": "qemu",' >> "$syzkaller_path/my.cfg"
+                echo '  "vm": {' >> "$syzkaller_path/my.cfg"
+                echo '          "count": 8,' >> "$syzkaller_path/my.cfg"
+                echo "          \"kernel\": \"$dir_linux_next/arch/x86/boot/bzImage\"," >> "$syzkaller_path/my.cfg"
+                echo '          "cpu": 8,' >> "$syzkaller_path/my.cfg"
+                echo '          "mem": 4098' >> "$syzkaller_path/my.cfg"
+                echo '  }' >> "$syzkaller_path/my.cfg"
+                echo '}' >> "$syzkaller_path/my.cfg"
 
                 echo "[*] MOVING TO SYZKALLER DIRECTORY"
-                cd $dir_syzkaller
+                cd $syzkaller_path
 
-                
+
                 rep_syz_term_out=/home/anon/research/rep_syzkaller_terminal_output/rep_${config_name}_${commit_hash}_${current_date}
-                
+
                 echo "[+] Creating new tmux sesion"
                 tmux new-session -d -s rep_${commit_hash} "timeout 12h /home/anon/opt/syzkaller/bin/syz-manager -config=my.cfg 2>&1 | tee ${rep_syz_term_out}; exec $SHELL"
-                
+
                 echo "[+] All steps completed successfully!"
                 exit 1
                 #echo "===============================RUNNING SYZKALLER==============================="
