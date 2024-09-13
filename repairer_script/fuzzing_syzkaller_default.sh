@@ -93,13 +93,13 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo '  }' >> "$syzkaller_path/my.cfg"
     echo '}' >> "$syzkaller_path/my.cfg"
 
-    mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
+    mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
-    timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
+    timeout 5m $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
 
-    sleep 43320
+    sleep 360
 
     echo "[+] All steps completed!"
 
