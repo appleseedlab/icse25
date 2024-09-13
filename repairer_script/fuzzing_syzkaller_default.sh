@@ -13,6 +13,7 @@ syzbot_config_files_path=$5
 output_path=$6
 
 unix_time=$(printf '%(%s)T\n' -1)
+syzkaller_port=56700
 
 while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo "[+] Read Config Name: $syzbot_config_name"
@@ -75,7 +76,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     # create new config file for syzkaller config
     echo '{' > "$syzkaller_path/my.cfg"
     echo '  "target": "linux/amd64",' >> "$syzkaller_path/my.cfg"
-    echo '  "http": "127.0.0.1:56741",' >> "$syzkaller_path/my.cfg"
+    echo "  \"http\": \"127.0.0.1:$syzkaller_port\"," >> "$syzkaller_path/my.cfg"
 
     printf '  "workdir": "%s",\n' "$workdir_name" >> "$syzkaller_path/my.cfg"
 
@@ -97,9 +98,10 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
-    timeout 5m $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
+    timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
+    sleep 43320
 
-    sleep 360
+    ((syzkaller_port++))
 
     echo "[+] All steps completed!"
 
