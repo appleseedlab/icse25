@@ -31,6 +31,11 @@ debian_image_path=$6
 # Output folder
 output_dir=$7
 
+if [ $# -ne 7 ]; then
+                echo "[!] Usage: ./program start_date end_date config_file path_to_linux-next path_to_syzkaller debian_image_path path_to_output"
+                exit 1
+fi
+
 unix_time=$(printf '%(%s)T\n' -1)
 
 # Path to saved diff files that are used
@@ -47,11 +52,6 @@ mkdir -p $output_of_repaired_koverage_path
 
 total_excluded=0
 total_repaired_excluded=0
-
-if [ $# -ne 7 ]; then
-                echo "[!] Usage: ./program start_date end_date config_file path_to_linux-next path_to_syzkaller debian_image_path path_to_output"
-                exit 1
-fi
 
 diff=1
 
