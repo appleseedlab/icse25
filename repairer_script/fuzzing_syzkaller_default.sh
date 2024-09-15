@@ -123,7 +123,16 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
-    sleep 43320
+    exit_status_timeout=${PIPESTATUS[0]}
+
+    if [ $exit_status_timeout -eq 0 ]; then
+        echo "[+] Fuzzing instance completed successfully"
+    elif [ $exit_status_timeout -eq 124 ]; then
+        echo "[+] Fuzzing instance timed out after 12 hours"
+    elif [ $exit_status_timeout -ge 128 ]; then
+        echo "[-] Fuzzing instance terminated by signal $signal_number"
+    else
+        echo "[-] Fuzzing instance exited with error code $exit_status_timeout"
 
     syzkaller_port=$((syzkaller_port + 1))
 
