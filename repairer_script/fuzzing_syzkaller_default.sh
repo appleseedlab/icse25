@@ -1,8 +1,9 @@
-if [ "$#" -ne 6 ]; then
-        echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> \
-        <path to syzbot configs> <path to output folder>"
-        echo "[-] Exiting..."
-        exit 9
+set -euo pipefail
+
+if [ "$#" -ne 7 ]; then
+    echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> <path to debian image> <path to syzbot configs> <path to output folder> <log file>"
+    echo "[-] Exiting..."
+    exit 9
 fi
 
 csv_file=$1
@@ -11,6 +12,24 @@ syzkaller_path=$3
 debian_image_path=$4
 syzbot_config_files_path=$5
 output_path=$6
+log_file=$7
+
+if [ ! -d "$dir_linux_next" ]; then
+    echo "[-] The Linux-next directory does not exist: $dir_linux_next"
+    exit 1
+fi
+
+if [ ! -d "$syzkaller_path" ]; then
+    echo "[-] syzkaller directory does not exist: $syzkaller_path"
+    exit 1
+fi
+
+if [ ! -d "$debian_image_path" ]; then
+    echo "[-] Debian images directory does not exist: $debian_image_path"
+    exit 1
+fi
+
+exec > >(tee -i "$log_file") 2>&1
 
 unix_time=$(printf '%(%s)T\n' -1)
 syzkaller_port=56700
@@ -25,15 +44,19 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Cleaning the linux-next repo"
 
-    git clean -dfx
+    git clean -dfx || {echo "[-] Git clean failed"; exit 1; }
 
     echo "[+] Resetting the git head"
-    git reset --hard origin/master
+    git reset --hard origin/master || { echo "[-] Git reset failed"; exit 1; }
 
     echo "[+] Checking out to the tag $git_tag"
-    git checkout -f $git_tag
+    git checkout -f $git_tag || { echo "[-] Git checkout failed for tag $git_tag"; exit 1; }
 
     # bring syzbot config file to the linux-next directory
+    if [ ! -f "${syzbot_config_files_path}/${syzbot_config_name}" ]; then
+        echo "[-] The syzbot config file does not exist: ${syzbot_config_files_path}/${syzbot_config_name}"
+        exit 1
+    fi
     cp ${syzbot_config_files_path}/${syzbot_config_name} $dir_linux_next
 
     echo "[+] Starting making defconfig..."
@@ -49,22 +72,23 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Adding default syzkaller configs to .config file"
     # add syzkaller default config options
-    echo "CONFIG_KCOV=y" >> .config
-    echo "CONFIG_DEBUG_INFO=y" >> .config
-    echo "CONFIG_DEBUG_INFO_DWARF4=y" >> .config
-    echo "CONFIG_KASAN=y" >> .config
-    echo "CONFIG_KASAN_INLINE=y" >> .config
-    echo "CONFIG_CONFIGFS_FS=y" >> .config
-    echo "CONFIG_SECURITYFS=y" >> .config
-    echo "CONFIG_CMDLINE_BOOL=y" >> .config
-    #echo "CONFIG_DEBUG_INFO_BTF=n" >> .config
-    echo "CONFIG_CMDLINE=\"net.ifnames=0\"" >> .config
+    cat >> .config <<-EOF
+    CONFIG_KCOV=y
+    CONFIG_DEBUG_INFO=y
+    CONFIG_DEBUG_INFO_DWARF4=y
+    CONFIG_KASAN=y
+    CONFIG_KASAN_INLINE=y
+    CONFIG_CONFIGFS_FS=y
+    CONFIG_SECURITYFS=y
+    CONFIG_CMDLINE_BOOL=y
+    CONFIG_CMDLINE="net.ifnames=0"
+    EOF
 
     echo "[+] Making olddefconfig..."
     make olddefconfig
     echo "[+] Made olddefconfig"
     echo "[+] Compiling the kernel..."
-    make -j`nproc`
+    make -j"$(nproc)" || { echo "[-] Kernel compilation failed"; exit 1; }
     echo "[+] Compiled the kernel!"
 
     mkdir -p $output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
@@ -74,25 +98,25 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo "[+] Created workdir ${workdir_name} for the current session"
     echo "[+] Creating new config file for syzkaller config"
     # create new config file for syzkaller config
-    echo '{' > "$syzkaller_path/my.cfg"
-    echo '  "target": "linux/amd64",' >> "$syzkaller_path/my.cfg"
-    echo "  \"http\": \"127.0.0.1:$syzkaller_port\"," >> "$syzkaller_path/my.cfg"
-
-    printf '  "workdir": "%s",\n' "$workdir_name" >> "$syzkaller_path/my.cfg"
-
-    echo "  \"kernel_obj\": \"$dir_linux_next\"," >> "$syzkaller_path/my.cfg"
-    echo "  \"image\": \"$debian_image_path/bullseye.img\"," >> "$syzkaller_path/my.cfg"
-    echo "  \"sshkey\": \"$debian_image_path/bullseye.id_rsa\"," >> "$syzkaller_path/my.cfg"
-    echo "  \"syzkaller\": \"$syzkaller_path\"," >> "$syzkaller_path/my.cfg"
-    echo '  "procs": 8,' >> "$syzkaller_path/my.cfg"
-    echo '  "type": "qemu",' >> "$syzkaller_path/my.cfg"
-    echo '  "vm": {' >> "$syzkaller_path/my.cfg"
-    echo '          "count": 8,' >> "$syzkaller_path/my.cfg"
-    echo "          \"kernel\": \"$dir_linux_next/arch/x86/boot/bzImage\"," >> "$syzkaller_path/my.cfg"
-    echo '          "cpu": 8,' >> "$syzkaller_path/my.cfg"
-    echo '          "mem": 4098' >> "$syzkaller_path/my.cfg"
-    echo '  }' >> "$syzkaller_path/my.cfg"
-    echo '}' >> "$syzkaller_path/my.cfg"
+    cat > "$syzkaller_path/my.cfg" <<-EOF
+    {
+      "target": "linux/amd64",
+      "http": "127.0.0.1:$syzkaller_port",
+      "workdir": "$workdir_name",
+      "kernel_obj": "$dir_linux_next",
+      "image": "$debian_image_path/bullseye.img",
+      "sshkey": "$debian_image_path/bullseye.id_rsa",
+      "syzkaller": "$syzkaller_path",
+      "procs": 8,
+      "type": "qemu",
+      "vm": {
+        "count": 8,
+        "kernel": "$dir_linux_next/arch/x86/boot/bzImage",
+        "cpu": 8,
+        "mem": 4098
+      }
+    }
+    EOF
 
     mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
@@ -101,7 +125,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
     sleep 43320
 
-    ((syzkaller_port++))
+    syzkaller_port=$((syzkaller_port + 1))
 
     echo "[+] All steps completed!"
 
