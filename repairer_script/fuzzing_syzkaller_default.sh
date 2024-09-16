@@ -126,7 +126,6 @@ EOF
 EOF
 
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
-    mkdir -p $fuzzing_instance_log_path
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
