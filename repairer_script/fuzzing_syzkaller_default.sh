@@ -1,7 +1,7 @@
 set -euo pipefail
 
-if [ "$#" -ne 7 ]; then
-    echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> <path to debian image> <path to syzbot configs> <path to output folder> <log file>"
+if [ "$#" -ne 6 ]; then
+    echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> <path to debian image> <path to syzbot configs> <path to output folder>"
     echo "[-] Exiting..."
     exit 9
 fi
@@ -12,7 +12,6 @@ syzkaller_path=$3
 debian_image_path=$4
 syzbot_config_files_path=$5
 output_path=$6
-log_file=$7
 
 if [ ! -d "$dir_linux_next" ]; then
     echo "[-] The Linux-next directory does not exist: $dir_linux_next"
@@ -29,14 +28,23 @@ if [ ! -d "$debian_image_path" ]; then
     exit 1
 fi
 
+unix_time=$(printf '%(%s)T\n' -1)
+output_path=$output_path/$unix_time
+log_file=$output_path/$unix_time/main_script_logs.log
+
 exec > >(tee -i "$log_file") 2>&1
 
-unix_time=$(printf '%(%s)T\n' -1)
 syzkaller_port=56700
+
+while ss -tuln | grep -q ":$syzkaller_port\b"; do
+    ((syzkaller_port++))
+done
 
 while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo "[+] Read Config Name: $syzbot_config_name"
     echo "[+] Read Commit Hash: $commit_hash"
+    echo "[+] Syzkaller port: $syzkaller_port"
+    echo "[+] Unix time: $unix_time"
     # go to linux-next directory
     cd $dir_linux_next
 
@@ -44,7 +52,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Cleaning the linux-next repo"
 
-    git clean -dfx || {echo "[-] Git clean failed"; exit 1; }
+    git clean -dfx || { echo "[-] Git clean failed"; exit 1; }
 
     echo "[+] Resetting the git head"
     git reset --hard origin/master || { echo "[-] Git reset failed"; exit 1; }
@@ -72,7 +80,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
 
     echo "[+] Adding default syzkaller configs to .config file"
     # add syzkaller default config options
-    cat >> .config <<-EOF
+    cat >> .config <<EOF
     CONFIG_KCOV=y
     CONFIG_DEBUG_INFO=y
     CONFIG_DEBUG_INFO_DWARF4=y
@@ -82,7 +90,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     CONFIG_SECURITYFS=y
     CONFIG_CMDLINE_BOOL=y
     CONFIG_CMDLINE="net.ifnames=0"
-    EOF
+EOF
 
     echo "[+] Making olddefconfig..."
     make olddefconfig
@@ -91,14 +99,13 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     make -j"$(nproc)" || { echo "[-] Kernel compilation failed"; exit 1; }
     echo "[+] Compiled the kernel!"
 
-    mkdir -p $output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}
-
-    workdir_name="$output_path/fuzzing_results/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
+    workdir_name="$output_path/fuzzing_results/syzkaller_workdir_${syzbot_config_name}_${commit_hash}"
+    mkdir -p $workdir_name
 
     echo "[+] Created workdir ${workdir_name} for the current session"
     echo "[+] Creating new config file for syzkaller config"
-    # create new config file for syzkaller config
-    cat > "$syzkaller_path/my.cfg" <<-EOF
+
+    cat > "$syzkaller_path/my.cfg" <<EOF
     {
       "target": "linux/amd64",
       "http": "127.0.0.1:$syzkaller_port",
@@ -116,10 +123,10 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
         "mem": 4098
       }
     }
-    EOF
+EOF
 
-    mkdir -p $output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/
-    fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/$unix_time/default_syzkaller_configs/syzkaller_default_${syzbot_config_name}_${commit_hash}"
+    fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
+    mkdir -p $fuzzing_instance_log_path
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
     timeout 12h $syzkaller_path/bin/syz-manager -config=$syzkaller_path/my.cfg 2>&1 | tee ${fuzzing_instance_log_path};
@@ -133,6 +140,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag; do
         echo "[-] Fuzzing instance terminated by signal $signal_number"
     else
         echo "[-] Fuzzing instance exited with error code $exit_status_timeout"
+    fi
 
     syzkaller_port=$((syzkaller_port + 1))
 
