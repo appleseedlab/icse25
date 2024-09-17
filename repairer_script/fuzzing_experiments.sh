@@ -13,6 +13,12 @@ debian_image_path=$4
 syzbot_config_files_path=$5
 output_path=$6
 
+unix_time=$(printf '%(%s)T\n' -1)
+output_path=$output_path/$unix_time
+log_file=$output_path/main_script_logs.log
+
+exec > >(tee -i "$log_file") 2>&1
+
 if [ ! -d "$dir_linux_next" ]; then
     echo "[-] The Linux-next directory does not exist: $dir_linux_next"
     exit 1
@@ -27,12 +33,6 @@ if [ ! -d "$debian_image_path" ]; then
     echo "[-] Debian images directory does not exist: $debian_image_path"
     exit 1
 fi
-
-unix_time=$(printf '%(%s)T\n' -1)
-output_path=$output_path/$unix_time
-log_file=$output_path/$unix_time/main_script_logs.log
-
-exec > >(tee -i "$log_file") 2>&1
 
 syzkaller_port=56700
 
