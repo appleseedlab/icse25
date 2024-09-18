@@ -1,9 +1,16 @@
 # Content
 
 ## Guide to the Artifacts
-This guide provides information on how we used the artifacts during the experiments and post-processing of the results. First, we initiate the 12-hour experiment with configuration variety using repairer.sh script. The script will take a random start and end date and an arbitrary syzkaller configuration file taken from the syzbot dashboard It will collect all the commit IDs belonging to the interval between start and end dates. Next up, it will check the commit IDs one by one against the configuration file with koverage to see if the configuration file includes lines in the patch commit. If not, klocalizer will be used to repair the configuration file to include those lines. Then, a kernel image will be built with the repaired configuration file and syzkaller will start fuzzing the image for 12 hours.
 *Note:* To be able to run the scripts, you need to have [kmax](https://github.com/paulgazz/kmax) and [syzkaller](https://github.com/google/syzkaller) installed. Please refer to the installation instructions of these tools to install them.
 *Note:* Please also make sure to use Python3 3.9 or above to able to run the scripts in this repository.
+
+This guide provides information on how we used the artifacts during the experiments and post-processing of the results.
+First, we initiate the 12-hour experiment with configuration variety using repairer.sh script.
+The script will take a random start and end date and an arbitrary syzkaller configuration file taken from the syzbot dashboard.
+It will collect all the commit IDs belonging to the interval between start and end dates.
+Next up, it will check the commit IDs one by one against the configuration file with koverage to see if the configuration file includes lines in the patch commit.
+If not, klocalizer will be used to repair the configuration file to include those lines.
+Then, a kernel image will be built with the repaired configuration file and syzkaller will start fuzzing the image for 12 hours.
 
 The same 12-hour experiment will be conducted without configuration variety using original syzkaller configurations using fuzzing_syzkaller_default.sh script.
 Next, we will use the scripts to post-process the results of the experiments.
