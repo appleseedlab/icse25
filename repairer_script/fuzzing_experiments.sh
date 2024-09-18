@@ -126,6 +126,7 @@ EOF
     }
 EOF
 
+    mkdir -p "$output_path/fuzzing_instance_logs/"
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
 
     echo "[+] Writing logs to ${fuzzing_instance_log_path}"
