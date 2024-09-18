@@ -9,26 +9,40 @@ import matplotlib.lines as mlines
 def parse_args():
     parser = argparse.ArgumentParser(description="Calculate confidence interval")
     parser.add_argument(
-        "--syzkaller_file", type=str, help="Path to the syzkaller file with the data"
+        "--syzkaller_file",
+        type=str,
+        help="Path to the syzkaller file with the data",
+        required=True,
     )
     parser.add_argument(
-        "--krepair_file", type=str, help="Path to the krepair file with the data"
+        "--krepair_file",
+        type=str,
+        help="Path to the krepair file with the data",
+        required=True,
     )
     parser.add_argument(
-        "--kafl_file", type=str, help="Path to the kafl file with the data"
+        "--kafl_file",
+        type=str,
+        help="Path to the kafl file with the data",
+        required=True,
     )
     parser.add_argument(
         "--kafl_krepair_file",
         type=str,
         help="Path to the kafl krepair file with the data",
+        required=True,
     )
     parser.add_argument(
-        "--defconfig_file", type=str, help="Path to the defconfig file with the data"
+        "--defconfig_file",
+        type=str,
+        help="Path to the defconfig file with the data",
+        required=True,
     )
     parser.add_argument(
         "--defconfig_krepair_file",
         type=str,
         help="Path to the defconfig repair file with the data",
+        required=True,
     )
     parser.add_argument(
         "--confidence", type=float, default=0.95, help="Confidence level"
