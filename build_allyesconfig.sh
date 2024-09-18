@@ -10,6 +10,8 @@ linuxsrc="$1"
 kernel_image_save_path="$2"
 kernel_version="$3"
 
+git fetch --tags
+
 set -euxo pipefail
 
 # Navigate to the Linux source directory and clean it up
