@@ -15,6 +15,7 @@ output_path=$6
 
 unix_time=$(printf '%(%s)T\n' -1)
 output_path=$output_path/$unix_time
+mkdir -p $output_path
 log_file=$output_path/main_script_logs.log
 
 exec > >(tee -i "$log_file") 2>&1
