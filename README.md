@@ -116,7 +116,11 @@ data_tables/Repaired-SYZKALLER Only Crash+Call Trace(Bug Finding+Coverage).xlsx 
 - bugs_unique_and_common.py - This script is used for comparing unique and common crash names found by fuzzing with and without configuration variety. It needs crash names belonging to fuzzing with configuration variety in column 1 and crash names belonging to fuzzing without configuration variety in column 2.
 - build_kernel.sh - This script is used to build the Linux kernel with a given configuration file and commit hash. Built kernel images are needed to run them in QEMU to test whether reproducers of crashes crash on kernels built with and without configuration variety.
 - categorize_bugs_bar_chart.py - This script is used for categorizing all crashes found by fuzzing with configuration variability based on their types. It reads the names of the crashes from the provided CSV file and categorizes them into different types, then visualizes the results as a bar chart and saves it to a PDF file named 'categorized_bugs_bar_chart.pdf'.
-- collect_reproducers.sh - This script reads the names and paths to the reproducers of crashes from the repaired_reproducers.csv file and checks the type of the reproducer. It puts C reproducers to /home/anon/research/repaired_reproducers/c_reproducers and Syzkaller reproducers to /home/anon/research/repaired_reproducers/syz_reproducers.
+- collect_reproducers.sh - This script reads the names and paths to the reproducers of crashes from the repaired_reproducers.csv file and checks the type of the reproducer.
+Example command to run the script:
+```bash
+./collect_reproducers.sh guild_reproducers/ repairer_script/repaired_reproducers.csv guild_bugs/
+```
 - find_reproducers.sh - this script is used for finding reproducers and their types (C or syz) in repaired_bugs folders, the folder that stores folders of bugs found during fuzzing with configuration variety. It generates reproducers.csv files and stores them there.
 - find_unique_crash.py - This script is used to find unique alarm names + call trace pairs from the results of fuzzing with and without configuration variety. It reads the results from the provided CSV file and finds unique alarm names + call trace pairs, then saves them to a new CSV file.
 - fuzzing_syzkaller_default.sh - This script is used to perform fuzzing without configuration variety using Syzkaller. It uses a configuration file arbitrarily selected from the Syzbot dashboard and a Linux-next tag to check out to build the kernel and starts fuzzing with Syzkaller while saving the outputs.
