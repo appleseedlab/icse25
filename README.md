@@ -5,10 +5,10 @@
 1. To be able to run the scripts, you need to have [kmax](https://github.com/paulgazz/kmax) and [syzkaller](https://github.com/google/syzkaller) installed.
 Please refer to the installation instructions of these tools to install them.
 2. Please also make sure to use Python3 3.9 or above to able to run the scripts in this repository.
-3. You will need the contents of "guild_reproducers.7z" and "guild_bugs.7z" files when running some of the scripts. Extract them with the commands below:
+3. You will need the contents of "repaired_reproducers.7z" and "repaired_bugs.7z" files when running some of the scripts. Extract them with the commands below:
 ```
-7z e guild_reproducers.7z
-7z e guild_bugs.7z
+7z e repaired_reproducers.7z
+7z e repaired_bugs.7z
 ```
 
 This guide provides information on how we used the artifacts during the experiments and post-processing of the results.
