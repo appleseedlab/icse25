@@ -19,7 +19,7 @@ Next up, it will check the commit IDs one by one against the configuration file 
 If not, klocalizer will be used to repair the configuration file to include those lines.
 Then, a kernel image will be built with the repaired configuration file and syzkaller will start fuzzing the image for 12 hours.
 
-The same 12-hour experiment will be conducted without configuration variety using original syzkaller configurations using fuzzing_syzkaller_default.sh script.
+The same 12-hour experiment will be conducted without configuration variety using original syzkaller configurations using repairer_script/fuzzing_experiments.sh script.
 Next, we will use the scripts to post-process the results of the experiments.
 In the beginning, we analyze crash folders of each run of fuzzing with and without configuration variety to check whether previously unreported bugs are present and need to be reported to the Linux kernel mailing list.
 To check whether a bug is previously unreported we manually analyze the bug's alarm name and call trace and compare it with the existing bug reports with the same description in the Linux kernel mailing list.
@@ -123,7 +123,7 @@ Example command to run the script:
 ```
 - find_reproducers.sh - this script is used for finding reproducers and their types (C or syz) in repaired_bugs folders, the folder that stores folders of bugs found during fuzzing with configuration variety. It generates reproducers.csv files and stores them there.
 - find_unique_crash.py - This script is used to find unique alarm names + call trace pairs from the results of fuzzing with and without configuration variety. It reads the results from the provided CSV file and finds unique alarm names + call trace pairs, then saves them to a new CSV file.
-- fuzzing_syzkaller_default.sh - This script is used to perform fuzzing without configuration variety using Syzkaller. It uses a configuration file arbitrarily selected from the Syzbot dashboard and a Linux-next tag to check out to build the kernel and starts fuzzing with Syzkaller while saving the outputs.
+- fuzzing_experiments.sh - This script is used to perform fuzzing without configuration variety using Syzkaller. It uses a configuration file arbitrarily selected from the Syzbot dashboard and a Linux-next tag to check out to build the kernel and starts fuzzing with Syzkaller while saving the outputs.
 - get_call_trace.py - This Python script automates the process of extracting call traces from Syzkaller bug reports, categorizing them based on uniqueness, and compiling bug statistics.
 - get_source_lines_of_code_default.sh - This script is used to get the number of source lines of code of the Linux kernel binary built with configuration file without configuration variety.
 - get_source_lines_of_code_repaired.sh - This script is used to get the number of source lines of code of the Linux kernel binary built with a configuration file with configuration variety.
