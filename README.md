@@ -12,6 +12,12 @@ After pulling the files, you can extract them with the commands below:
 7z x repaired_reproducers.7z
 7z x repaired_bugs.7z
 ```
+4. You will need a linux-next repo that contains the linux-next daily tags to be able to run the scripts in this repository.
+You can find our linux-next repo that contains the tags we used in the experiments [here](https://drive.google.com/file/d/1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT/view?usp=sharing)
+Extract the repo with the following command:
+```
+7z x linux-next.7z
+```
 
 This guide provides information on how we used the artifacts during the experiments and post-processing of the results.
 First, we initiate the 12-hour experiment with configuration variety using repairer.sh script.
