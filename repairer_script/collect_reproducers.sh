@@ -2,7 +2,7 @@
 
 if [[ $# -ne 3 ]]; then
     echo "[*] Usage: ./program <path-to-repaired-reproducers-directory> <path-to-csv-containing-paths-to-repaired-reproducers> <repaired_bugs_directory>"
-    echo "[*] Example: ./collec_reproducers.sh ./repaired_reproducers/ ./repaired_reproducers.csv"
+    echo "[*] Example: ./collect_reproducers.sh ./repaired_reproducers/ ./repaired_reproducers.csv ./repaired_bugs/"
     exit 1
 fi
 
@@ -19,7 +19,7 @@ mkdir -p $syz_reproducers
 
 # Replace "/home/sanan/research/guild_bugs" with the new folder
 cp "$repaired_reproducers_csv" "${repaired_reproducers_csv}.bak"
-sed -i "s|/home/sanan/research/guild_bugs|$repaired_bugs|g" "$repaired_reproducers_csv"
+sed -i "s|/home/anon/research/guild_bugs|$repaired_bugs|g" "$repaired_reproducers_csv"
 
 # Read the CSV file line by line
 while IFS=, read -r description type location; do
