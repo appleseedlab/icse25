@@ -3,14 +3,35 @@
 # csv format:
 # config_filename,commit_id,tag
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+
 # The location of the CSV file
-CSV_FILE="/home/anon/research/source_lines.csv"
+CSV_FILE="$REPO_ROOT/repairer_script/source_lines.csv"
+
+# Check if the CSV file exists
+if [ ! -f "$CSV_FILE" ]; then
+  echo "[-] The CSV file does not exist: $CSV_FILE"
+  exit 1
+fi
 
 # The directory where the kernel configuration files are located
-CONFIG_FILES_DIR=/home/anon/research/syzbot_configuration_files
+CONFIG_FILES_DIR="$REPO_ROOT/camera_ready/configuration_files/syzbot_configuration_files/"
 
 # Path to the Linux repository where the operations will be performed
-LINUX_REPO_DIR=/home/anon/linux-next
+LINUX_REPO_DIR=$1
+
+# Path to output
+OUTPUT_DIR=$2
+
+# Check if arguments are provided
+if [ -z "$LINUX_REPO_DIR" ] || [ -z "$OUTPUT_DIR" ]; then
+  echo "Usage: $0 <linux-next-repo-dir> <output-dir>"
+  exit 1
+fi
+
+# Create the output directory
+mkdir -p "$OUTPUT_DIR"
 
 # Change directory to the Linux repository
 cd "$LINUX_REPO_DIR" || exit
@@ -33,7 +54,7 @@ while IFS=, read -r config_filename commit_id tag; do
 
   # Show the commit and redirect output to a file with commit id as name
   git show "$commit_id" > "${commit_id}.diff"
-  
+
   echo "[+] generated diff file: $commit_id.diff"
   sleep 2
 
@@ -51,17 +72,24 @@ while IFS=, read -r config_filename commit_id tag; do
 
   echo "[+] Building the kernel"
   KCFLAGS="-save-temps=obj" make -j14
-  
+
   sleep 2
-  echo "[+] Rsyncing .i to the ~/linux-next-$config_filename-$tag directory"
-  rsync -avm --include='*/' --include='*.i' --exclude='*' --prune-empty-dirs --relative "$LINUX_REPO_DIR" /home/anon/linux-next-$config_filename-$tag-repaired
-  
+  echo "[+] Rsyncing .i to the $OUTPUT_DIR/linux-next-$config_filename-$tag directory"
+  rsync -avm --include='*/' --include='*.i' --exclude='*' --prune-empty-dirs --relative "$LINUX_REPO_DIR" $OUTPUT_DIR/linux-next-$config_filename-$tag-repaired
+
   echo "[+] getting source lines"
-  /home/anon/research/source_lines.sh
-  
+  # Check if source_lines.sh exists
+
+  if [ ! -f "$REPO_PATH/repairer_script/source_lines.sh" ]; then
+    echo "[-] The source_lines.sh script does not exist: $REPO_PATH/repairer_script/source_lines.sh"
+    exit 1
+  fi
+
+  $REPO_PATH/repairer_script/source_lines.sh
+
   sleep 2
   echo "[+] Rsyncing source lines to the ~/linux-next-$config_filename-$tag directory"
-  rsync -avm --include='*/' --include='*_source_lines.txt' --exclude='*' --prune-empty-dirs --relative "$LINUX_REPO_DIR" /home/anon/linux-next-$config_filename-$tag-repaired
+  rsync -avm --include='*/' --include='*_source_lines.txt' --exclude='*' --prune-empty-dirs --relative "$LINUX_REPO_DIR" $OUTPUT_DIR/linux-next-$config_filename-$tag-repaired
 
 
 done < "$CSV_FILE"

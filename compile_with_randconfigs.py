@@ -27,6 +27,13 @@ def parse_args():
         help="Path to the kernel source directory",
     )
     parser.add_argument(
+        "-syzsrc",
+        "--syzkaller_src",
+        type=str,
+        required=True,
+        help="Path to syzkaller source directory",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         type=str,
@@ -265,6 +272,7 @@ def prepare_syzkaller_configs(
 
 def run_syzkaller_in_parallel(
     syzkaller_config_list: list,
+    syzkaller_src: str,
     output_dir: str,
     timeout_duration: str = "1",
 ) -> list:
@@ -279,7 +287,7 @@ def run_syzkaller_in_parallel(
     tmux_sessions_list = []
 
     for syzkaller_config in syzkaller_config_list:
-        syzkaller_path = "/home/anon/Documents/syzkaller"
+        syzkaller_path = syzkaller_src
         command = f"cd {syzkaller_path}; ./bin/syz-manager -config={syzkaller_config} 2>&1 | tee {output_dir}/{os.path.basename(syzkaller_config)}.log"
 
         tmux_session_name = syzkaller_config.replace(".", "_")
@@ -440,7 +448,7 @@ def main():
     #     logging.debug(f"Kernel src: {kernel_src_list[i]}")
 
     tmux_sessions_list = run_syzkaller_in_parallel(
-        syzkaller_config_list, args.output_dir
+        syzkaller_config_list, args.syzkaller_src, args.output_dir
     )
     logging.debug(f"Tmux sessions list: {tmux_sessions_list}")
 

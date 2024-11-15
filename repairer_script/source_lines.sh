@@ -1,7 +1,20 @@
 #!/bin/bash
 
 # Path to the kernel directory containing .c and .i files
-KERNEL_DIR="/home/anon/linux"
+KERNEL_DIR=$1
+
+# Check if the kernel directory is provided
+if [[ -z "$KERNEL_DIR" ]]; then
+    echo "Usage: $0 <kernel_directory>"
+    echo "Example: $0 /path/to/linux-next"
+    exit 1
+fi
+
+# Check if the kernel directory exists
+if [[ ! -d "$KERNEL_DIR" ]]; then
+    echo "Kernel directory not found"
+    exit 1
+fi
 
 # Navigate to the kernel directory
 cd "$KERNEL_DIR" || {

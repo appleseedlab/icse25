@@ -42,6 +42,9 @@ unix_time=$(printf '%(%s)T\n' -1)
 output_of_diff=$output_dir/$unix_time/coverage_commit_diff_files/;
 mkdir -p $output_of_diff
 
+# Path to saved syzkaller terminal logs
+output_of_syzkaller_logs = $output_dir/rep_syzkaller_terminal_output/
+
 # Path to saved koverage result files
 output_of_koverage=$output_dir/$unix_time/coverage_commit_koverage_files/;
 mkdir -p $output_of_koverage
@@ -231,8 +234,8 @@ do
                 fi
 
 
-                mkdir /home/anon/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')
-                workdir_name="/home/anon/opt/syzkaller/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')"
+                mkdir $syzkaller_path/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')
+                workdir_name="$syzkaller_path/rep_${config_name}_${commit_hash}_$(date +'%m%d%Y')"
 
                 echo "[+] Creating new config file for repaired config"
                 # create new config file for syzkaller config
@@ -260,10 +263,10 @@ do
                 cd $syzkaller_path
 
 
-                rep_syz_term_out=/home/anon/research/rep_syzkaller_terminal_output/rep_${config_name}_${commit_hash}_${current_date}
+                rep_syz_term_out=$output_of_syzkaller_logs/rep_${config_name}_${commit_hash}_${current_date}
 
                 echo "[+] Creating new tmux sesion"
-                tmux new-session -d -s rep_${commit_hash} "timeout 12h /home/anon/opt/syzkaller/bin/syz-manager -config=my.cfg 2>&1 | tee ${rep_syz_term_out}; exec $SHELL"
+                tmux new-session -d -s rep_${commit_hash} "timeout 12h $syzkaller_path/bin/syz-manager -config=my.cfg 2>&1 | tee ${rep_syz_term_out}; exec $SHELL"
 
                 echo "[+] All steps completed successfully!"
                 exit 1
