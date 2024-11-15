@@ -4,13 +4,18 @@ import logging
 import time
 import shutil
 import git
+import git.exc
 import os
 import csv
-import json
-import sys
-import requests
 import signal
+from tqdm import tqdm
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from git import Repo
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from loguru import logger
 
+from gitdb.util import sys
 
 def parse_args():
     """
@@ -28,12 +33,34 @@ def parse_args():
         help="Path to the kernel source directory",
     )
     parser.add_argument(
+        "-di",
+        "--debian_image",
+        type=str,
+        required=True,
+        help="Path to the debian image",
+    )
+    parser.add_argument(
+        "-qt",
+        "--qemu_timeout",
+        type=int,
+        default=300,
+        help="Timeout for qemu to boot the kernel",
+    )
+    parser.add_argument(
+        "-w",
+        "--workers",
+        type=int,
+        default=max(1, os.cpu_count() - 1),
+        help="Number of workers to clone kernels in parallel",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
-        type=str,
-        required=False,
-        help="Logging level",
+        action="count",
+        default=0,
+        help="Verbose mode",
     )
+
     parser.add_argument(
         "-o",
         "--output_dir",
@@ -49,6 +76,7 @@ def parse_args():
         required=False,
         help="Git reference to checkout to",
     )
+
     args = parser.parse_args()
     return args
 
@@ -129,7 +157,7 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, str]:
 
     csv_file_path = f"{output_dir}/randconfig_experiment_results_{csvname_seed}.csv"
 
-    for i in range(0, 100):
+    for _ in range(0, 100):
         git_clean(kernel_src)
         prob = 50
 
@@ -231,11 +259,16 @@ def compile_kernel(
     return bzimage_paths
 
 
-def run_qemu(bzimage_paths, output_dir, csv_file_path):
+def run_qemu(bzimage_paths, debian_image, timeout, output_dir, csv_file_path):
     """
     This function runs the bzImage files in qemu
+
     Args:
-    bzimage_paths: list of paths to the bzImage files
+        bzimage_paths: list of paths to the bzImage files
+        debian_image: path to the debian image
+        timeout: timeout for qemu to boot the kernel
+        output_dir: output directory
+        csv_file_path: path to the csv file
     """
     for bzimage_path in bzimage_paths:
         logname = f"{output_dir}/{os.path.basename(bzimage_path)}.log"
@@ -253,7 +286,7 @@ def run_qemu(bzimage_paths, output_dir, csv_file_path):
             "-append",
             "console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0",
             "-drive",
-            "file=/home/anon/debian_image/bullseye.img,format=raw",
+            f"file={debian_image},format=raw",
             "-net",
             "user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:10021-:22",
             "-net",
@@ -271,7 +304,7 @@ def run_qemu(bzimage_paths, output_dir, csv_file_path):
             command, stdout=logfile, stderr=subprocess.STDOUT
         )
 
-        time.sleep(200)
+        time.sleep(timeout)
         booted = False
         with open(logname, "r") as logfile:
             for line in logfile:
@@ -291,6 +324,8 @@ def run_qemu(bzimage_paths, output_dir, csv_file_path):
         else:
             os.kill(qemu_process.pid, signal.SIGKILL)
             add_to_csv(csv_file_path, config_path, "Booted", True)
+
+    logger.debug("Finished bootability testing for the provided images")
 
 
 def add_to_csv(csv_file_path, config_path, type, bootable):
@@ -314,22 +349,95 @@ def add_to_csv(csv_file_path, config_path, type, bootable):
         csvwriter.writeheader()
         csvwriter.writerows(data)
 
+def check_args(args):
+    """
+    This function checks if the provided kernel source directory is valid
+    Args:
+    args: parsed arguments
+    Raises: Exception
+    """
+
+    if not os.path.exists(args.kernel_src):
+        raise Exception("Kernel source directory does not exist")
+
+    # check if the kernel source directory is a git repository
+    if not os.path.exists(f"{args.kernel_src}/.git"):
+        raise Exception("Kernel source directory is not a git repository")
+
+    # check if the provided git reference exists in the repository
+    repo = git.Repo(args.kernel_src)
+    try:
+        repo.git.rev_parse(args.gitref)
+    except git.exc.GitCommandError:
+        raise Exception("Git reference does not exist in the repository")
+
+def clone_kernel(kernel_url, tmpdir, idx: int) -> Path:
+    KERNEL_DIR = Path(f"{tmpdir}/linux-next-{idx}")
+    KERNEL_DIR.mkdir(parents=True)
+
+    try:
+        Repo.clone_from(kernel_url, KERNEL_DIR)
+    except Exception as e:
+        logger.exception(f"Failed to clone kernel {idx}: {e}")
+
+    # KERNEL_DIR = Path(f"{tmpdir}/linux-next-{idx}")
+    # Repo.clone_from(kernel_url, KERNEL_DIR)
+    return KERNEL_DIR
+
+
+def clone_kernels_parallel(available_cores: int) -> list[Path]:
+    NUM_KERNELS = MAX_WORKERS = available_cores
+    KERNEL_URL = "https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git"
+    kernel_dirs = []
+
+    logger.debug(f"Utilizing {MAX_WORKERS} workers to clone in parallel")
+    with TemporaryDirectory() as tmpdir:
+        with tqdm(total=NUM_KERNELS) as pbar:
+            with ProcessPoolExecutor(max_workers=MAX_WORKERS) as executor:
+                futures = {
+                    executor.submit(clone_kernel, KERNEL_URL, tmpdir, i): i
+                    for i in range(100)
+                }
+
+                for future in as_completed(futures):
+                    try:
+                        idx = future.result()
+                        kernel_dirs.append(idx)
+                        pbar.update(1)
+                        logger.debug(f"Finished processing idx: {idx}")
+                    except Exception as e:
+                        logger.exception(f"error when cloning: {e}")
+
+    return kernel_dirs
+
+def set_logging_level(verbose):
+    match verbose:
+        case 1:
+            logger.remove()
+            logger.add(sys.stderr, level="ERROR")
+        case 2:
+            logger.remove()
+            logger.add(sys.stderr, level="WARNING")
+        case 3:
+            logger.remove()
+            logger.add(sys.stderr, level="DEBUG")
 
 def main():
     args = parse_args()
+    check_args(args)
+    set_logging_level(args.verbose)
 
-    loglevel = args.verbose
-    numeric_level = getattr(logging, loglevel.upper(), None)
-    if not isinstance(numeric_level, int):
-        raise ValueError("Invalid log level: %s" % loglevel)
-    logging.basicConfig(level=loglevel)
-
+    logger.debug("Generating random configurations to compile kernel images")
     generated_config_files, csv_file_path = generate_randconfigs(
         args.kernel_src, args.output_dir
     )
-    logging.debug(generated_config_files)
+    logger.debug(f"Generated random configs: {generated_config_files}")
 
-    kernel_src_list = ["/home/anon/linux-next" for i in range(100)]
+    logger.debug("Cloning 100 kernel repositories in parallel")
+    kernel_src_list = clone_kernels_parallel(args.workers)
+    logger.debug(f"Cloned kernel sources: {kernel_src_list}")
+
+    logger.debug("Compiling kernel images")
     bzimage_paths = compile_kernel(
         kernel_src_list,
         generated_config_files,
@@ -341,7 +449,7 @@ def main():
     logging.debug("Bzimage paths:")
     logging.debug(bzimage_paths)
 
-    run_qemu(bzimage_paths, args.output_dir, csv_file_path)
+    run_qemu(bzimage_paths, args.debian_image, args.qemu_timeout, args.output_dir, csv_file_path)
 
 
 if __name__ == "__main__":

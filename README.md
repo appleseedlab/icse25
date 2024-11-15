@@ -243,7 +243,7 @@ python3 get_percentage_change.py --change_of_summaries_csv change_of_summaries_b
 
 The following command can be used to get the results of bootability study:
 ```Python
-python3 test_100_randconfigs.py -k ~/linux-next -o ~/Documents/100_randconfigs_test/outdir -v DEBUG
+python3 test_100_randconfigs.py -k ~/linux-next -di ~/debian_image/bullseye.img -o ~/Documents/100_randconfigs_test/outdir -vvv
 ```
 
 ## Change Summary Study Script
