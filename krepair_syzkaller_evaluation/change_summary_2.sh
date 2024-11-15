@@ -6,7 +6,7 @@ configsdir=${2}
 
 if [ -z ${changestudycsvpath} ]; then
     echo "Usage: $0 <change-study-csv-path> <configs-dir>"
-    echo "Example: $0 change-study.csv camera_ready/configuration_files/"
+    echo "Example: $0 change_study.csv camera_ready/configuration_files/"
     exit 1
 fi
 
