@@ -20,21 +20,19 @@ debian_image_path=$4
 syzbot_config_files_path=$REPO_ROOT/$5
 output_path=$6
 
-unix_time=$(printf '%(%s)T\n' -1)
+unix_time=$(date +%s)
 output_path=$output_path/$unix_time
 mkdir -p $output_path
 log_file=$output_path/main_script_logs.log
 
 exec > >(tee -i "$log_file") 2>&1
 
-if [ ! -d "$csv_file" ]; then
+if [ ! -f "$csv_file" ]; then
     echo "[-] The csv file does not exist: $csv_file"
     exit 1
 fi
-if [ ! -d "$csv_file" ]; then
-    echo "[-] The csv file does not exist: $csv_file"
-    exit 1
-fi
+echo "[+] CSV file: $csv_file"
+exit 1
 
 if [ ! -d "$dir_linux_next" ]; then
     echo "[-] The Linux-next directory does not exist: $dir_linux_next"
