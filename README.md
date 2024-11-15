@@ -253,3 +253,21 @@ The following command can be used to get the results of change summary study:
 bash krepair_syzkaller_evaluation/change_summary_2.sh change_study.csv
 ```
 change_study.csv is a csv file that contains the names of original and repaired Syzkaller configuration, and patch commits that are used to repair the original configuration files.
+
+## Fuzzing Without Configuration Variety Script
+The following command can be used to run the script that performs fuzzing without configuration variety using Syzkaller:
+```Bash
+./repairer_script/fuzzing_experiments.sh repairer_script/fuzzing_parameters.csv  ~/linux-next/ ~/syzkaller/ ~/debian_images/ camera_ready/configuration_files/syzbot_configuration_files ~/output/
+```
+Explanation of the parameters:
+- repairer_script/fuzzing_parameters.csv - a CSV file that contains the names of
+the configuration files used during the fuzzing experiments and the commit IDs of
+the Linux-next versions that were fuzzed.
+- ~/linux-next/ - the path to the linux-next repository that contains the tags of
+the Linux kernel versions that were fuzzed.
+- ~/syzkaller/ - the path to the syzkaller repository.
+- ~/debian_images/ - the path to the directory that contains a debian image like
+'bullseye.img' and its ssh key 'bullseye.id_rsa' that are used to boot the kernel
+images built during the fuzzing experiments.
+- camera_ready/configuration_files/syzbot_configuration_files - the path to the
+directory that contains the syzkaller configuration files used during the fuzzing

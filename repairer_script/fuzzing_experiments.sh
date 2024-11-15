@@ -1,16 +1,23 @@
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+
 if [ "$#" -ne 6 ]; then
-    echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller> <path to debian image> <path to syzbot configs> <path to output folder>"
+    echo "[!] Usage: ./program <csv-file> <path to linux-next> <path to syzkaller>
+    <path to debian image> <path to syzbot configs> <path to output folder>"
+    echo "[*] Example Usage: ./program repairer_script/fuzzing_parameters.csv " \
+        "~/linux-next/ ~/syzkaller/ ~/debian_images/" \
+        "camera_ready/configuration_files/syzbot_configuration_files ~/output/"
     echo "[-] Exiting..."
     exit 9
 fi
 
-csv_file=$1
+csv_file=$REPO_ROOT/$1
 dir_linux_next=$2
 syzkaller_path=$3
 debian_image_path=$4
-syzbot_config_files_path=$5
+syzbot_config_files_path=$REPO_ROOT/$5
 output_path=$6
 
 unix_time=$(printf '%(%s)T\n' -1)
@@ -19,6 +26,15 @@ mkdir -p $output_path
 log_file=$output_path/main_script_logs.log
 
 exec > >(tee -i "$log_file") 2>&1
+
+if [ ! -d "$csv_file" ]; then
+    echo "[-] The csv file does not exist: $csv_file"
+    exit 1
+fi
+if [ ! -d "$csv_file" ]; then
+    echo "[-] The csv file does not exist: $csv_file"
+    exit 1
+fi
 
 if [ ! -d "$dir_linux_next" ]; then
     echo "[-] The Linux-next directory does not exist: $dir_linux_next"
@@ -30,16 +46,26 @@ if [ ! -d "$syzkaller_path" ]; then
     exit 1
 fi
 
+if [ ! -d "$syzbot_config_files_path" ]; then
+    echo "[-] The syzbot config files directory does not exist: $syzbot_config_files_path"
+    exit 1
+fi
+
 if [ ! -d "$debian_image_path" ]; then
     echo "[-] Debian images directory does not exist: $debian_image_path"
     exit 1
 fi
+
+echo "[*] Starting the fuzzing experiments..."
+echo "[*] Logs are saved in $log_file"
 
 syzkaller_port=56700
 
 while ss -tuln | grep -q ":$syzkaller_port\b"; do
     ((syzkaller_port++))
 done
+
+echo "[*] Syzkaller port: $syzkaller_port"
 
 while IFS=, read -r commit_hash syzbot_config_name git_tag; do
     echo "[+] Read Config Name: $syzbot_config_name"
