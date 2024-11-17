@@ -32,7 +32,6 @@ if [ ! -f "$csv_file" ]; then
     exit 1
 fi
 echo "[+] CSV file: $csv_file"
-exit 1
 
 if [ ! -d "$dir_linux_next" ]; then
     echo "[-] The Linux-next directory does not exist: $dir_linux_next"
