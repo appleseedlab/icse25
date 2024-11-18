@@ -5,7 +5,8 @@
 1. To be able to run the scripts, you need to have [kmax](https://github.com/paulgazz/kmax) and [syzkaller](https://github.com/google/syzkaller) installed.
 Please refer to the installation instructions of these tools to install them.
 2. Please also make sure to use Python3 3.9 or above to able to run the scripts in this repository.
-3. You will need the contents of "repaired_reproducers.7z" and "repaired_bugs.7z" files when running some of the scripts.
+3. Make sure to enable kmax virtual environment before running the scripts.
+4. You will need the contents of "repaired_reproducers.7z" and "repaired_bugs.7z" files when running some of the scripts.
 Since they are files large in size, you have to pull them first with 'git lfs pull' command once you clone the repository.
 After pulling the files, you can extract them with the commands below:
 ```
