@@ -20,5 +20,5 @@ ENV PATH=/home/apprunner/.local/pipx/venvs/kmax/bin/:${PATH}
 # RUN gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
 # RUN 7z x linux-next.7z -o /home/apprunner
 ENV ICSE25_PATH=/home/apprunner/icse25
-ADD ../icse25 ${ICSE25_PATH}
+ADD . ${ICSE25_PATH}
 RUN echo "alias change_study='bash ${ICSE25_PATH}/krepair_syzkaller_evaluation/change_summary_2.sh ${ICSE25_PATH}/change_study.csv'" >> /home/apprunner/.bashrc
