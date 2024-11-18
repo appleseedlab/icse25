@@ -1,22 +1,25 @@
-scriptsdir=$(dirname $0)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
 
-# set -x
+syzbot_configuration_files_dir="${REPO_ROOT}/camera_ready/configuration_files/syzbot_configuration_files"
+repaired_configuration_files_dir="${REPO_ROOT}/camera_ready/configuration_files/repaired_configuration_files"
+krepair_syzkaller_evaluation_dir="${REPO_ROOT}/krepair_syzkaller_evaluation"
+
+if [ ! -d ${syzbot_configuration_files_dir} ]; then
+    echo "Error: ${syzbot_configuration_files_dir} does not exist"
+    exit 1
+fi
+
+if [ ! -d ${repaired_configuration_files_dir} ]; then
+    echo "Error: ${repaired_configuration_files_dir} does not exist"
+    exit 1
+fi
+
 changestudycsvpath=${1}
-configsdir=${2}
 
 if [ -z ${changestudycsvpath} ]; then
     echo "Usage: $0 <change-study-csv-path> <configs-dir>"
     echo "Example: $0 change_study.csv camera_ready/configuration_files/"
-    exit 1
-fi
-
-if [ ! -f ${changestudycsvpath} ]; then
-    echo "File not found: ${changestudycsvpath}"
-    exit 1
-fi
-
-if [ ! -d ${configsdir} ]; then
-    echo "Directory not found: ${configsdir}"
     exit 1
 fi
 
@@ -25,7 +28,7 @@ echo "commit,configfile,changes"
 while IFS=, read -r commit configfile repairedconfig; do
 	changepct=0
 	repairedconfig=$(echo ${repairedconfig} | tr -d '\r')
-	changes=$(python3 measure_change.py --original-config ${2}/syzbot_configuration_files/${configfile} ${2}/repaired_configuration_files/${repairedconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
+	changes=$(python3 ${krepair_syzkaller_evaluation_dir}/measure_change.py --original-config ${syzbot_configuration_files_dir}/${configfile} ${repaired_configuration_files_dir}/${repairedconfig} 2>/dev/null | jq .repaired[].change_wrt_original | paste -sd+ | bc -lq)
 	echo -n ${configfile},
 	echo -n ${repairedconfig},
 	echo -n ${changes}
