@@ -9,6 +9,12 @@ RUN DEBIAN_FRONTEND=noninteractive \
   && rm -rf /var/lib/apt/lists/*
 RUN pip3 install gdown
 RUN useradd -ms /bin/bash apprunner
+
+# install go
+RUN wget https://go.dev/dl/go1.23.3.src.tar.gz -O /home/apprunner/go1.23.3.src.tar.gz
+RUN rm -rf /usr/local/go && tar -C /usr/local -xzf /home/apprunner/go1.23.3.src.tar.gz
+ENV PATH=$PATH:/usr/local/go/bin
+
 USER apprunner
 WORKDIR /home/apprunner
 RUN wget -O - https://raw.githubusercontent.com/appleseedlab/superc/master/scripts/install.sh | bash
@@ -19,6 +25,8 @@ RUN pipx install kmax
 ENV PATH=/home/apprunner/.local/pipx/venvs/kmax/bin/:${PATH}
 # RUN gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
 # RUN 7z x linux-next.7z -o /home/apprunner
+
 ENV ICSE25_PATH=/home/apprunner/icse25
 ADD . ${ICSE25_PATH}
+RUN git clone https://github.com/google/syzkaller.git /home/apprunner/syzkaller
 RUN echo "alias change_study='bash ${ICSE25_PATH}/krepair_syzkaller_evaluation/change_summary_2.sh ${ICSE25_PATH}/change_study.csv'" >> /home/apprunner/.bashrc
