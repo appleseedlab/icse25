@@ -27,6 +27,7 @@ log_file=$output_path/main_script_logs.log
 
 exec > >(tee -i "$log_file") 2>&1
 
+dir_linux_next=$(realpath "$dir_linux_next")
 if [ ! -f "$csv_file" ]; then
     echo "[-] The csv file does not exist: $csv_file"
     exit 1
