@@ -47,6 +47,12 @@ def parse_args():
     parser.add_argument(
         "--confidence", type=float, default=0.95, help="Confidence level"
     )
+    parser.add_argument(
+        "--output_file",
+        type=str,
+        required=True,
+        help="Path to the output file to save the plot",
+    )
     return parser.parse_args()
 
 
@@ -70,7 +76,7 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m - h, m + h
 
 
-def plot_confidence_interval(means, ci_diffs, labels):
+def plot_confidence_interval(means, ci_diffs, labels, output_file):
     fig, ax = plt.subplots(figsize=(6.4, 3.3))
 
     # Convert means to percentages
@@ -152,7 +158,7 @@ def plot_confidence_interval(means, ci_diffs, labels):
 
     plt.xticks(rotation=45)
 
-    plt.savefig("patchcoverage_comparison.pdf", format="pdf", bbox_inches="tight")
+    plt.savefig(output_file, format="pdf", bbox_inches="tight")
     # plt.show()
 
 
@@ -247,7 +253,7 @@ def main():
         ci_diffs.append((mean - ci_lower, ci_upper - mean))
 
     # Plotting the confidence intervals for all datasets
-    plot_confidence_interval(means, ci_diffs, labels)
+    plot_confidence_interval(means, ci_diffs, labels, args.output_file)
 
 
 if __name__ == "__main__":

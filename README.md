@@ -203,35 +203,16 @@ To get the figure, you can run the following command:
 python3 block_coverage_bar_chart.py
 ```
 
-## Figure(Average patch coverage of syzkaller, kAFL, and defconfig.)
+## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig.
 
-In this figure, you can the average patch coverage of syzkaller, kAFL, and defconfig. The figure is obtained from the results of the replication study.
-To get the figure, first patch coverage data for each dataset should be obtained. Following commands can be utilized to get each of the patch coverage files that should be provided to calculate_confidence_interval.py script:
-```Python
-# to obtain syzkaller_config_patchcoverage.txt
-grep "syzkaller_config" syzkaller_krepair_experiment_j8.csv | awk -F',' '{print $3}' > syzkaller_config_patchcoverage.txt
-
-# to obtain krepair_patchcoverage.txt
-grep "krepair" syzkaller_krepair_experiment_j8.csv | awk -F',' '{print $3}' > krepair_patchcoverage.txt
-
-# to obtain kafl_config_patchcoverage.txt
-grep "kafl_config" kafl_krepair_experiment_j8.csv | awk -F',' '{print $3}' > kafl_config_patchcoverage.txt
-
-# to obtain kafl_krepair_patchcoverage.txt
-grep "krepair" kafl_krepair_experiment_j8.csv | awk -F',' '{print $3}' > kafl_krepair_patchcoverage.txt
-
-# to obtain defconfig_config_patchcoverage.txt
-grep "defconfig" defconfig_krepair_experiment_j8.csv | awk -F',' '{print $4}' > defconfig_config_patchcoverage.txt
-
-# to obtain defconfig_krepair_patchcoverage.txt
-grep "krepair" defconfig_krepair_experiment_j8.csv | awk -F',' '{print $4}' > defconfig_krepair_patchcoverage.txt
+In this figure, you can the average patch coverage of syzkaller, kAFL, and defconfig.
+The figure is obtained from the results of the replication study.
+To get the figure, you can run the following command:
+```Bash
+bash figure1/get_figure_1.sh
 ```
-
-To get the figure, you can utilize:
-
-```Python
-python3 calculate_confidence_interval.py --syzkaller_file syzkaller_config_patchcoverage.txt --krepair_file krepair_patchcoverage.txt --kafl_file kafl_config_patchcoverage.txt --kafl_krepair_file kafl_krepair_patchcoverage.txt --defconfig_file defconfig_config_patchcoverage.txt --defconfig_krepair_file defconfig_krepair_patchcoverage.txt
-```
+This will output information about Mean, lower and upper bounds of the confidence intervals of the patch coverage of syzkaller, kAFL, and defconfig configuration files.
+It will also provide pdf file that contains the bar chart of the results with the name "patchcoverage.pdf" under figure1/ directory.
 
 ## Table(Number of configurations options changed by krepair)
 
