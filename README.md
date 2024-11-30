@@ -51,12 +51,6 @@ We also analyze and deduplicate the alarms found during the experiments with and
 Overall, more information about the experiments and the results can be found in data_tables/Table_of_all_crashes.xlsx.
 
 ### Replication Study
-We also performed a replication study for configuration files used by kernel fuzzers syzkaller and kAFL and repaired configuration files. We used the syz-kconf utility to generate syzkaller configuration files for each commit ID and then used the koverage tool from the kmax tool suite to see whether there were lines from the patch commit that were excluded in syzkaller configuration file, and if yes, we used klocalizer tool from kmax to "repair" the syzkaller config to include those lines as well. We performed the same set of steps for the kAFL configuration file. We took the configuration file mentioned in the kAFL tutorial. We measured how much of a patch coverage increase is achieved by the repaired configuration file compared to the original Syzkaller and kAFL configuration files using the calculate_confidence_intervals.py script. Moreover, we plotted a bar chart of the results of the replication experiment using calculate_confidence_intervals.py. We divided datasets for pairs of Syzkaller and repaired Syzkaller configuration files, kAFL and repaired kAFL configuration files, and defconfig and repaired defconfig configuration files into three bar groups. You can view Figure(Average patch coverage of syzkaller, kAFL, and defconfig.) to see the results of the replication study.
-Patch coverage results of the replication study for each dataset are stored in syzkaller_config_patchcoverage.txt, krepair_patchcoverage.txt, kafl_config_patchcoverage.txt, kafl_krepair_patchcoverage.txt, defconfig_config_patchcoverage.txt, defconfig_krepair_patchcoverage.txt files. All results of the replication study are stored in: #TODO add zenodo link
-The following command can be used to replicate the replication study:
-```
-python3 calculate_confidence_interval.py --syzkaller_file syzkaller_config_patchcoverage.txt --krepair_file krepair_patchcoverage.txt --kafl_file kafl_config_patchcoverage.txt --kafl_krepair_file kafl_krepair_patchcoverage.txt --defconfig_file defconfig_config_patchcoverage.txt --defconfig_krepair_file defconfig_krepair_patchcoverage.txt
-```
 ### Change Summary Study
 
 We evaluated how our approach changed the number of configuration options of the original Syzkaller configuration files used in the experiments.
@@ -203,11 +197,32 @@ To get the figure, you can run the following command:
 python3 block_coverage_bar_chart.py
 ```
 
-## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig.
+## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig. (Replication Study)
+Figure 1. depicts the results of a replication study for configuration files used
+by kernel fuzzers syzkaller and kAFL and repaired configuration files.
+We used the syz-kconf utility to generate syzkaller configuration files for each
+commit ID and then used the koverage tool from the kmax tool suite to see whether
+there were lines from the patch commit that were excluded in syzkaller configuration
+file, and if yes, we used klocalizer tool from kmax to "repair" the syzkaller config
+to include those lines as well. We performed the same set of steps for the kAFL
+configuration file.
+We took the configuration file mentioned in the kAFL tutorial.
+We measured how much of a patch coverage increase is achieved by the repaired
+configuration file compared to the original Syzkaller and kAFL configuration files
+using the calculate_confidence_intervals.py script.
+Moreover, we plotted a bar chart of the results of the replication experiment using
+calculate_confidence_intervals.py.
+We divided datasets for pairs of Syzkaller and repaired Syzkaller configuration
+files, kAFL and repaired kAFL configuration files, and defconfig and repaired
+defconfig configuration files into three bar groups.
+Patch coverage results of the replication study for each dataset are stored in
+syzkaller_config_patchcoverage.txt, krepair_patchcoverage.txt,
+kafl_config_patchcoverage.txt, kafl_krepair_patchcoverage.txt,
+defconfig_config_patchcoverage.txt, defconfig_krepair_patchcoverage.txt files
+in figure1/ folder.
+All results of the replication study are stored in: #TODO add zenodo link
 
-In this figure, you can the average patch coverage of syzkaller, kAFL, and defconfig.
-The figure is obtained from the results of the replication study.
-To get the figure, you can run the following command:
+To get Figure 1, you can run the following command:
 ```Bash
 bash figure1/get_figure_1.sh
 ```
