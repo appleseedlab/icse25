@@ -226,7 +226,7 @@ bash figure1/get_figure_1.sh
 This will output information about Mean, lower and upper bounds of the confidence intervals of the patch coverage of syzkaller, kAFL, and defconfig configuration files.
 It will also provide pdf file that contains the bar chart of the results with the name "patchcoverage.pdf" under figure1/ directory.
 
-## Table(Number of configurations options changed by krepair)
+## Table VI: Number of configurations options changed by krepair.
 
 The table shows the number of configuration options changed by krepair. The table is obtained from the change_of_summaries_bug_finding_coverage.csv file using get_percentage_change.py. To get the table, you can run the following command:
 ```Python
