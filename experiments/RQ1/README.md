@@ -17,7 +17,8 @@ To generate the figures, run the following command:
 ```bash
 python3 venn_diagram.py
 ```
-> [!NOTE] This script uses hardcoded data, the total number of bugs found by fuzzing
+> [!NOTE]
+> This script uses hardcoded data, the total number of bugs found by fuzzing
 with repaired and original configuration files manually obtained from `data_tables/Table_of_all_crashes.xlsx`.
 
 The script will generate two pdf files: `all_bugs_venn_diagram.pdf` and `new_bugs_venn_diagram.pdf`.
@@ -35,7 +36,8 @@ To generate the figure, run the following command:
 ```bash
 python3 categorize_bugs_bar_chart.py
 ```
-> [!NOTE] **NOTE:** This script uses list of the names of new bugs found by fuzzing with repaired
+> [!NOTE]
+> This script uses list of the names of new bugs found by fuzzing with repaired
 configuration files manually obtained from `data_tables/Table_of_all_crashes.xlsx` and
 categorizes them.
 
