@@ -33,7 +33,7 @@ To generate the figure, run the following command:
 ```bash
 python3 categorize_bugs_bar_chart.py
 ```
-[!NOTE] This script uses list of the names of new bugs found by fuzzing with repaired
+> :memo: **NOTE:** This script uses list of the names of new bugs found by fuzzing with repaired
 configuration files obtained from `data_tables/Table_of_all_crashes.xlsx` and
 categorizes them.
 
