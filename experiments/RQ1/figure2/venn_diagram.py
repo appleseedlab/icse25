@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
 
+# NOTE: The numbers below are manually obtained from the data tables provided
+
 # Total number of bugs found by each tool and their overlap
 tool1_bugs = 267  # Tool 1 found 35 bugs
 tool2_bugs = 228  # Tool 2 found 11 bugs that overlap with Tool 1 and 2 that don't
