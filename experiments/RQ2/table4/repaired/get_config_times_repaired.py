@@ -3,6 +3,7 @@ import argparse
 import subprocess
 import os
 from loguru import logger
+from pathlib import Path
 
 def read_from_csv(file_path):
     with open(file_path, 'r') as f:
@@ -12,17 +13,10 @@ def read_from_csv(file_path):
 
     return data
 
-def write_results_to_csv(data):
-    with open('results.csv', 'w') as f:
+def write_results_to_csv(data, output_path):
+    with open(output_path, 'w') as f:
         writer = csv.writer(f)
         writer.writerows(data)
-
-def read_args():
-    parser = argparse.ArgumentParser(description='Measure time taken for repaired configurations')
-    parser.add_argument('-fp', '--file_path', type=str, help='Path to the file containing the repaired configurations')
-    parser.add_argument('-ksrc', '--kernel-src', type=str, help='Path to the kernel source code')
-    args = parser.parse_args()
-    return args
 
 def extract_real_time(output):
     lines = output.split('\n')
@@ -76,22 +70,42 @@ def execute_krepair(kernel_src, repaired_commit_id, config_name, kernel_commit_i
 
     return [repaired_commit_id, config_name, kernel_commit_id, total_time]
 
-def process_data(data, kernel_src):
+def process_data(data, kernel_src, configs_dir, output_path):
     results = []
     for row in data:
         repaired_commit_id, config_name, kernel_commit_id = row
-        config_path  = os.path.join('/home/sanan/research/syzbot_configuration_files', config_name)
+        config_path  = os.path.join(configs_dir, config_name)
         results_row = execute_krepair(kernel_src, repaired_commit_id, config_path, kernel_commit_id)
         results.append(results_row)
 
-    write_results_to_csv(results)
+    write_results_to_csv(results, output_path)
+
+def get_repo_root():
+    try:
+        # Use 'git rev-parse --show-toplevel' to get the repo root
+        repo_root = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            stderr=subprocess.DEVNULL,  # Suppress errors if not in a Git repo
+            text=True,  # Return output as a string
+        ).strip()  # Remove trailing newlines or spaces
+        return Path(repo_root)
+    except subprocess.CalledProcessError:
+        # Not in a Git repository
+        return None
 
 def main():
-    args = read_args()
-    file_path = args.file_path
-    kernel_src = args.kernel_src
+    repo_root = get_repo_root()
+    if repo_root is None:
+        logger.error("Not in a Git repository")
+        exit(1)
+
+    file_path = repo_root / "experiments/RQ2/table4/repaired/repaired_configs.csv"
+    output_path = repo_root/ "experiments/RQ2/table4/repaired/config_times.csv"
+    kernel_src = repo_root / "linux-next"
+    configs_dir = repo_root / "camera_ready/configuration_files"
+
     data = read_from_csv(file_path)
-    process_data(data, kernel_src)
+    process_data(data, kernel_src, configs_dir, output_path)
     # print(data)
 
 if __name__ == '__main__':

@@ -2,8 +2,12 @@
 
 set -x
 
-KERNEL_SRC=$1
-SRC_CSV_FILE=$2
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+
+KERNEL_SRC="$REPO_ROOT/linux-next"
+SRC_CSV_FILE="$REPO_ROOT/experiments/RQ2/table4/repaired_configs.csv"
+CONFIGS_DIR="$REPO_ROOT/camera_ready/configuration_files/syzbot_configuration_files"
 
 # Read config_name, kernel_id, commit_id from csv file
 
@@ -16,11 +20,11 @@ do
     (cd $KERNEL_SRC; make defconfig)
 
     # copy config file to .config
-    cp /home/sanan/research/syzbot_configuration_files/$config_name $KERNEL_SRC/.config
+    cp $CONFIGS_DIR/$config_name $KERNEL_SRC/.config
 
     # make olddefconfig
     config_time=$(cd $KERNEL_SRC; (time -p make olddefconfig) 2>&1 | grep "^real" | awk -F' ' '{print $2}')
 
-    echo "$config_name,$kernel_id,$commit_id,$config_time" >> config_times.csv
+    echo "$config_name,$kernel_id,$commit_id,$config_time" >> $SCRIPT_DIR/config_times.csv
 
 done < $SRC_CSV_FILE
