@@ -2,6 +2,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FuncFormatter
 from matplotlib.pyplot import figure
+import os
+from pathlib import Path
+
+script_dir = os.path.dirname(__file__)
 
 # Data for Konffuz and Syzkaller
 konffuz_data = [
@@ -75,5 +79,5 @@ ax.yaxis.set_major_formatter(
 ax.legend(fontsize=16)
 
 # Save the plot to a PDF file
-pdf_filename = "syscalls_comparison_chart.pdf"
+pdf_filename = Path(script_dir) / str("syscalls_comparison_chart.pdf")
 plt.savefig(pdf_filename)

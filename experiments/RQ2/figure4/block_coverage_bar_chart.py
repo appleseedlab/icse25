@@ -1,6 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.ticker as ticker
+import os
+from pathlib import Path
+
+script_dir = os.path.dirname(__file__)
 
 # Data for each experiment
 repaired_coverage = [
@@ -72,5 +76,5 @@ plt.legend(fontsize=16)
 
 # Show the plot
 plt.tight_layout()
-plt.savefig("block_coverage_comparison_chart.pdf")
+plt.savefig(Path(script_dir) / "block_coverage_comparison_chart.pdf")
 plt.close()

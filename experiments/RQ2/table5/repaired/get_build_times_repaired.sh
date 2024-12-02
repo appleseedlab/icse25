@@ -2,8 +2,12 @@
 
 set -x
 
-KERNEL_SRC=/home/sanan/linux-next
-SRC_CSV_FILE=repaired_configs.csv
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+
+KERNEL_SRC="$REPO_ROOT/linux-next"
+SRC_CSV_FILE="$REPO_ROOT/experiments/RQ2/table5/repaired_configs.csv"
+CONFIGS_DIR="$REPO_ROOT/camera_ready/configuration_files/syzbot_configuration_files"
 
 # Read config_name, kernel_id, commit_id from csv file
 
@@ -32,9 +36,9 @@ do
     build_time=$(cd $KERNEL_SRC; (time -p make -j$(nproc)) 2>&1 | grep "^real" | awk '{print $2}')
 
     if [ $? -eq 0 ]; then
-        echo "$config_name,$kernel_id,$commit_id,$build_time" >> build_times.csv
+        echo "$config_name,$kernel_id,$commit_id,$build_time" >> $SCRIPT_DIR/build_times.csv
     else
-        echo "$config_name,$kernel_id,$commit_id,-1" >> build_times.csv
+        echo "$config_name,$kernel_id,$commit_id,-1" >> $SCRIPT_DIR/build_times.csv
     fi
 
 done < $SRC_CSV_FILE
