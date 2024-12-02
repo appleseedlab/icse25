@@ -17,6 +17,9 @@ To generate the figures, run the following command:
 ```bash
 python3 venn_diagram.py
 ```
+> :memo: **NOTE:** This script uses list of the names of new bugs found by fuzzing with repaired
+configuration files obtained from `data_tables/Table_of_all_crashes.xlsx` and
+categorizes them.
 
 The script will generate two pdf files: `all_bugs_venn_diagram.pdf` and `new_bugs_venn_diagram.pdf`.
 They represent Figure 2a. and Figure 2b., respectively.
@@ -37,3 +40,5 @@ python3 categorize_bugs_bar_chart.py
 configuration files obtained from `data_tables/Table_of_all_crashes.xlsx` and
 categorizes them.
 
+This script will generate a pdf file `kernel_bug_categories_bar_chart.pdf` that
+represents Figure 3.
