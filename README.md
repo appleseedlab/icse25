@@ -30,6 +30,8 @@ one security vulnerability being assigned a CVE.
 
 For more information, please refer to [our paper](https://paulgazzillo.com/papers/icse25.pdf)
 from ICSE25.
+[experiments](experiments/) directory contains instructions, data, and scripts
+to reproduce the experiments in the paper.
 
 ## Guide to the Artifacts
 *Note:* Please make sure to follow the steps below after entering the repo:
@@ -188,88 +190,6 @@ Example command to run the script:
 This folder contains the same scripts as krepair_syzkaller_evaluation folder but for kAFL configuration files.
 
 # Figures
-
-## Figure (Distribution of kernel bug types found by Our Approach.)
-In this figure, you can see the types of bugs found by Our Approach. The most common type of bug found is the kernel warnings, followed by the various kernel bugs and general protection faults.
-To get the figure, you can run the following command:
-```Python
-python3 categorize_bugs_bar_chart.py
-```
-
-This script uses list of the names of new bugs found by Our Approach obtained from data_tables/Table_of_all_crashes.xlsx and categorizes them.
-
-## Figure (12-hour total bugs found by Our Approach and Syzkaller and 12-hour new bugs found by Our Approach and Syzkaller.)
-In the first figure, you can see the total number of bugs found by Our Approach and Syzkaller in 12 hours.
-In the second figure, you can see the new bugs found by Our Approach and Syzkaller in 12 hours.
-
-The following command can be used to get both figures:
-```Python
-python3 venn_diagram.py
-```
-
-This script uses the quantity of total and new bugs found both by Our Approach and Syzkaller obtained from data_tables/Table_of_all_crashes.xlsx and provides two Venn diagrams that describe the intersection of these two sets in terms of total and new bugs.
-
-## Table (12-hour previously-unreported kernel bugs found by Our Approach, and their current post-reporting status)
-The table depicts the previously unreported kernel bugs found by Our Approach and their current post-reporting status. The table is obtained from data_tables/Table_of_all_crashes.xlsx.
-
-## Figure (12-hour test cases executed by Our Approach and Syzkaller.)
-The figure shows the number of test cases executed by Our Approach and Syzkaller over 10 runs that lasted 12 hours each.
-To get the figure, you can run the following command:
-```Python
-python3 syscall_exec_bar_chart.py
-```
-The script uses the number of test cases executed by Our Approach and Syzkaller obtained from data_tables/Table_of_all_crashes.xlsx.
-
-## Figure (12-hour basic block coverage of Our Approach and Syzkaller.)
-This figure shows the basic block coverage of Our Approach and Syzkaller over 10 runs that lasted 12 hours each.
-To get the figure, you can run the following command:
-```Python
-python3 block_coverage_bar_chart.py
-```
-
-## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig. (Replication Study)
-**Figure 1** illustrates the results of a replication study involving configuration files used by the kernel fuzzers Syzkaller and kAFL, along with their corresponding repaired configuration files.
-
-To conduct this study, we utilized the **syz-kconf** utility to generate Syzkaller configuration files for each commit ID. We then applied the **koverage** tool from the kmax suite to identify any patch commit lines excluded from the original Syzkaller configuration files. If exclusions were detected, the **klocalizer** tool from kmax was used to "repair" the configuration files, ensuring the inclusion of the missing lines. The same procedure was performed for kAFL, using the configuration file provided in the kAFL tutorial.
-
-We quantified the increase in patch coverage achieved by the repaired configuration files compared to the original Syzkaller and kAFL configurations using the **calculate_confidence_intervals.py** script. Additionally, we generated a bar chart to visualize the results of the replication experiment, categorizing datasets into three groups:
-
-1. Syzkaller vs. repaired Syzkaller configuration files,
-2. kAFL vs. repaired kAFL configuration files, and
-3. defconfig vs. repaired defconfig configuration files.
-
-The patch coverage results for each dataset are saved in the following files within the `figure1/` directory:
-
-- `syzkaller_config_patchcoverage.txt`
-- `krepair_patchcoverage.txt`
-- `kafl_config_patchcoverage.txt`
-- `kafl_krepair_patchcoverage.txt`
-- `defconfig_config_patchcoverage.txt`
-- `defconfig_krepair_patchcoverage.txt`
-
-All replication study results are stored in: [#TODO: Add Zenodo link].
-
-
-To get Figure 1, you can run the following command:
-```Bash
-bash figure1/get_figure_1.sh
-```
-This will output information about Mean, lower and upper bounds of the confidence intervals of the patch coverage of syzkaller, kAFL, and defconfig configuration files.
-It will also provide pdf file that contains the bar chart of the results with the name "patchcoverage.pdf" under figure1/ directory.
-
-## Table VI: Number of configurations options changed by krepair.
-
-The table shows the number of configuration options changed by krepair. The table is obtained from the change_of_summaries_bug_finding_coverage.csv file using get_percentage_change.py. To get the table, you can run the following command:
-```Python
-python3 get_percentage_change.py --change_of_summaries_csv change_of_summaries_bug_finding_coverage.csv
-```
-
-## Bootability Study Script
-
-The following command can be used to get the results of bootability study:
-```Python
-python3 test_100_randconfigs.py -k ~/linux-next -di ~/debian_image/bullseye.img -o ~/Documents/100_randconfigs_test/outdir -vvv
-```
 
 ## Change Summary Study Script
 
