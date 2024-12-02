@@ -3,6 +3,7 @@ This subdirectory contains the data and scripts used to answer the first researc
 question of the paper.
 
 ## Directory structure
+#TODO: Update the directory structure
 
 ## Figures and tables related to RQ1
 ### Fig. 2: Bugs found by syzkaller using krepaired configuration files compared to the original configuration files.
@@ -14,8 +15,9 @@ Figure 2b. shows the number of previously-unknown bugs found by fuzzing with
 repaired and original configuration files.
 
 To generate the figures, run the following command:
+#TODO: Replace with docker command
 ```bash
-python3 venn_diagram.py
+python3 figure2/venn_diagram.py
 ```
 > [!NOTE]
 > This script uses hardcoded data, the total number of bugs found by fuzzing
@@ -33,8 +35,9 @@ The most common type of bug found is the kernel warnings, followed by the
 various kernel bugs and general protection faults.
 
 To generate the figure, run the following command:
+#TODO: Replace with docker command
 ```bash
-python3 categorize_bugs_bar_chart.py
+python3 figure3/categorize_bugs_bar_chart.py
 ```
 > [!NOTE]
 > This script uses list of the names of new bugs found by fuzzing with repaired
