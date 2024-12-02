@@ -6,6 +6,13 @@ But they are used within the project to get some statistical and analytical insi
 # Directory Structure
 #TODO: Add the directory structure of the subdirectory.
 
+# Structure
+| Visual              | Section   |
+|---------------------|-----------|
+| [Figure 1.](figure1)| III       |
+| [Bootability Study](bootability_study) | IV.C |
+| [Table VIII](table8)| VI.A      |
+
 ## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig. (Replication Study)
 **Figure 1** illustrates the results of a replication study involving
 configuration files used by the kernel fuzzers Syzkaller and kAFL, along with
@@ -52,3 +59,16 @@ bash figure1/get_figure_1.sh
 intervals of the patch coverage of syzkaller, kAFL, and defconfig configuration files.
 It will also provide pdf file that contains the bar chart of the results with
 the name `patchcoverage.pdf` under `figure1/` directory.
+
+## Bootability Study
+The bootability study is conducted to evaluate the bootability of the Linux kernel
+with random configurations generated with different random seeds.
+To replicate the bootability study, you can run the following command:
+```Bash
+python3 test_100_randconfigs.py
+```
+> [!NOTE]
+> This script outputs a csv file named `bootability_study.csv` under `bootability_study/` directory.
+
+# TABLE VIII: Bugs that depended on configuration variety to be found.
+#TODO: Add data, scripts, and description of the table.

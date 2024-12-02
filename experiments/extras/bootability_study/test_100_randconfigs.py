@@ -17,11 +17,30 @@ from loguru import logger
 
 from gitdb.util import sys
 
+def get_repo_root():
+    try:
+        # Use 'git rev-parse --show-toplevel' to get the repo root
+        repo_root = subprocess.check_output(
+            ["git", "rev-parse", "--show-toplevel"],
+            stderr=subprocess.DEVNULL,  # Suppress errors if not in a Git repo
+            text=True,  # Return output as a string
+        ).strip()  # Remove trailing newlines or spaces
+        return Path(repo_root)
+    except subprocess.CalledProcessError:
+        # Not in a Git repository
+        return None
+
 def parse_args():
     """
     This function parses the command line arguments and returns them
     Returns: parsed arguments
     """
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    # get the full path of the script's repository
+    repo_root = get_repo_root()
+    if not repo_root:
+        raise Exception("Not in a git repository")
+
     parser = argparse.ArgumentParser(
         description="Generate random configurations for the kernel"
     )
@@ -29,14 +48,14 @@ def parse_args():
         "-k",
         "--kernel_src",
         type=str,
-        required=True,
+        default=Path(repo_root) / "linux-next",
         help="Path to the kernel source directory",
     )
     parser.add_argument(
         "-di",
         "--debian_image",
         type=str,
-        required=True,
+        default=Path(repo_root) / "debian_image/bullseye.img",
         help="Path to the debian image",
     )
     parser.add_argument(
@@ -65,7 +84,7 @@ def parse_args():
         "-o",
         "--output_dir",
         type=str,
-        required=True,
+        default=Path(script_dir) / "outdir/",
         help="Output directory",
     )
     parser.add_argument(
@@ -212,6 +231,8 @@ def compile_kernel(
     """
     config_not_compiled = []
     bzimage_paths = []
+
+    csv_file_path = csv_file_path / "bootability_results.csv"
 
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
