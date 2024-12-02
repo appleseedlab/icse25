@@ -1,0 +1,54 @@
+# Extras
+This subdirectory contains data and scripts that are not directly used to get
+the results for research questions.
+But they are used within the project to get some statistical and analytical insights.
+
+# Directory Structure
+#TODO: Add the directory structure of the subdirectory.
+
+## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig. (Replication Study)
+**Figure 1** illustrates the results of a replication study involving
+configuration files used by the kernel fuzzers Syzkaller and kAFL, along with
+their corresponding repaired configuration files.
+
+To conduct this study, we utilized the **syz-kconf** utility to generate
+Syzkaller configuration files for each commit ID.
+We then applied the **koverage** tool from the kmax suite to identify any patch
+commit lines excluded from the original Syzkaller configuration files.
+If exclusions were detected, the **klocalizer** tool from kmax was used to
+"repair" the configuration files, ensuring the inclusion of the missing lines.
+The same procedure was performed for kAFL, using the configuration file provided
+in the kAFL tutorial.
+
+We quantified the increase in patch coverage achieved by the repaired
+configuration files compared to the original Syzkaller and kAFL configurations
+using the **calculate_confidence_intervals.py** script.
+Additionally, we generated a bar chart to visualize the results of the
+replication experiment, categorizing datasets into three groups:
+
+1. Syzkaller vs. repaired Syzkaller configuration files,
+2. kAFL vs. repaired kAFL configuration files, and
+3. defconfig vs. repaired defconfig configuration files.
+
+The patch coverage results for each dataset are saved in the following files
+within the `figure1/` directory:
+
+- `syzkaller_config_patchcoverage.txt`
+- `krepair_patchcoverage.txt`
+- `kafl_config_patchcoverage.txt`
+- `kafl_krepair_patchcoverage.txt`
+- `defconfig_config_patchcoverage.txt`
+- `defconfig_krepair_patchcoverage.txt`
+
+All replication study results are stored in: [#TODO: Add Zenodo link].
+
+
+To get Figure 1, you can run the following command:
+```Bash
+bash figure1/get_figure_1.sh
+```
+> [!NOTE]
+> This script outputs information about mean, lower and upper bounds of the confidence
+intervals of the patch coverage of syzkaller, kAFL, and defconfig configuration files.
+It will also provide pdf file that contains the bar chart of the results with
+the name `patchcoverage.pdf` under `figure1/` directory.
