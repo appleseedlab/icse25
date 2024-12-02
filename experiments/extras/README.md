@@ -9,9 +9,9 @@ But they are used within the project to get some statistical and analytical insi
 # Structure
 | Visual              | Section   |
 |---------------------|-----------|
-| [Figure 1](#figure1)| III       |
-| [Bootability Study](#bootability_study) | IV.C |
-| [Table VIII](#table8)| VI.A      |
+| [figure_1](#figure1)| III       |
+| [bootability_study](#bootability_study) | IV.C |
+| [table_8](#table8)| VI.A      |
 
 ## Figure 1: Average patch coverage of syzkaller, kAFL, and defconfig. (Replication Study)
 **Figure 1** illustrates the results of a replication study involving
