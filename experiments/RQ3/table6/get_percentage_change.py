@@ -4,9 +4,11 @@ import argparse
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-
+import os
+from pathlib import Path
 
 def parse_args():
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     parser = argparse.ArgumentParser(
         description="Process CSV and calculate statistics."
     )
@@ -14,7 +16,7 @@ def parse_args():
         "--change_of_summaries_csv",
         type=str,
         help="Path to the CSV file",
-        required=True,
+        default=os.path.join(script_dir, "change_of_summaries_bug_finding_coverage.csv"),
     )
     return parser.parse_args()
 
@@ -54,6 +56,7 @@ def calculate_statistics(values):
 
 
 def create_pdf_table(stats):
+    script_dir = os.path.dirname(os.path.realpath(__file__))
     # Create DataFrame with stats wrapped in a list for a single-row DataFrame
     df = pd.DataFrame([stats])
 
@@ -62,7 +65,7 @@ def create_pdf_table(stats):
     df = df.applymap(lambda x: f"{x:.2f}%" if isinstance(x, (int, float)) else x)
 
     # Set up PDF file path
-    pdf_file_path = "change_summary.pdf"
+    pdf_file_path = Path(script_dir) / "change_summary.pdf"
 
     # Save the table as a PDF with specific borders under column headers and to the right of row headers
     with PdfPages(pdf_file_path) as pdf:
