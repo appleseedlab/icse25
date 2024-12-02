@@ -30,6 +30,7 @@ one security vulnerability being assigned a CVE.
 
 For more information, please refer to [our paper](https://paulgazzillo.com/papers/icse25.pdf)
 from ICSE25.
+
 [experiments](experiments/) directory contains instructions, data, and scripts
 to reproduce the experiments in the paper.
 
