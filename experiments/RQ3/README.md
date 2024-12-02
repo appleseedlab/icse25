@@ -5,7 +5,7 @@ question of the paper.
 ## Directory structure
 #TODO: Update the directory structure
 
-## Figures and tables related to RQ2
+## Figures and tables related to RQ3
 ### TABLE VI: Number of configurations options changed by krepair.
 Table VI shows the distribution of the number of options changed as a five-point
 summary, i.e., quartiles, the minimum, and the maximum, plus the 90th percentile
