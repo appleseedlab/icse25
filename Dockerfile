@@ -23,10 +23,9 @@ ENV CLASSPATH=/usr/share/java/org.sat4j.core.jar:/usr/share/java/json-lib.jar:/h
 ENV PATH=/home/apprunner/.local/bin/:${PATH}
 RUN pipx install kmax
 ENV PATH=/home/apprunner/.local/pipx/venvs/kmax/bin/:${PATH}
-# RUN gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
-# RUN 7z x linux-next.7z -o /home/apprunner
+RUN gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
+RUN 7z x linux-next.7z -o /home/apprunner
 
 ENV ICSE25_PATH=/home/apprunner/icse25
-ADD . ${ICSE25_PATH}
-RUN git clone https://github.com/google/syzkaller.git /home/apprunner/syzkaller
+# ADD . ${ICSE25_PATH}
 RUN echo "alias change_study='bash ${ICSE25_PATH}/krepair_syzkaller_evaluation/change_summary_2.sh ${ICSE25_PATH}/change_study.csv'" >> /home/apprunner/.bashrc
