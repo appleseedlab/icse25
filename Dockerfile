@@ -6,6 +6,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
   && apt-get install -y python3 python3-pip pipx python3-dev gcc build-essential \
   && apt-get install -y jq bc flex bison bc libssl-dev libelf-dev git \
   && apt-get install -y wget libz3-java libjson-java sat4j unzip xz-utils lftp \
+  && apt-get install -y p7zip-full \
   && rm -rf /var/lib/apt/lists/*
 RUN pip3 install gdown
 RUN useradd -ms /bin/bash apprunner
