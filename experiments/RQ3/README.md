@@ -3,7 +3,11 @@ This subdirectory contains the data and scripts used to answer the third researc
 question of the paper.
 
 ## Directory structure
-#TODO: Update the directory structure
+|Subdirectory|Description|
+|----|----|
+|[table6](table6)|Subdirectory that contains scripts and data to generate Table VI|
+|[krepair_syzkaller_evaluation](krepair_syzkaller_evaluation)|Subdirectory that contains results of change summary experiment with krepaired and default syzkaller configs|
+|[krepair_kafl_evaluation](krepair_kafl_evaluation)|Subdirectory that contains results of change summary experiment with krepaired and default KAFL configs|
 
 ## Figures and tables related to RQ3
 ### TABLE VI: Number of configurations options changed by krepair. (Change Summary Study)
@@ -13,22 +17,9 @@ to show how the vast majority of cases behave.
 
 The directory `table6` contains the data and scripts used to generate Table VI.
 
-To reproduce the Table VI data, first we need to obtain change summary study results.
-The following command can be used to get the results of change summary study:
+To reproduce the Table VI data, use the following command:
 ```bash
-bash krepair_syzkaller_evaluation/change_summary_2.sh change_study.csv > change_of_summaries_bug_finding_coverage.csv
-```
-
-change_study.csv is a csv file that contains the names of original and repaired
-syzkaller configuration, and patch commits that are used to repair the original
-configuration files.
-
-#TODO: Replace with docker command
-#TODO: #FIXME This command provides a different output than the one in the paper.
-Then, we can utilize this command to get the actual percentage changes obtained
-from change_of_summaries_bug_finding_coverage.csv:
-```bash
-python3 get_percentage_change.py
+bash table6/get_change_summary.sh
 ```
 The script will output a file `table6/change_summary.pdf` containing the
 percentage change in the number of configuration options for the original and

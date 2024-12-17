@@ -1,9 +1,15 @@
+set -x
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/../../..")"
+echo "REPO_rOOT: $REPO_ROOT"
+echo "SCRIPT_DIR: $SCRIPT_DIR"
 
 syzbot_configuration_files_dir="${REPO_ROOT}/camera_ready/configuration_files/syzbot_configuration_files"
 repaired_configuration_files_dir="${REPO_ROOT}/camera_ready/configuration_files/repaired_configuration_files"
-krepair_syzkaller_evaluation_dir="${REPO_ROOT}/krepair_syzkaller_evaluation"
+krepair_syzkaller_evaluation_dir="${SCRIPT_DIR}"
+
+echo "syzbot_configuration_files_dir: $syzbot_configuration_files_dir"
+echo "repaired_configuration_files_dir: $repaired_configuration_files_dir"
 
 if [ ! -d ${syzbot_configuration_files_dir} ]; then
     echo "Error: ${syzbot_configuration_files_dir} does not exist"
