@@ -3,7 +3,10 @@ This subdirectory contains the data and scripts used to answer the first researc
 question of the paper.
 
 ## Directory structure
-#TODO: Update the directory structure
+|Subdirectory|Description|
+|----|----|
+|[figure2](figure2)|Subdirectory that contains scripts and data to get Figure 2.|
+|[figure3](figure3)|Subdirectory that contains scripts and data to get Figure 3.|
 
 ## Figures and tables related to RQ1
 ### Fig. 2: Bugs found by syzkaller using krepaired configuration files compared to the original configuration files.
@@ -16,6 +19,7 @@ repaired and original configuration files.
 
 To generate the figures, run the following command:
 #TODO: Replace with docker command
+#TODO: Add a way to get pdf from docker and display it
 ```bash
 python3 figure2/venn_diagram.py
 ```
@@ -36,6 +40,7 @@ various kernel bugs and general protection faults.
 
 To generate the figure, run the following command:
 #TODO: Replace with docker command
+#TODO: Add a way to get pdf from docker and display it
 ```bash
 python3 figure3/categorize_bugs_bar_chart.py
 ```
