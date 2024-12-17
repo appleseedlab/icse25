@@ -196,9 +196,10 @@ change_study.csv is a csv file that contains the names of original and repaired 
 ## Fuzzing Without Configuration Variety Script
 The following command can be used to run the script that performs fuzzing without configuration variety using Syzkaller:
 ```Bash
-./repairer_script/fuzzing_experiments.sh repairer_script/fuzzing_parameters.csv  ~/linux-next/ ~/syzkaller/ ~/debian_images/ camera_ready/configuration_files/syzbot_configuration_files ~/output/
+./repairer_script/fuzzing_experiments.sh default repairer_script/fuzzing_parameters.csv ~/linux-next/ ~/syzkaller/ ~/debian_images/ camera_ready/configuration_files/syzbot_configuration_files ~/output/
 ```
 Explanation of the parameters:
+- default - type of the experiment. Can be either default or repaired.
 - repairer_script/fuzzing_parameters.csv - a CSV file that contains the names of
 the configuration files used during the fuzzing experiments and the commit IDs of
 the Linux-next versions that were fuzzed.
