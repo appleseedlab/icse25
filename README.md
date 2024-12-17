@@ -111,22 +111,6 @@ Example command to run the script:
 - time_taken_scatterplot.py - This script is used to visualize the time taken to find bugs found by fuzzing with and without configuration variety.
 - venn_diagram.py - This script is used to generate Venn diagrams to compare unique and common bugs found by fuzzing with and without configuration variety. It uses data manually obtained from data_tables/Table_of_all_crashes.xlsx.
 
-## krepair_syzkaller_evaluation folder
-
-- run_many_syzkaller_evaluations.sh - This Bash script orchestrates the evaluation of Syzkaller configurations against a set of Linux kernel commit IDs, which can either be provided through a file or fetched from a server. It sets up the environment for each kernel commit, invoking another script to run the actual evaluation for Syzkaller fuzzing configurations and organizes the output into directories named after the commit IDs.
-- run_evaluate_syzkaller_config.sh - This script generates a Syzkaller configuration file with Syzkaller's syz-kconf utility and runs evaluate_syzkaller_config.sh to check how many lines of the commit it covers.
-- evaluate_syzkaller_config.sh - This script is used to evaluate the coverage of a Syzkaller configuration file. It uses the koverage tool from the kmax tool suite to see whether there are lines from the patch commit that are excluded in the Syzkaller configuration file, and if yes, the script uses the klocalizer tool from kmax to "repair" the Syzkaller config to include those lines as well.
-- calculate_confidence_intervals.py - This script is used to calculate the confidence intervals of the coverage of Syzkaller and repaired configuration files. It uses the coverage data obtained from evaluate_syzkaller_config.sh.
-- change_summary_2.sh - this script is used to find out how many configuration options were added to the original Syzkaller configuration files by our approach.
-- data_summary.sh - This script is used to summarize the results of the replication study.
-- data_summaries.sh - this script is used to run many data_summary.sh scripts for many datasets.
-- measure_change.py - this script is used to measure the change in the number of configuration options of repaired Syzkaller configuration files against the total number of configuration options available on the configuration system. It is used inside the change_summary_2.sh script
-- coverable_patches - this file contains the list of patches that are used in the replication study.
-- total_coverage.py - this script is used to merge the output of koverage into a single coverage report. It is used inside evaluate_syzkaller_config.sh script.
-
-## krepair_kafl_evaluation_folder
-This folder contains the same scripts as krepair_syzkaller_evaluation folder but for kAFL configuration files.
-
 # Figures
 
 ## Change Summary Study Script
