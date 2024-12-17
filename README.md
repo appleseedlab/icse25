@@ -113,10 +113,3 @@ Example command to run the script:
 
 # Figures
 
-## Change Summary Study Script
-
-The following command can be used to get the results of change summary study:
-```Python
-bash krepair_syzkaller_evaluation/change_summary_2.sh change_study.csv
-```
-change_study.csv is a csv file that contains the names of original and repaired Syzkaller configuration, and patch commits that are used to repair the original configuration files.
