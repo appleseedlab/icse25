@@ -57,12 +57,6 @@ Extract the repo with the following command:
 7z x linux-next.7z
 ```
 
-### Change Summary Study
-
-We evaluated how our approach changed the number of configuration options of the original Syzkaller configuration files used in the experiments.
-krepair_syzkaller_evaluation/change_summary_2.sh script was used to evaluate the change in number of configuration options of repaired Syzkaller configuration files against the total number of the configuration options available on the configuration system.
-The number of total configuration options was obtained from the configuration system of the Linux kernel using find_total_config_option_count.sh script. The CSV file that contains the names of the original and repaired Syzkaller configuration, and patch commits that are used to repair the original configuration files can be found at change_of_summaries_bug_finding_coverage.csv The CSV file that contains the names of the original and repaired Syzkaller configuration, and patch commits that are used to repair the original configuration files is change_of_summaries_bug_finding_coverage.csv.
-We calculated the change of summary percentile information and represented them in a table. You can view Table(Number of configurations options changed by krepair) to see the results of the change summary study.
 ## Artifacts
 
 - build_allnoconfig.sh - This script is used to build the Linux kernel with an allnoconfig configuration file.
