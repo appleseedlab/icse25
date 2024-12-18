@@ -85,7 +85,7 @@ The directory `figure4` contains the data and scripts used to generate Fig. 4.
 
 To get Fig. 4a, run the following command:
 ```bash
-python3 figure4/syscall_exec_bar_chart.py
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/figure4/syscall_exec_bar_chart.py"; docker cp artifacts-container:/home/apprunner/icse25/experiments/RQ2/figure4/syscalls_comparison_chart.pdf ./syscalls_comparison_chart.pdf; open ./syscalls_comparison_chart.pdf
 ```
 The script will output a file `figure4/syscalls_comparison_chart.pdf` which is
 a bar chart comparing the throughput of the original and krepaired configuration
@@ -99,7 +99,7 @@ the throughput data in `data_tables/Table_of_all_crashes.xlsx` file.
 
 To get Fig. 4b, run the following command:
 ```bash
-python3 figure4/block_coverage_bar_chart.py
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/figure4/block_coverage_bar_chart.py"; docker cp artifacts-container:/home/apprunner/icse25/experiments/RQ2/figure4/block_coverage_comparison_chart.pdf ./block_coverage_comparison_chart.pdf; open ./block_coverage_comparison_chart.pdf
 ```
 The script will output a file `figure4/block_coverage_comparison_chart.pdf` which is
 a bar chart comparing the block coverage of the original and krepaired configuration
