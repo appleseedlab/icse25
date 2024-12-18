@@ -41,7 +41,7 @@ mkdir -p $REPO_ROOT$IMAGE
 (cd $IMAGE; ./create-image.sh)
 
 # install gdown
-pip3 install gdown
+pip3 install gdown --break-system-packages
 
 # download linux-next
 gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
