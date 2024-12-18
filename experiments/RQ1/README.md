@@ -21,7 +21,7 @@ To generate the figures, run the following command:
 #TODO: Replace with docker command
 #TODO: Add a way to get pdf from docker and display it
 ```bash
-python3 figure2/venn_diagram.py
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ1/figure2/venn_diagram.py"; docker cp artifacts-container:/home/apprunner/all_bugs_venn_diagram.pdf ./all_bugs_venn_diagram.pdf; docker cp artifacts-container:/home/apprunner/new_bugs_venn_diagram.pdf ./new_bugs_venn_diagram.pdf; open ./all_bugs_venn_diagram.pdf; open ./new_bugs_venn_diagram.pdf;
 ```
 > [!NOTE]
 > This script uses hardcoded data, the total number of bugs found by fuzzing
@@ -42,7 +42,7 @@ To generate the figure, run the following command:
 #TODO: Replace with docker command
 #TODO: Add a way to get pdf from docker and display it
 ```bash
-python3 figure3/categorize_bugs_bar_chart.py
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ1/figure3/categorize_bugs_bar_chart.py"; docker cp artifacts-container:/home/apprunner/kernel_bug_categories_bar_chart.pdf ./kernel_bug_categories_bar_chart.pdf; open ./kernel_bug_categories_bar_chart.pdf;
 ```
 > [!NOTE]
 > This script uses list of the names of new bugs found by fuzzing with repaired
