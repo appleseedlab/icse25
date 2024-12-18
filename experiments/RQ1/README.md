@@ -18,8 +18,6 @@ Figure 2b. shows the number of previously-unknown bugs found by fuzzing with
 repaired and original configuration files.
 
 To generate the figures, run the following command:
-#TODO: Replace with docker command
-#TODO: Add a way to get pdf from docker and display it
 ```bash
 docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ1/figure2/venn_diagram.py"; docker cp artifacts-container:/home/apprunner/all_bugs_venn_diagram.pdf ./all_bugs_venn_diagram.pdf; docker cp artifacts-container:/home/apprunner/new_bugs_venn_diagram.pdf ./new_bugs_venn_diagram.pdf; open ./all_bugs_venn_diagram.pdf; open ./new_bugs_venn_diagram.pdf;
 ```
@@ -39,8 +37,6 @@ The most common type of bug found is the kernel warnings, followed by the
 various kernel bugs and general protection faults.
 
 To generate the figure, run the following command:
-#TODO: Replace with docker command
-#TODO: Add a way to get pdf from docker and display it
 ```bash
 docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ1/figure3/categorize_bugs_bar_chart.py"; docker cp artifacts-container:/home/apprunner/kernel_bug_categories_bar_chart.pdf ./kernel_bug_categories_bar_chart.pdf; open ./kernel_bug_categories_bar_chart.pdf;
 ```
