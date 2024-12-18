@@ -4,7 +4,7 @@ from collections import Counter
 
 # Read kernel bugs from CSV file into a list
 kernel_bugs = []
-with open("repaired_bugs2.csv", "r") as csvfile:
+with open("icse25/experiments/RQ1/figure3/repaired_bugs2.csv", "r") as csvfile:
     csvreader = csv.reader(csvfile)
     for row in csvreader:
         if row:  # Check if row is not empty
