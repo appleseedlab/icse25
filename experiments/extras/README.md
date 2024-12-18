@@ -79,8 +79,9 @@ configuration file nor the kernel image built with the allnoconfig configuration
 file was bootable.
 
 To replicate the bootability study, you can run the following command:
+#TODO: This script requires linux-next folder and fails since we don't have it.
 ```Bash
-python3 test_100_randconfigs.py
+docker exec -it artifacts-container bash -c "python3 -m venv myenv; source myenv/bin/activate; python3 -m pip install gitpython loguru tqdm; python3 icse25/experiments/extras/bootability_study/test_100_randconfigs.py;";
 ```
 > [!NOTE]
 > This script outputs a csv file named `bootability_study.csv` under `bootability_study/` directory.
