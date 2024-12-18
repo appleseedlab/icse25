@@ -5,9 +5,15 @@ set -x
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
 
-KERNEL_SRC="$REPO_ROOT/linux-next"
-SRC_CSV_FILE="$REPO_ROOT/experiments/RQ2/table4/repaired_configs.csv"
-CONFIGS_DIR="$REPO_ROOT/camera_ready/configuration_files/syzbot_configuration_files"
+KERNEL_SRC="$REPO_ROOT/../../../linux-next"
+# exit if kernel source directory does not exist
+if [ ! -d "$KERNEL_SRC" ]; then
+    echo "[-] Kernel source directory does not exist. Please provide the correct path."
+    exit 1
+fi
+
+SRC_CSV_FILE="$SCRIPT_DIR/../repaired_configs.csv"
+CONFIGS_DIR="$REPO_ROOT/../../../camera_ready/configuration_files/syzbot_configuration_files"
 
 # Read config_name, kernel_id, commit_id from csv file
 
