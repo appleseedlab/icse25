@@ -51,23 +51,3 @@ you can run the following command to conduct the experiments for 15 minutes:
 ```bash
 #TODO
 ```
-
-## Artifacts
-
-- build_allnoconfig.sh - This script is used to build the Linux kernel with an allnoconfig configuration file.
-- build_allyesconfig.sh - This script is used to build the Linux kernel with an allyesconfig configuration file.
-- calculate_confidence_interval.py - This script is used to calculate the confidence intervals of the coverage of Syzkaller and repaired configuration files and provides a bar chart to visualize the results.
-- change_of_summaries_bug_finding_coverage.csv - this CSV file contains the names of the original and repaired Syzkaller configuration, and patch commits that are used to repair the original configuration files.
-- defconfig_config_patchcoverage.txt - this file contains the patch coverage of defconfig configuration files.
-- defconfig_krepair_patchcoverage.txt - this file contains the patch coverage of repaired defconfig configuration files.
-- find_total_config_option_count.sh - This script is used to get the number of configuration options available in the configuration system of the Linux kernel.
-- get_percentage_change.py - this script is used to measure the change in the number of configuration options of repaired Syzkaller configuration files against the total number of configuration options available on the configuration system.
-- kafl_config_patchcoverage.txt - this file contains the patch coverage of kAFL configuration files.
-- kaf_krepair_patchcoverage.txt - this file contains the patch coverage of repaired kAFL configuration files.
-- syzkaller_config_patchcoverage.txt - this file contains the patch coverage of Syzkaller configuration files.
-- krepair_patchcoverage.txt - this file contains the patch coverage of repaired Syzkaller configuration files.
-- links_to_syzkaller_configuration_used.txt - this file contains the links to the syzkaller configuration files used during fuzzing experiments.
-- test_100_randconfigs.py - this script is used to generate 100 configuration files with randconfig utility, build kernel images with them, and try to boot the kernel images with QEMU.
-- kafl_krepair_experiment_j8.csv - this file contains the results of the replication study for kAFL and repaired kAFL configuration files.
-- syzkaller_krepair_experiment_j8.csv - this file contains the results of the replication study for Syzkaller and repaired Syzkaller configuration files.
-- defconfig_krepair_experiment_j8.csv - this file contains the results of the replication study for defconfig and repaired defconfig configuration files.
