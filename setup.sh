@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 # install kmax
 # kmax dependencies
 sudo apt install -y pipx git-lfs python3-dev python3-pip gcc build-essential
