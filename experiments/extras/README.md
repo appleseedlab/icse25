@@ -53,7 +53,6 @@ All replication study results are stored in: [#TODO: Add Zenodo link].
 To get Figure 1, you can run the following command:
 ```Bash
 docker exec -it artifacts-container sh -c "bash icse25/experiments/extras/figure1/get_figure_1.sh"; docker cp artifacts-container:/home/apprunner/icse25/experiments/extras/figure1/patchcoverage.pdf ./patchcoverage.pdf; open ./patchcoverage.pdf;
-bash figure1/get_figure_1.sh
 ```
 > [!NOTE]
 > This script outputs information about mean, lower and upper bounds of the confidence
