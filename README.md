@@ -37,24 +37,19 @@ to reproduce the experiments in the paper.
 You can follow [SUMMARY.md](SUMMARY.md) for a summary of the experimental setup and
 set of actions that are performed during experiments.
 
-## Guide to the Artifacts
-*Note:* Please make sure to follow the steps below after entering the repo:
-1. To be able to run the scripts, you need to have [kmax](https://github.com/paulgazz/kmax) and [syzkaller](https://github.com/google/syzkaller) installed.
-Please refer to the installation instructions of these tools to install them.
-2. Please also make sure to use Python3 3.9 or above to able to run the scripts in this repository.
-3. Make sure to enable kmax virtual environment before running the scripts.
-4. You will need the contents of "repaired_reproducers.7z" and "repaired_bugs.7z" files when running some of the scripts.
-Since they are files large in size, you have to pull them first with 'git lfs pull' command once you clone the repository.
-After pulling the files, you can extract them with the commands below:
+## Prerequisites
+Before running the experiments, please make sure that you have Python 3.9 or later
+installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).
+Next, you need to run setup.sh script to install the required dependencies.
+```bash
+sudo ./setup.sh
 ```
-7z x repaired_reproducers.7z
-7z x repaired_bugs.7z
-```
-4. You will need a linux-next repo that contains the linux-next daily tags to be able to run the scripts in this repository.
-You can find our linux-next repo that contains the tags we used in the experiments [here](https://drive.google.com/file/d/1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT/view?usp=sharing)
-Extract the repo with the following command:
-```
-7z x linux-next.7z
+
+## Kicking the Tires
+To get a demo of the fuzzing experiments with and without configuration variety,
+you can run the following command to conduct the experiments for 15 minutes:
+```bash
+#TODO
 ```
 
 ## Artifacts
