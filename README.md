@@ -37,6 +37,10 @@ to reproduce the experiments in the paper.
 You can follow [SUMMARY.md](SUMMARY.md) for a summary of the experimental setup and
 set of actions that are performed during experiments.
 
+Reports of the bugs found with fuzzing with configuration variety, and discussions
+with the kernel maintainers can be found [here](
+https://lore.kernel.org/lkml/?q=Sanan+Hasanov).
+
 ## Prerequisites
 Before running the experiments, please make sure that you have Python 3.9 or later
 installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).
