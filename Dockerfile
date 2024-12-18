@@ -29,4 +29,9 @@ ENV PATH=/home/apprunner/.local/pipx/venvs/kmax/bin/:${PATH}
 
 ENV ICSE25_PATH=/home/apprunner/icse25
 ADD . ${ICSE25_PATH}
+USER root
+RUN chown -R apprunner:apprunner /home/apprunner/icse25
+USER apprunner
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install -r ${ICSE25_PATH}/requirements.txt
 RUN echo "alias change_study='bash ${ICSE25_PATH}/krepair_syzkaller_evaluation/change_summary_2.sh ${ICSE25_PATH}/change_study.csv'" >> /home/apprunner/.bashrc
