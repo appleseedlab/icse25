@@ -93,13 +93,18 @@ def get_repo_root():
         # Not in a Git repository
         return None
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Get configuration times for repaired commits")
+    parser.add_argument("--repo", type=Path, default=Path("/home/apprunner/icse25"), help="Path to the repository root")
+    return parser.parse_args()
+
 def main():
-    repo_root = get_repo_root()
+    repo_root = parse_args().repo
     if repo_root is None:
         logger.error("Not in a Git repository")
         exit(1)
 
-    file_path = repo_root / "experiments/RQ2/table4/repaired/repaired_configs.csv"
+    file_path = repo_root / "experiments/RQ2/table4/repaired_configs.csv"
     output_path = repo_root/ "experiments/RQ2/table4/repaired/config_times.csv"
     kernel_src = repo_root / "linux-next"
     configs_dir = repo_root / "camera_ready/configuration_files"
