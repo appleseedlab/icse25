@@ -22,9 +22,10 @@ To reproduce the 'Original Configurations' column data,
 run the following command:
 #TODO: Replace with docker command
 ```bash
+docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table4/original/default_config_times.csv";
 bash table4/original/get_config_times.sh
 ```
-The script will output a file `table4/oriiginal/config_times.csv` containing the
+The script will output a file `table4/original/config_times.csv` containing the
 configuration times for the original configuration files.
 
 > [!NOTE]
