@@ -6,9 +6,11 @@ export DEBIAN_FRONTEND=noninteractive
 # install go
 echo "[+] Installing Go"
 
+GOTAR=go1.23.4.linux-amd64.tar.gz
 wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
-sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
-echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf $GOTAR
+export PATH=$PATH:/usr/local/go/bin
+echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
 source ~/.bashrc
 
 # check if go is installed
@@ -18,6 +20,8 @@ then
     exit
 else
     echo "  [+] go is installed"
+    # remove the tar file
+    rm $GOTAR
 fi
 
 sudo apt install make libncurses-dev
