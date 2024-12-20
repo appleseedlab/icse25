@@ -4,9 +4,21 @@ set -e
 export DEBIAN_FRONTEND=noninteractive
 
 # install go
+echo "[+] Installing Go"
+
 wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
 sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
-export PATH=$PATH:/usr/local/go/bin
+echo "export PATH=$PATH:/usr/local/go/bin" >> ~/.bashrc
+source ~/.bashrc
+
+# check if go is installed
+if ! command -v go &> /dev/null
+then
+    echo "  [-] go could not be found"
+    exit
+else
+    echo "  [+] go is installed"
+fi
 
 sudo apt install make libncurses-dev
 
@@ -33,5 +45,7 @@ pip3 install gdown --break-system-packages
 
 # download linux-next
 gdown --id 1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT
+
 # download reproducer files with git-lfs
+echo "[+] Downloading reproducer files"
 git-lfs pull
