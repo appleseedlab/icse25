@@ -3,7 +3,11 @@ This subdirectory contains the data and scripts used to answer the second resear
 question of the paper.
 
 ## Directory structure
-#TODO: Update the directory structure
+|Subdirectory|Description|
+|----|----|
+|[figure4](figure4)|Subdirectory that contains scripts and data to get Figure 4. (Throughput and coverage data).|
+|[table4](table4)|Subdirectory that contains scripts and data to get Table 4. (Configuration Build Times).|
+|[table5](table5)|Subdirectory that contains scripts and data to get Table 5. (Kernel Image Build Times).|
 
 ## Figures and tables related to RQ2
 ### TABLE IV: Five-point summaries of kernel configuration time in seconds.
