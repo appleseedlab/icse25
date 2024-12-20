@@ -3,10 +3,7 @@
 set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
-
-echo "$SCRIPT_DIR"
-exit 1
+REPO_ROOT="$(realpath "$SCRIPT_DIR/../../../../")"
 
 KERNEL_SRC="$REPO_ROOT/linux-next"
 SRC_CSV_FILE="$REPO_ROOT/experiments/RQ2/table5/repaired_configs.csv"

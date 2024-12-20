@@ -45,7 +45,6 @@ newly generated timing results.
 #### Repaired Configuration Generation Times
 To reproduce the 'Repaired Configurations' column data,
 run the following command:
-#TODO: Replace with docker command
 ```bash
 docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table4/repaired/repaired_config_times.csv";
 ```
@@ -80,28 +79,47 @@ machine, build times were less than 10 minutes in all cases.
 
 To get the data for the 'Original Configurations' column of Table V,
 run the following command:
-#TODO: Replace with docker command
 ```bash
-bash table5/original/get_build_times.sh
+docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table5/original/default_build_times.csv";
 ```
-The script will output a file `table5/original/build_times.csv` containing the
-build times for the original configuration files.
 > [!NOTE]
-> To get the 'Original Configurations' column data of Table V,
-you can view `table5/original/default_build_times.csv` file.
-
+> The script used to measure the time taken to generate Linux kernel images
+with original configuration files was executed during our initial experimentation, and the resulting timings
+were recorded in a CSV file called `table5/original/default_build_times.csv`.
+These recorded timings were subsequently used to populate the table of results in this paper.
+It is worth noting that rerunning the script may produce slightly different
+timing results due to factors such as variations in system load, background
+processes, or other environmental conditions during execution.
+To ensure consistency and reproducibility in the reported results, we rely on
+the originally recorded data, which accurately reflects the conditions under which
+the measurements were initially conducted.
+> However, if readers still wish to run the script to generate the timing results
+themselves, they can use the following command:
+```bash
+docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/original/get_build_times.sh"
+```
 
 To get the data for the 'Repaired Configurations' column of Table V,
 run the following command:
-#TODO: Replace with docker command
 ```bash
-bash table5/repaired/get_build_times_repaired.sh
+docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table5/repaired/repaired_build_times.csv";
 ```
-The script will output a file `table5/repaired/build_times.csv` containing the
-build times for the repaired configuration files.
 > [!NOTE]
-> To get the 'Repaired Configurations' column data of Table V,
-you can view `table5/repaired/repaired_build_times.csv` file.
+> The script used to measure the time taken to generate Linux kernel images
+with original configuration files was executed during our initial experimentation, and the resulting timings
+were recorded in a CSV file called `table5/repaired/repaired_build_times.csv`.
+These recorded timings were subsequently used to populate the table of results in this paper.
+It is worth noting that rerunning the script may produce slightly different
+timing results due to factors such as variations in system load, background
+processes, or other environmental conditions during execution.
+To ensure consistency and reproducibility in the reported results, we rely on
+the originally recorded data, which accurately reflects the conditions under which
+the measurements were initially conducted.
+> However, if readers still wish to run the script to generate the timing results
+themselves, they can use the following command:
+```bash
+docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/repaired/get_build_times_repaired.sh"
+```
 
 ### Fig. 4: Comparing syzkaller performance before and after using krepair.
 The directory `figure4` contains the data and scripts used to generate Fig. 4.
