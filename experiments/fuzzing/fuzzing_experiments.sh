@@ -132,8 +132,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
 
     echo "[+] Adding default syzkaller configs to .config file"
     # add syzkaller default config options
-    ./scripts/config --enable CONFIG_KCOV --enable CONFIG_DEBUG_INFO --enable CONFIG_DEBUG_INFO_DWARF4 --enable CONFIG_KASAN --enable CONFIG_KASAN_IN
-LINE --enable CONFIG_CONFIGFS_FS --enable CONFIG_SECURITYFS --enable CONFIG_CMDLINE_BOOL --set-val CONFIG_CMDLINE "net.ifnames=0"
+    ./scripts/config --enable CONFIG_KCOV --enable CONFIG_DEBUG_INFO --enable CONFIG_DEBUG_INFO_DWARF4 --enable CONFIG_KASAN --enable CONFIG_KASAN_INLINE --enable CONFIG_CONFIGFS_FS --enable CONFIG_SECURITYFS --enable CONFIG_CMDLINE_BOOL --set-val CONFIG_CMDLINE "net.ifnames=0"
 
     echo "[+] Making olddefconfig..."
     make olddefconfig
