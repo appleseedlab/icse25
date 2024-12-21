@@ -22,12 +22,21 @@ REPAIRED_BUGS_GDRIVE_ID="1aAuCp_zqdjx7OpXBeniFXR5WZsxhI0Ja"
 ###############################################################################
 # LOGGING FUNCTIONS
 ###############################################################################
+# ANSI color codes
+COLOR_RESET="\e[0m"
+COLOR_RED="\e[31m"
+COLOR_GREEN="\e[32m"
+COLOR_YELLOW="\e[33m"
+COLOR_BLUE="\e[34m"
+
 log_info() {
-    echo "[INFO] $*"
+    # Print [INFO] in green
+    echo -e "${COLOR_GREEN}[INFO]${COLOR_RESET} $*"
 }
 
 log_error() {
-    echo "[ERROR] $*" >&2
+    # Print [ERROR] in red
+    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2
 }
 
 check_command() {
