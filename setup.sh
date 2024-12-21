@@ -93,6 +93,29 @@ install_syzkaller() {
     log_info "Syzkaller installation complete."
 }
 
+install_docker() {
+    log_info "Installing Docker"
+
+    # Add Docker's official GPG key:
+    sudo apt-get update
+    sudo apt-get install ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    # Add the repository to Apt sources:
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+    check_command docker
+
+    log_info "Docker is installed."
+}
+
 create_debian_image() {
     log_info "Creating a Debian image"
     mkdir -p "$IMAGE_DIR"
@@ -134,6 +157,7 @@ download_reproducers() {
 ###############################################################################
 install_go
 install_dependencies
+install_docker
 install_gdown
 install_syzkaller
 create_debian_image
