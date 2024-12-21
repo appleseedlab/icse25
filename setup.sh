@@ -64,7 +64,7 @@ install_dependencies() {
     log_info "Installing system dependencies"
     check_command apt
     sudo apt-get update -y
-    sudo apt-get install -y build-essential make libncurses-dev qemu-system-x86 debootstrap python3 python3-pip git-lfs git wget curl p7zip-full
+    sudo apt-get install -y build-essential make libncurses-dev qemu-system-x86 debootstrap python3 python3-pip git-lfs git wget curl p7zip-full flex bison
 }
 
 install_gdown() {
