@@ -187,14 +187,6 @@ extract_linux_next() {
     sudo chown -R "$SUDO_USER":"$SUDO_USER" linux-next/
 }
 
-download_reproducers() {
-    log_info "Downloading reproducer files with git-lfs"
-    check_command git-lfs
-    # Ensure the repository and .gitattributes are set up
-    git-lfs pull
-    log_info "Reproducer files downloaded."
-}
-
 ###############################################################################
 # MAIN
 ###############################################################################
