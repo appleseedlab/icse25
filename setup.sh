@@ -96,23 +96,37 @@ install_syzkaller() {
 install_docker() {
     log_info "Installing Docker"
 
-    # Add Docker's official GPG key:
+    # Detect distro
+    source /etc/os-release
+    if [[ "$ID" == "ubuntu" ]]; then
+        REPO_URL="https://download.docker.com/linux/ubuntu"
+    elif [[ "$ID" == "debian" && "$VERSION_CODENAME" == "bookworm" ]]; then
+        REPO_URL="https://download.docker.com/linux/debian"
+    else
+        echo "This script currently only supports Ubuntu and Debian 12 (bookworm)."
+        return 1
+    fi
+
+    # Update packages, install prerequisites
     sudo apt-get update
-    sudo apt-get install ca-certificates curl
+    sudo apt-get install -y ca-certificates curl
+
+    # Setup Docker GPG key
     sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo curl -fsSL "${REPO_URL}/gpg" -o /etc/apt/keyrings/docker.asc
     sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-    # Add the repository to Apt sources:
+    # Add Docker repo
     echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $REPO_URL \
+      $VERSION_CODENAME stable" | \
       sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    # Final install
     sudo apt-get update
-    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
     check_command docker
-
     log_info "Docker is installed."
 }
 
