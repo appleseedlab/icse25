@@ -64,7 +64,7 @@ install_dependencies() {
     log_info "Installing system dependencies"
     check_command apt
     sudo apt-get update -y
-    sudo apt-get install -y build-essential make libncurses-dev qemu-system-x86 debootstrap python3 python3-pip git-lfs git wget curl
+    sudo apt-get install -y build-essential make libncurses-dev qemu-system-x86 debootstrap python3 python3-pip git-lfs git wget curl p7zip-full
 }
 
 install_gdown() {
@@ -115,6 +115,12 @@ download_linux_next() {
     gdown --id "$LINUX_NEXT_GDRIVE_ID" || { log_error "Failed to download linux-next kernel"; exit 1; }
 }
 
+extract_linux_next() {
+    log_info "Extracting linux-next"
+    check_command 7z
+    7z x linux-next.7z
+}
+
 download_reproducers() {
     log_info "Downloading reproducer files with git-lfs"
     check_command git-lfs
@@ -133,6 +139,7 @@ install_syzkaller
 create_debian_image
 download_linux_next
 download_reproducers
+extract_linux_next
 
 log_info "Setup completed successfully."
 
