@@ -16,6 +16,8 @@ SYZKALLER_SRC="$REPO_ROOT/syzkaller"
 IMAGE_DIR="$REPO_ROOT/debian_image"
 DEBIAN_IMAGE_URL="https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh"
 LINUX_NEXT_GDRIVE_ID="1H_aNBlJZ9qBLF0gvOflBE3-rou0EEbmT"
+REPAIRED_REPRODUCERS_GDRIVE_ID="1fcspm0AISvY57DnxiLitUHjGJS_vvc55"
+REPAIRED_BUGS_GDRIVE_ID="1aAuCp_zqdjx7OpXBeniFXR5WZsxhI0Ja"
 
 ###############################################################################
 # LOGGING FUNCTIONS
@@ -146,16 +148,34 @@ create_debian_image() {
     log_info "Debian image creation complete."
 }
 
+download_reproducers() {
+    log_info "Downloading repaired reproducer files and repaired bugs with gdown"
+    check_command gdown
+    gdown "$REPAIRED_REPRODUCERS_GDRIVE_ID" || { log_error "Failed to download repaired reproducer files"; exit 1; }
+    gdown "$REPAIRED_BUGS_GDRIVE_ID" || { log_error "Failed to download repaired bugs"; exit 1; }
+    log_info "Repaired reproducer files downloaded."
+}
+
+extract_reproducers() {
+    log_info "Extracting repaired reproducer files"
+    check_command 7z
+    7z x repaired_reproducers.7z || { log_error "Failed to extract repaired reproducer files"; exit 1; }
+    sudo chown -R "$SUDO_USER":"$SUDO_USER" repaired_reproducers/
+    7z x repaired_bugs.7z || { log_error "Failed to extract repaired bugs"; exit 1; }
+    sudo chown -R "$SUDO_USER":"$SUDO_USER" repaired_bugs/
+}
+
 download_linux_next() {
     log_info "Downloading linux-next"
     check_command gdown
-    gdown --id "$LINUX_NEXT_GDRIVE_ID" || { log_error "Failed to download linux-next kernel"; exit 1; }
+    gdown "$LINUX_NEXT_GDRIVE_ID" || { log_error "Failed to download linux-next kernel"; exit 1; }
 }
 
 extract_linux_next() {
     log_info "Extracting linux-next"
     check_command 7z
-    7z x linux-next.7z
+    7z x linux-next.7z || { log_error "Failed to extract linux-next kernel"; exit 1; }
+    sudo chown -R "$SUDO_USER":"$SUDO_USER" linux-next/
 }
 
 download_reproducers() {
