@@ -71,7 +71,7 @@ install_gdown() {
     log_info "Ensuring gdown is installed"
     if ! command -v gdown &>/dev/null; then
         # Install gdown without affecting system packages too heavily
-        python3 -m pip install --user gdown
+        python3 -m pip install gdown --break-system-packages
         # Refresh shell hash
         hash -r
         if ! command -v gdown &>/dev/null; then
