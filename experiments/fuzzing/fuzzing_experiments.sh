@@ -22,7 +22,7 @@ fi
 experiment_type=$1
 csv_file=$REPO_ROOT/$2
 dir_linux_next=$REPO_ROOT/$3
-syzkaller_path=$REPO_ROOT/$4
+syzkaller_path=$4
 debian_image_path=$REPO_ROOT/$5
 syzbot_config_files_path=$REPO_ROOT/$6
 output_path=$SCRIPT_DIR/$7
