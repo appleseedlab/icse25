@@ -6,9 +6,17 @@ if [[ $# -ne 3 ]]; then
     exit 1
 fi
 
-repaired_reproducers=$1
-repaired_reproducers_csv=$2
-repaired_bugs=$3
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIR="$SCRIPT_DIR/../../../"
+echo "Root directory: $ROOT_DIR"
+
+repaired_reproducers="$ROOT_DIR/$1"
+repaired_reproducers_csv="$ROOT_DIR/$2"
+repaired_bugs="$ROOT_DIR/$3"
+
+echo "Repaired reproducers directory: $repaired_reproducers"
+echo "Repaired reproducers CSV file: $repaired_reproducers_csv"
+echo "Repaired bugs directory: $repaired_bugs"
 
 c_reproducers="$repaired_reproducers/c_reproducers"
 syz_reproducers="$repaired_reproducers/syz_reproducers"
