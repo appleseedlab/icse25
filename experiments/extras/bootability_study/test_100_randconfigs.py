@@ -12,6 +12,7 @@ from tqdm import tqdm
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from git import Repo
 from pathlib import Path
+import tempfile
 from tempfile import TemporaryDirectory
 from loguru import logger
 
@@ -37,7 +38,8 @@ def parse_args():
     """
     script_dir = os.path.dirname(os.path.realpath(__file__))
     # get the full path of the script's repository
-    repo_root = get_repo_root()
+    repo_root = os.path.abspath(os.path.join(script_dir, "..", "..", ".."))
+
     if not repo_root:
         raise Exception("Not in a git repository")
 
@@ -392,6 +394,10 @@ def check_args(args):
     except git.exc.GitCommandError:
         raise Exception("Git reference does not exist in the repository")
 
+    # create the output directory if it does not exist
+    if not os.path.exists(args.output_dir):
+        os.makedirs(args.output_dir)
+
 def clone_kernel(kernel_url, tmpdir, idx: int) -> Path:
     KERNEL_DIR = Path(f"{tmpdir}/linux-next-{idx}")
     KERNEL_DIR.mkdir(parents=True)
@@ -404,6 +410,31 @@ def clone_kernel(kernel_url, tmpdir, idx: int) -> Path:
     # KERNEL_DIR = Path(f"{tmpdir}/linux-next-{idx}")
     # Repo.clone_from(kernel_url, KERNEL_DIR)
     return KERNEL_DIR
+
+def copy_kernel(kernel_src: Path) -> Path:
+    # create a temporary directory to store the cloned kernel
+    tmp_kernel_dir = tempfile.TemporaryDirectory()
+    tmp_kernel_repo = Repo.clone_from(kernel_src, tmp_kernel_dir.name)
+    return Path(tmp_kernel_repo.working_dir)
+
+def copy_kernel_in_parallel(kernel_src: Path, available_cores: int) -> list[Path]:
+    kernel_dirs = []
+    with tqdm(total=available_cores) as pbar:
+        with ProcessPoolExecutor(max_workers=available_cores) as executor:
+            futures = {
+                executor.submit(copy_kernel, kernel_src)
+            }
+
+            for future in as_completed(futures):
+                try:
+                    kernel_dir = future.result()
+                    kernel_dirs.append(kernel_dir)
+                    pbar.update(1)
+                    logger.debug(f"Finished processing kernel: {kernel_dir}")
+                except Exception as e:
+                    logger.exception(f"error when cloning: {e}")
+
+    return kernel_dirs
 
 
 def clone_kernels_parallel(available_cores: int) -> list[Path]:
@@ -455,7 +486,7 @@ def main():
     logger.debug(f"Generated random configs: {generated_config_files}")
 
     logger.debug("Cloning 100 kernel repositories in parallel")
-    kernel_src_list = clone_kernels_parallel(args.workers)
+    kernel_src_list = copy_kernel_in_parallel(args.kernel_src, args.workers)
     logger.debug(f"Cloned kernel sources: {kernel_src_list}")
 
     logger.debug("Compiling kernel images")
@@ -471,6 +502,10 @@ def main():
     logging.debug(bzimage_paths)
 
     run_qemu(bzimage_paths, args.debian_image, args.qemu_timeout, args.output_dir, csv_file_path)
+
+    # delete the temporary kernel directories
+    for kernel_dir in kernel_src_list:
+        shutil.rmtree(kernel_dir)
 
 
 if __name__ == "__main__":
