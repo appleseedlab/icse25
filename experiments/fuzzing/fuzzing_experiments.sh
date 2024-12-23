@@ -115,7 +115,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
     fi
 
     echo "[+] Starting making defconfig..."
-    make defconfig
+    make CC=/usr/local/bin/gcc defconfig
 
     if [ "$1" == "default" ]; then
         echo "[+] Copying the syzbot config file to .config"
@@ -126,7 +126,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
     fi
 
     echo "[+] Made defconfig. Now making kvm_guest.config..."
-    make kvm_guest.config
+    make CC=/usr/local/bin/gcc kvm_guest.config
 
     echo "[+] Made kvm_guest.config"
 
@@ -135,10 +135,10 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
     ./scripts/config --enable CONFIG_KCOV --enable CONFIG_DEBUG_INFO --enable CONFIG_DEBUG_INFO_DWARF4 --enable CONFIG_KASAN --enable CONFIG_KASAN_INLINE --enable CONFIG_CONFIGFS_FS --enable CONFIG_SECURITYFS --enable CONFIG_CMDLINE_BOOL --set-val CONFIG_CMDLINE "net.ifnames=0"
 
     echo "[+] Making olddefconfig..."
-    make olddefconfig
+    make CC=/usr/local/bin/gcc olddefconfig
     echo "[+] Made olddefconfig"
     echo "[+] Compiling the kernel..."
-    make -j"$(nproc)" || { echo "[-] Kernel compilation failed"; exit 1; }
+    make CC=/usr/local/bin/gcc -j"$(nproc)" || { echo "[-] Kernel compilation failed"; exit 1; }
     echo "[+] Compiled the kernel!"
 
     workdir_name="$output_path/fuzzing_results/syzkaller_workdir_${syzbot_config_name}_${commit_hash}"
