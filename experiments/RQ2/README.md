@@ -8,6 +8,7 @@ question of the paper.
 |[figure4](figure4)|Subdirectory that contains scripts and data to get Figure 4. (Throughput and coverage data).|
 |[table4](table4)|Subdirectory that contains scripts and data to get Table 4. (Configuration Build Times).|
 |[table5](table5)|Subdirectory that contains scripts and data to get Table 5. (Kernel Image Build Times).|
+|[five_point_summary.py](five_point_summary.py)|A script that gets five point summary results from configuration and kernel image build times.|
 
 ## Figures and tables related to RQ2
 ### TABLE IV: Five-point summaries of kernel configuration time in seconds.
@@ -25,7 +26,7 @@ The directory `table4` contains the data and scripts used to generate Table IV.
 To reproduce the 'Original Configurations' column data,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table4/original/default_config_times.csv";
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table4/original/default_config_times.csv";
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel configuration
@@ -50,7 +51,7 @@ newly generated timing results.
 To reproduce the 'Repaired Configurations' column data,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table4/repaired/repaired_config_times.csv";
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table4/repaired/repaired_config_times.csv";
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate repaired Linux kernel configuration
@@ -84,7 +85,7 @@ machine, build times were less than 10 minutes in all cases.
 To get the data for the 'Original Configurations' column of Table V,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table5/original/default_build_times.csv";
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table5/original/default_build_times.csv";
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel images
@@ -106,7 +107,7 @@ docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/or
 To get the data for the 'Repaired Configurations' column of Table V,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/camera_ready/five_point_summary.py --file icse25/experiments/RQ2/table5/repaired/repaired_build_times.csv";
+docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table5/repaired/repaired_build_times.csv";
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel images
