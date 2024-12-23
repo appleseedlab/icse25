@@ -1,5 +1,6 @@
 import argparse
 import subprocess
+import threading
 import logging
 import time
 import shutil
@@ -240,9 +241,9 @@ def compile_kernel(
         git_clean(kernel_src)
         # logging.debug(f"counter: {counter}")
         head_commit = git_checkout_commit(kernel_src, commit_hash)
-        logging.debug(f"HEAD commit: {head_commit}")
+        logger.debug(f"HEAD commit: {head_commit}")
 
-        logging.debug(f"Working on config file: {config_file}")
+        logger.debug(f"Working on config file: {config_file}")
         command = f"KCONFIG_CONFIG={config_file} make -C {kernel_src} -j$(nproc)"
         try:
             result = subprocess.run(
@@ -253,11 +254,11 @@ def compile_kernel(
                 capture_output=True,
                 text=True,
             )
-            logging.debug("Output of kernel compilation:")
-            logging.debug(result.stdout)
+            logger.debug("Output of kernel compilation:")
+            logger.debug(result.stdout)
 
             if result.returncode != 0:
-                logging.error(result.stderr)
+                logger.error(result.stderr)
             else:
                 add_to_csv(csv_file_path, config_file, "Compiled", True)
                 bzimage_save_dir = (
@@ -268,10 +269,10 @@ def compile_kernel(
                 try:
                     shutil.copy(bzimage_path, bzimage_save_dir)
                 except shutil.Error as e:
-                    logging.error(e)
+                    logger.error(e)
 
         except subprocess.CalledProcessError as e:
-            logging.error(e)
+            logger.error(e)
             config_not_compiled.append(config_file)
             add_to_csv(csv_file_path, config_file, "Compiled", False)
             add_to_csv(csv_file_path, config_file, "Booted", False)
@@ -413,7 +414,8 @@ def clone_kernel(kernel_url, tmpdir, idx: int) -> Path:
 
 def copy_kernel(kernel_src: Path) -> Path:
     # create a temporary directory to store the cloned kernel
-    tmp_kernel_dir = tempfile.mkdtemp()
+    thread_id = threading.get_ident()
+    tmp_kernel_dir = tempfile.mkdtemp(prefix=f"kernel-{thread_id}-")
     tmp_kernel_repo = Repo.clone_from(kernel_src, tmp_kernel_dir)
     return Path(tmp_kernel_repo.working_dir)
 
