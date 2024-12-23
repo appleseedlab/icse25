@@ -176,7 +176,7 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, str]:
     generated_config_files = []
     csvname_seed = int(time.time())
 
-    csv_file_path = f"{output_dir}/randconfig_experiment_results_{csvname_seed}.csv"
+    csv_file_path = Path(output_dir).joinpath(f"randconfig_experiment_results_{csvname_seed}.csv")
 
     for _ in range(0, 100):
         git_clean(kernel_src)
@@ -234,7 +234,7 @@ def compile_kernel(
     config_not_compiled = []
     bzimage_paths = []
 
-    csv_file_path = csv_file_path / "bootability_results.csv"
+    csv_file_path = csv_file_path.joinpath("bootability_results.csv")
 
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
@@ -413,8 +413,8 @@ def clone_kernel(kernel_url, tmpdir, idx: int) -> Path:
 
 def copy_kernel(kernel_src: Path) -> Path:
     # create a temporary directory to store the cloned kernel
-    tmp_kernel_dir = tempfile.TemporaryDirectory()
-    tmp_kernel_repo = Repo.clone_from(kernel_src, tmp_kernel_dir.name)
+    tmp_kernel_dir = tempfile.mkdtemp()
+    tmp_kernel_repo = Repo.clone_from(kernel_src, tmp_kernel_dir)
     return Path(tmp_kernel_repo.working_dir)
 
 def copy_kernel_in_parallel(kernel_src: Path, available_cores: int) -> list[Path]:
