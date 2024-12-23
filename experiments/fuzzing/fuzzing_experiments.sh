@@ -9,12 +9,10 @@ if [ "$1" != "repaired" ] && [ "$1" != "default" ]; then
     exit 1
 fi
 
-if [ "$#" -ne 7 ]; then
+if [ "$#" -ne 6 ]; then
     echo "[!] Usage: ./program <experiment_type> <csv-file> <path to linux-next> <path to syzkaller>
-    <path to debian image> <path to syzbot configs> <path to output folder>"
-    echo "[*] Example Usage: ./program default repairer_script/fuzzing_parameters.csv " \
-        "~/linux-next/ ~/syzkaller/ ~/debian_images/" \
-        "camera_ready/configuration_files/syzbot_configuration_files ~/output/"
+    <path to debian image> <path to output folder>"
+    echo "[*] Example Usage: bash ./experiments/fuzzing/fuzzing_experiments.sh default ./experiments/fuzzing/fuzzing_parameters.csv ./linux-next/ ./syzkaller/ ./debian_image/ ./camera_ready/configuration_files/syzbot_configuration_files ./experiments/fuzzing/output/"
     echo "[-] Exiting..."
     exit 9
 fi
@@ -24,10 +22,10 @@ csv_file=$REPO_ROOT/$2
 dir_linux_next=$REPO_ROOT/$3
 syzkaller_path=$4
 debian_image_path=$REPO_ROOT/$5
-syzbot_config_files_path=$REPO_ROOT/$6
-output_path=$SCRIPT_DIR/$7
+output_path=$SCRIPT_DIR/$6
 
-repaired_config_files_path="$REPO_ROOT/camera_ready/configuration_files/repaired_configuration_files"
+syzbot_config_files_path="$REPO_ROOT/configuration_files/syzbot_configuration_files"
+repaired_config_files_path="$REPO_ROOT/configuration_files/repaired_configuration_files"
 
 unix_time=$(date +%s)
 output_path=$output_path/$unix_time

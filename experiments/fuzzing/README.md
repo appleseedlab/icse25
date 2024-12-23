@@ -12,7 +12,7 @@ with and without configuration variety.
 # Usage
 The following command can be used to run the script that performs fuzzing without configuration variety using syzkaller:
 ```Bash
-bash ./experiments/fuzzing/fuzzing_experiments.sh default ./experiments/fuzzing/fuzzing_parameters.csv ./linux-next/ ./syzkaller/ ./debian_image/ ./camera_ready/configuration_files/syzbot_configuration_files ./experiments/fuzzing/output/
+bash ./experiments/fuzzing/fuzzing_experiments.sh default ./experiments/fuzzing/fuzzing_parameters.csv ./linux-next/ ./syzkaller/ ./debian_image/ ./experiments/fuzzing/output/
 ```
 Explanation of the parameters:
 - default - type of the experiment. Can be either default or repaired.
@@ -25,7 +25,5 @@ the Linux kernel versions that were fuzzed.
 - ./debian_image/ - the path to the directory that contains a debian image like
 'bullseye.img' and its ssh key 'bullseye.id_rsa' that are used to boot the kernel
 images built during the fuzzing experiments.
-- ./camera_ready/configuration_files/syzbot_configuration_files - the path to the
-directory that contains the syzkaller configuration files used during the fuzzing
 - ./experiments/fuzzing/output/ - the path to the directory where the results of the
 fuzzing experiments will be saved.
