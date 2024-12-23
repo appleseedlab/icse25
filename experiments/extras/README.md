@@ -3,9 +3,6 @@ This subdirectory contains data and scripts that are not directly used to get
 the results for research questions.
 But they are used within the project to get some statistical and analytical insights.
 
-# Directory Structure
-#TODO: Add the directory structure of the subdirectory.
-
 # Structure
 | Visual              | Section   |
 |---------------------|-----------|
