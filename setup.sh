@@ -141,6 +141,49 @@ install_docker() {
     log_info "Docker is installed."
 }
 
+#!/usr/bin/env bash
+
+function install_required_gcc() {
+  local required_version="11.4.0"
+
+  # 1. Update system packages and install prerequisites
+  sudo apt-get update
+  sudo apt-get install -y build-essential software-properties-common \
+       libgmp-dev libmpfr-dev libmpc-dev zlib1g-dev flex bison wget
+
+  # 2. Download and unpack GCC 11.4.0 source
+  wget https://ftp.gnu.org/gnu/gcc/gcc-"$required_version"/gcc-"$required_version".tar.gz
+  tar -xvf gcc-"$required_version".tar.gz
+  cd gcc-"$required_version" || exit 1
+
+  # 3. Fetch additional prerequisites
+  ./contrib/download_prerequisites
+
+  # 4. Create a build directory and configure
+  mkdir build && cd build || exit 1
+  ../configure --enable-languages=c,c++ --disable-multilib
+
+  # 5. Build and install
+  make -j"$(nproc)"
+  sudo make install
+
+  # 6. Register /usr/local/bin/gcc & g++ with update-alternatives
+  #    Use a high priority (e.g., 100) and set them as the default
+  sudo update-alternatives --install /usr/bin/gcc gcc /usr/local/bin/gcc 100
+  sudo update-alternatives --install /usr/bin/g++ g++ /usr/local/bin/g++ 100
+  sudo update-alternatives --set gcc /usr/local/bin/gcc
+  sudo update-alternatives --set g++ /usr/local/bin/g++
+
+  # 7. Verify installation
+  if [ "$(gcc --version | grep -oP '(?<=gcc \(GCC\) )\d+\.\d+\.\d+')" != "$required_version" ]; then
+    log_info "GCC $required_version installation failed."
+    exit 1
+  fi
+
+  log_info "Installed GCC version $(gcc --version | grep -oP '(?<=gcc \(GCC\) )\d+\.\d+\.\d+') successfully."
+
+}
+
 create_debian_image() {
     log_info "Creating a Debian image"
     mkdir -p "$IMAGE_DIR"
@@ -187,18 +230,32 @@ extract_linux_next() {
     sudo chown -R "$SUDO_USER":"$SUDO_USER" linux-next/
 }
 
+check_if_user_in_kvm_group() {
+    log_info "Checking if user is in kvm group"
+
+    if id -nG "$SUDO_USER" | grep -qw "kvm"; then
+        log_info "User $SUDO_USER is in kvm group."
+    else
+        log_error "User $SUDO_USER is not in kvm group. Adding the user to kvm group."
+        sudo usermod -aG kvm "$SUDO_USER"
+    fi
+}
+
 ###############################################################################
 # MAIN
 ###############################################################################
 install_go
 install_dependencies
 install_docker
+check_if_user_in_kvm_group
+install_required_gcc
 install_gdown
 install_syzkaller
 create_debian_image
 download_linux_next
 download_reproducers
 extract_linux_next
+extract_reproducers
 
 log_info "Setup completed successfully."
 
