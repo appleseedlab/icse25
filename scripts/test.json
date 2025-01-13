@@ -1,0 +1,7 @@
+{
+    "kernel_commit_1": "/tmp/test1",
+    "kernel_commit_2": "/tmp/test2",
+    "path_config_default": "/tmp/default",
+    "path_config_repaired": "/tmp/repaired",
+    "path_reproducer": "/tmp/reproducer"
+}
