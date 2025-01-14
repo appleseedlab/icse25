@@ -161,7 +161,7 @@ def save_to_csv(csv_file_path, seed, probability, config_path, csvname_seed) -> 
     return csv_file_path
 
 
-def generate_randconfigs(kernel_src, output_dir) -> tuple[list, str]:
+def generate_randconfigs(kernel_src, output_dir) -> tuple[list, Path]:
     """
     This function generates random configurations for the kernel
     It uses the randconfig make target to generate random configurations with seeds of current time and probability from 10 to 90
@@ -179,7 +179,7 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, str]:
 
     csv_file_path = Path(output_dir).joinpath(f"randconfig_experiment_results_{csvname_seed}.csv")
 
-    for _ in range(0, 100):
+    for _ in range(0, 2):
         git_clean(kernel_src)
         prob = 50
 
@@ -236,6 +236,8 @@ def compile_kernel(
     bzimage_paths = []
 
     csv_file_path = csv_file_path.joinpath("bootability_results.csv")
+    makenproc_log = f"{output_dir}/makenproc.log"
+    logger.debug(f"compilation logs are saved in {makenproc_log}")
 
     for kernel_src, config_file in zip(kernel_src_list, generated_config_files):
         git_clean(kernel_src)
@@ -243,17 +245,21 @@ def compile_kernel(
         head_commit = git_checkout_commit(kernel_src, commit_hash)
         logger.debug(f"HEAD commit: {head_commit}")
 
+        config_file = Path(config_file).resolve()
         logger.debug(f"Working on config file: {config_file}")
+        subprocess.run(f"KCONFIG_CONFIG={config_file} make -C {kernel_src} olddefconfig", shell=True, cwd=kernel_src)
         command = f"KCONFIG_CONFIG={config_file} make -C {kernel_src} -j$(nproc)"
         try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                cwd=kernel_src,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+            with open(makenproc_log, "w") as log:
+                result = subprocess.run(
+                    command,
+                    shell=True,
+                    cwd=kernel_src,
+                    check=True,
+                    text=True,
+                    stdout=log,
+                    stderr=log,
+                )
             logger.debug("Output of kernel compilation:")
             logger.debug(result.stdout)
 
@@ -488,7 +494,7 @@ def main():
     logger.debug(f"Generated random configs: {generated_config_files}")
 
     logger.debug("Cloning 100 kernel repositories in parallel")
-    kernel_src_list = copy_kernel_in_parallel(args.kernel_src, args.workers)
+    kernel_src_list = copy_kernel_in_parallel(args.kernel_src, 1)
     logger.debug(f"Cloned kernel sources: {kernel_src_list}")
 
     logger.debug("Compiling kernel images")
