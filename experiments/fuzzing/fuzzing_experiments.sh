@@ -14,13 +14,13 @@ REPO_ROOT="$(realpath "$SCRIPT_DIR/../../")"
 
 usage() {
     echo "[!] Usage: $0 <experiment_type> <csv-file> <path to linux-next> <path to syzkaller>"
-    echo "           <path to debian image> <path to output folder>"
-    echo "[*] Example: $0 default experiments/fuzzing/fuzzing_parameters.csv linux-next syzkaller debian_image experiments/fuzzing/output"
+    echo "           <path to debian image> <path to output folder> <fuzzing-time>"
+    echo "[*] Example: $0 default experiments/fuzzing/fuzzing_parameters.csv linux-next syzkaller debian_image experiments/fuzzing/output 12h"
     echo "    where all paths except syzkaller_path are relative to \$REPO_ROOT."
     exit 9
 }
 
-if [[ $# -ne 6 ]]; then
+if [[ $# -ne 7 ]]; then
     usage
 fi
 
@@ -30,6 +30,7 @@ dir_linux_next="$REPO_ROOT/$3"
 syzkaller_path="$4"               # Typically an absolute path, so not prefixed with $REPO_ROOT
 debian_image_path="$REPO_ROOT/$5"
 rel_output_path="$6"              # Rel path from $SCRIPT_DIR
+fuzzing_time="$7"
 output_path="$SCRIPT_DIR/$rel_output_path"
 
 if [[ "$experiment_type" != "repaired" && "$experiment_type" != "default" ]]; then
@@ -135,7 +136,7 @@ function build_linux_kernel() {
     local config_mode="$3"  # "default" or "repaired"
 
     echo "[+] make defconfig..."
-    make CC=/usr/local/bin/gcc defconfig
+    make CC=$(which gcc) defconfig
 
     if [[ "$config_mode" == "default" ]]; then
         echo "[+] Copying syzbot config file -> .config"
@@ -146,7 +147,7 @@ function build_linux_kernel() {
     fi
 
     echo "[+] make kvm_guest.config..."
-    make CC=/usr/local/bin/gcc kvm_guest.config
+    make CC=$(which gcc) kvm_guest.config
 
     echo "[+] Enabling syzkaller-related kernel configs via scripts/config..."
     ./scripts/config --enable CONFIG_KCOV \
@@ -157,13 +158,13 @@ function build_linux_kernel() {
                      --enable CONFIG_CONFIGFS_FS \
                      --enable CONFIG_SECURITYFS \
                      --enable CONFIG_CMDLINE_BOOL \
-                     --set-val CONFIG_CMDLINE "net.ifnames=0"
+                     --set-val CONFIG_CMDLINE "\"net.ifnames=0\""
 
     echo "[+] make olddefconfig..."
-    make CC=/usr/local/bin/gcc olddefconfig
+    make CC=$(which gcc) olddefconfig
 
     echo "[+] Compiling the kernel..."
-    make CC=/usr/local/bin/gcc -j"$(nproc)" || {
+    make CC=$(which gcc) -j"$(nproc)" || {
         echo "[-] Kernel compilation failed"
         exit 1
     }
@@ -179,10 +180,11 @@ function build_linux_kernel() {
 function run_syzkaller_fuzz() {
     local syz_cfg="$1"
     local fuzzing_log="$2"
+    local fuzzing_time="$3"
 
     echo "[*] Running syzkaller fuzzing with config: $syz_cfg"
     # 12h fuzzing
-    timeout 12h "$REPO_ROOT/$syzkaller_path/bin/syz-manager" \
+    timeout $fuzzing_time "$REPO_ROOT/$syzkaller_path/bin/syz-manager" \
         -config="$syz_cfg" 2>&1 | tee "$fuzzing_log"
     local exit_status_timeout="${PIPESTATUS[0]}"
 
@@ -280,7 +282,10 @@ EOF
     fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
 
     # Run fuzzing
-    run_syzkaller_fuzz "$syz_cfg" "$fuzzing_instance_log_path"
+    echo "syz config path: $syz_cfg"
+    echo "fuzzing_instance_log_path: $fuzzing_instance_log_path"
+    echo "fuzzing_time $fuzzing_time"
+    run_syzkaller_fuzz "$syz_cfg" "$fuzzing_instance_log_path" "$fuzzing_time"
 
     # Move to the next port if needed
     syzkaller_port="$((syzkaller_port + 1))"
