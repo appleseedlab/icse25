@@ -25,13 +25,17 @@ if [[ $# -ne 7 ]]; then
 fi
 
 experiment_type="$1"
-csv_file="$REPO_ROOT/$2"
-dir_linux_next="$REPO_ROOT/$3"
-syzkaller_path="$4"               # Typically an absolute path, so not prefixed with $REPO_ROOT
-debian_image_path="$REPO_ROOT/$5"
-rel_output_path="$6"              # Rel path from $SCRIPT_DIR
+csv_file="$(realpath $2)"
+dir_linux_next="$(realpath $3)"
+syzkaller_path="$(realpath $4)"
+debian_image_path="$(realpath $5)"
+output_path="$(realpath $6)"
 fuzzing_time="$7"
-output_path="$SCRIPT_DIR/$rel_output_path"
+
+# Create a unique output directory based on the current time
+unix_time="$(date +%s)"
+output_path="$output_path/$unix_time"
+mkdir -p "$output_path"
 
 if [[ "$experiment_type" != "repaired" && "$experiment_type" != "default" ]]; then
     echo "[!] <experiment_type> must be one of: repaired | default"
@@ -64,19 +68,15 @@ fi
 
 echo "[+] Experiment type: $experiment_type"
 echo "[+] CSV file: $csv_file"
-echo "[+] linux-next dir: $dir_linux_next"
-echo "[+] syzkaller dir: $syzkaller_path"
-echo "[+] Debian images dir: $debian_image_path"
-echo "[+] Output dir (relative): $rel_output_path"
-echo "[+] Expanded output path: $output_path"
+echo "[+] linux-next path: $dir_linux_next"
+echo "[+] syzkaller path: $syzkaller_path"
+echo "[+] Debian images path: $debian_image_path"
+echo "[+] Output path: $output_path"
 
 ################################################################################
 # Prepare output directory and logging
 ################################################################################
 
-unix_time="$(date +%s)"
-output_path="$output_path/$unix_time"
-mkdir -p "$output_path"
 log_file="$output_path/main_script_logs.log"
 
 # All output from the script is tee'd to main_script_logs.log
@@ -272,7 +272,9 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
     "count": 8,
     "kernel": "$dir_linux_next/arch/x86/boot/bzImage",
     "cpu": 8,
-    "mem": 4098
+    "mem": 4098,
+    "cmdline": "net.ifnames=0",
+    "qemu_args": "-cpu qemu64"
   }
 }
 EOF
@@ -285,6 +287,7 @@ EOF
     echo "syz config path: $syz_cfg"
     echo "fuzzing_instance_log_path: $fuzzing_instance_log_path"
     echo "fuzzing_time $fuzzing_time"
+    sleep 100
     run_syzkaller_fuzz "$syz_cfg" "$fuzzing_instance_log_path" "$fuzzing_time"
 
     # Move to the next port if needed
