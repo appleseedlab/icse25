@@ -370,7 +370,10 @@ def add_to_csv(csv_file_path, config_path, state, bootable):
         fieldnames = ["Seed", "Probability", "Config Path", "Compiled", "Booted"]
 
     for row in data:
-        if row["Config Path"] == config_path:
+        row_config_path = row["Config Path"]
+        logger.debug(f"row_config_path: {row_config_path}")
+        logger.debug(f"config_path: {config_path}")
+        if row["Config Path"] == str(config_path):
             if state == "Compiled":
                 row["Compiled"] = bootable
             elif state == "Booted":
@@ -433,7 +436,7 @@ def copy_kernel_in_parallel(kernel_src: Path, available_cores: int) -> list[Path
         with ProcessPoolExecutor(max_workers=available_cores) as executor:
             futures = {
                 executor.submit(copy_kernel, kernel_src)
-                for _ in range(available_cores)
+                for _ in range(100)
             }
 
             for future in as_completed(futures):
