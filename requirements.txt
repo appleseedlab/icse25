@@ -26,4 +26,6 @@ urllib3==2.2.3
 userpath==1.9.2
 yarg==0.1.10
 matplotlib-venn==1.1.1
-GitPython==0.3.2
+gitpython
+tqdm
+loguru
