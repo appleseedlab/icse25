@@ -41,7 +41,7 @@ Reports of the bugs found with fuzzing with configuration variety, and discussio
 with the kernel maintainers can be found [here](
 https://lore.kernel.org/lkml/?q=Sanan+Hasanov).
 
-## Prerequisites
+## :wrench: Prerequisites
 Before running the experiments, please make sure that you have Python 3.9 or later
 installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).
 Next, you need to run setup.sh script to install the required dependencies.
@@ -49,9 +49,10 @@ Next, you need to run setup.sh script to install the required dependencies.
 sudo ./setup.sh
 ```
 
-## Kicking the Tires
+## :rocket: Quick Start
 To get a demo of the fuzzing experiments with and without configuration variety,
-you can run the following command to conduct the experiments for 15 minutes:
+you can run the following command to conduct the experiment on a default and a
+repaired kernel image for 15 minutes:
 ```bash
-#TODO
+./fuzz.sh
 ```
