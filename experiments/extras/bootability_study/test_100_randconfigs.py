@@ -179,7 +179,7 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, Path]:
 
     csv_file_path = Path(output_dir).joinpath(f"randconfig_experiment_results_{csvname_seed}.csv")
 
-    for _ in range(0, 2):
+    for _ in range(0, 100):
         git_clean(kernel_src)
         prob = 50
 
@@ -187,7 +187,7 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, Path]:
         command = f"KCONFIG_SEED={seed} KCONFIG_PROBABILTIY={prob} make randconfig"
         logging.debug(f"Seed: {seed}, Probability: {prob}")
 
-        output_config_path = f"{output_dir}/{seed}_{prob}.config"
+        output_config_path = Path(f"{output_dir}/{seed}_{prob}.config").resolve()
         try:
             result = subprocess.run(
                 command, shell=True, cwd=kernel_src, check=True, capture_output=True
@@ -235,7 +235,8 @@ def compile_kernel(
     config_not_compiled = []
     bzimage_paths = []
 
-    csv_file_path = csv_file_path.joinpath("bootability_results.csv")
+    csv_file_path = csv_file_path.resolve()
+    csv_file_path.touch()
     makenproc_log = f"{output_dir}/makenproc.log"
     logger.debug(f"compilation logs are saved in {makenproc_log}")
 
@@ -304,6 +305,7 @@ def run_qemu(bzimage_paths, debian_image, timeout, output_dir, csv_file_path):
         logname = f"{output_dir}/{os.path.basename(bzimage_path)}.log"
         pidname = f"{output_dir}{os.path.basename(bzimage_path)}.pid"
         config_path = logname.replace(".bzImage.log", "")
+        config_path = Path(config_path).resolve()
 
         command = [
             "qemu-system-x86_64",
@@ -358,7 +360,7 @@ def run_qemu(bzimage_paths, debian_image, timeout, output_dir, csv_file_path):
     logger.debug("Finished bootability testing for the provided images")
 
 
-def add_to_csv(csv_file_path, config_path, type, bootable):
+def add_to_csv(csv_file_path, config_path, state, bootable):
     with open(csv_file_path, "r") as csv_file:
         csvreader = csv.DictReader(csv_file)
         fieldnames = csvreader.fieldnames
@@ -369,9 +371,9 @@ def add_to_csv(csv_file_path, config_path, type, bootable):
 
     for row in data:
         if row["Config Path"] == config_path:
-            if type == "Compiled":
+            if state == "Compiled":
                 row["Compiled"] = bootable
-            elif type == "Booted":
+            elif state == "Booted":
                 row["Booted"] = bootable
 
     with open(csv_file_path, "w") as csv_file:
@@ -431,6 +433,7 @@ def copy_kernel_in_parallel(kernel_src: Path, available_cores: int) -> list[Path
         with ProcessPoolExecutor(max_workers=available_cores) as executor:
             futures = {
                 executor.submit(copy_kernel, kernel_src)
+                for _ in range(available_cores)
             }
 
             for future in as_completed(futures):
@@ -494,7 +497,7 @@ def main():
     logger.debug(f"Generated random configs: {generated_config_files}")
 
     logger.debug("Cloning 100 kernel repositories in parallel")
-    kernel_src_list = copy_kernel_in_parallel(args.kernel_src, 1)
+    kernel_src_list = copy_kernel_in_parallel(args.kernel_src, args.workers)
     logger.debug(f"Cloned kernel sources: {kernel_src_list}")
 
     logger.debug("Compiling kernel images")
