@@ -16,6 +16,10 @@ import threading
 from uuid import uuid4
 import os
 import signal
+import csv
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 @dataclass
 class Config:
@@ -178,7 +182,14 @@ def get_free_port() -> int:
     return port
 
 
-def run_qemu(kernel_image_path: Path, debian_image_path: Path, qemu_instance: QemuInstance, timeout: int = 300) -> bool:
+def run_qemu(
+    kernel_image_path: Path,
+    debian_image_path: Path,
+    qemu_instance: QemuInstance,
+    timeout: int = 300,
+    commit_id: str = "",
+    config_type: str = "default config",
+) -> bool:
     """
     Runs a QEMU instance with a kernel image and a Debian image, ensuring it terminates after the specified timeout.
 
@@ -187,6 +198,8 @@ def run_qemu(kernel_image_path: Path, debian_image_path: Path, qemu_instance: Qe
         debian_image_path (Path): Path to the Debian image.
         qemu_instance (QemuInstance): Instance to store QEMU details.
         timeout (int): Timeout in seconds. Defaults to 300 seconds (5 minutes).
+        commit_id (str): Commit ID being tested.
+        config_type (str): Type of config being used (default or repaired).
 
     Returns:
         bool: True if QEMU starts successfully, False otherwise.
@@ -194,14 +207,12 @@ def run_qemu(kernel_image_path: Path, debian_image_path: Path, qemu_instance: Qe
     qemu_instance.log_path = Path(kernel_image_path.parent, "qemu.log")
     qemu_instance.log_path.touch()
 
-    # Use a unique PID file for each instance
     qemu_instance.pid_path = Path(kernel_image_path.parent, f"vm_{uuid4().hex}.pid")
     if qemu_instance.pid_path.exists():
         logger.warning(f"PID file {qemu_instance.pid_path} exists. Deleting it to avoid conflicts.")
         qemu_instance.pid_path.unlink()
 
     logger.debug(f"QEMU log path: {qemu_instance.log_path}")
-
     qemu_instance.ssh_port = get_free_port()
 
     # Create a temporary Debian image copy
@@ -218,7 +229,7 @@ def run_qemu(kernel_image_path: Path, debian_image_path: Path, qemu_instance: Qe
         f"-kernel {str(kernel_image_path)} "
         f"-append 'console=ttyS0 root=/dev/sda rw earlyprintk=serial net.ifnames=0' "
         f"-drive file={str(debian_image_path)},format=raw "
-        f"-net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:{str(qemu_instance.ssh_port)}-:22 "
+        f"-net user,hostfwd=tcp:127.0.0.1:{str(qemu_instance.ssh_port)}-:22 "
         f"-net nic,model=e1000 "
         f"-enable-kvm "
         f"-nographic "
@@ -231,49 +242,102 @@ def run_qemu(kernel_image_path: Path, debian_image_path: Path, qemu_instance: Qe
         process = subprocess.Popen(
             command,
             shell=True,
-            timeout=300,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
 
-        # # Function to terminate the QEMU process if timeout occurs
-        # def terminate_qemu():
-        #     logger.warning(f"QEMU process exceeded timeout of {timeout} seconds. Terminating.")
-        #     try:
-        #         # Read the actual PID from the PID file
-        #         if qemu_instance.pid_path.exists():
-        #             qemu_pid = int(qemu_instance.pid_path.read_text().strip())
-        #             logger.info(f"Terminating QEMU process with PID: {qemu_pid}")
-        #             os.kill(qemu_pid, signal.SIGKILL)  # Forcefully terminate the QEMU process
-        #         else:
-        #             logger.error(f"PID file {qemu_instance.pid_path} is missing or empty.")
-        #     except Exception as e:
-        #         logger.error(f"Failed to terminate QEMU process: {e}")
-
-        # # Start a timer to enforce the timeout
-        # timer = threading.Timer(timeout, terminate_qemu)
-        # timer.start()
-
-        # # Wait for the QEMU process to complete
-        # process.wait()
-        # timer.cancel()  # Cancel the timer if the process finishes within the timeout
-
-        # Validate PID file
-        if not qemu_instance.pid_path.exists() or not qemu_instance.pid_path.read_text().strip():
-            logger.error(f"PID file {qemu_instance.pid_path} is missing or empty.")
-            logger.debug(f"QEMU log contents:\n{qemu_instance.log_path.read_text()}")
+        # Wait for the PID file to be created and read the PID
+        for _ in range(10):  # Wait up to 10 seconds
+            if qemu_instance.pid_path.exists() and qemu_instance.pid_path.read_text().strip():
+                qemu_instance.pid = int(qemu_instance.pid_path.read_text().strip())
+                logger.info(f"QEMU PID: {qemu_instance.pid}")
+                break
+            time.sleep(1)
+        else:
+            logger.error("PID file not created or empty. Unable to monitor QEMU process.")
+            process.kill()
             return False
 
-        pid_from_file = int(qemu_instance.pid_path.read_text().strip())
-        qemu_instance.pid = pid_from_file
+        # Watchdog Handler to Monitor Log File
+        class VMLogHandler(FileSystemEventHandler):
+            def __init__(self, qemu_instance, timeout, csv_path, commit_id, config_type):
+                self.qemu_instance = qemu_instance
+                self.timeout = timeout
+                self.csv_path = csv_path
+                self.commit_id = commit_id
+                self.config_type = config_type
+                self.start_time = time.time()
+                self.success = False
+
+            def on_modified(self, event):
+                if event.src_path == str(self.qemu_instance.log_path):
+                    self.check_vm_state()
+
+            def check_vm_state(self):
+                try:
+                    with open(self.qemu_instance.log_path, "r") as log_file:
+                        for line in log_file:
+                            if "login:" in line or "Welcome to" in line:
+                                logger.info("VM booted successfully!")
+                                self.success = True
+                                reproducer_output = run_reproducer(self.qemu_instance, self.qemu_instance.ssh_port)
+                                self.terminate_vm("booted", reproducer_output)
+                                return
+                            elif "Kernel panic" in line or "Error" in line:
+                                logger.error("VM crashed or encountered an error.")
+                                self.terminate_vm("failed")
+                                return
+                except Exception as e:
+                    logger.error(f"Error reading log file: {e}")
+
+            def terminate_vm(self, result, reproducer_output=None):
+                logger.info(f"Terminating VM with PID: {self.qemu_instance.pid}")
+                if self.qemu_instance.pid:
+                    try:
+                        os.kill(self.qemu_instance.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        logger.warning(f"Process with PID {self.qemu_instance.pid} already terminated.")
+                self.append_csv(result, reproducer_output)
+                observer.stop()
+
+            def append_csv(self, result, reproducer_output=None):
+                csv_path = Path(self.csv_path)
+                header = ["commit_id", "config", "result", "reproducer_output"]
+                file_exists = csv_path.exists()
+                with open(csv_path, "a", newline="") as csvfile:
+                    writer = csv.writer(csvfile)
+                    if not file_exists:
+                        writer.writerow(header)
+                    writer.writerow([self.commit_id, self.config_type, result, reproducer_output or "N/A"])
+
+        # Set up watchdog observer
+        observer = Observer()
+        event_handler = VMLogHandler(
+            qemu_instance,
+            timeout,
+            "/home/eshgin/Desktop/experiments/new_icse/get_results_output/pass_fail.csv",
+            commit_id,
+            config_type,
+        )
+        observer.schedule(event_handler, str(qemu_instance.log_path.parent), recursive=False)
+        observer.start()
+
+        # Monitor the VM process for the specified timeout
+        while time.time() - event_handler.start_time < timeout:
+            if not observer.is_alive():
+                break
+            time.sleep(5)
+
+        # If timeout expires without success
+        if not event_handler.success:
+            logger.warning("Timeout expired: VM did not boot successfully.")
+            event_handler.terminate_vm("failed")
+
     except Exception as e:
         logger.error(f"Error starting QEMU: {e}")
         return False
 
     return True
-
-
-
 
 
 def cleanup_temporary_resources(temporary_resources: list[Path]):
@@ -293,72 +357,132 @@ def cleanup_temporary_resources(temporary_resources: list[Path]):
                     logger.error(f"Failed to clean up temporary resource: {e}")
 
 
-def terminate_qemu_procs(qemu_pids: list[int]):
-    if not qemu_pids:
-        logger.warning("No QEMU processes to terminate")
-        return
+# def terminate_qemu_procs(qemu_pids: list[int]):
+#     if not qemu_pids:
+#         logger.warning("No QEMU processes to terminate")
+#         return
 
-    for qemu_pid in qemu_pids:
-        try:
-            logger.info(f"Terminating QEMU process and children with PID: {qemu_pid}")
-            subprocess.run(["pkill", "-P", str(qemu_pid)])  # Terminate all child processes
-            subprocess.run(["kill", "-9", str(qemu_pid)])  # Terminate the parent process
-        except Exception as e:
-            logger.error(f"Error terminating QEMU process with PID {qemu_pid}: {e}")
+#     for qemu_pid in qemu_pids:
+#         try:
+#             logger.info(f"Terminating QEMU process and children with PID: {qemu_pid}")
+#             subprocess.run(["pkill", "-P", str(qemu_pid)])  # Terminate all child processes
+#             subprocess.run(["kill", "-9", str(qemu_pid)])  # Terminate the parent process
+#         except Exception as e:
+#             logger.error(f"Error terminating QEMU process with PID {qemu_pid}: {e}")
 
 
+def run_reproducer(qemu_instance: QemuInstance, ssh_port: int) -> Optional[str]:
+    """
+    Transfers, compiles, and runs the reproducer inside the VM.
 
-def compile_reproducer(path_reproducer: Path, output: Path):
-    # Compile reproducer C file
+    Args:
+        qemu_instance (QemuInstance): The QEMU instance being monitored.
+        ssh_port (int): The SSH port for accessing the VM.
+
+    Returns:
+        Optional[str]: The output of the reproducer run, or None if it fails.
+    """
+    logger.info("Transferring, compiling, and running reproducer in the VM...")
     try:
-        subprocess.run(["gcc", "-o", "reproducer", path_reproducer])
-    except Exception as e:
-        raise ValueError(f"Error compiling reproducer: {e}")
-
-    path_reproducer_bin = output / "reproducer"
-    shutil.move("reproducer", path_reproducer_bin)
-
-
-def upload_reproducer_to_vms(
-    path_reproducer_bin: Path, path_debian_image_key: Path, qemu_ssh_port: int
-):
-    try:
+        reproducer_src = "/home/eshgin/Desktop/experiments/new_icse/icse25/hello_world.c"
+        remote_path = "/root/hello_world.c"
+        ssh_key = "/home/eshgin/Desktop/debian_image/bullseye.id_rsa"  # Use the correct private key
+        
+        # Step 1: Transfer the reproducer source file to the VM
+        logger.info(f"Transferring {reproducer_src} to the VM at {remote_path}...")
         subprocess.run(
             [
                 "scp",
-                "-i",
-                path_debian_image_key,
-                "-p",
-                str(qemu_ssh_port),
-                "-o",
-                "StrictHostKeyChecking no",
-                str(path_reproducer_bin),
-                "root@localhost:/root",
-            ]
+                "-i", ssh_key,
+                "-P", str(ssh_port),
+                "-o", "StrictHostKeyChecking=no",
+                reproducer_src,
+                f"root@localhost:{remote_path}",
+            ],
+            check=True,
         )
-    except Exception as e:
-        raise ValueError(f"Error uploading reproducer to VM: {e}")
+        logger.info("Reproducer source file transferred successfully.")
 
-
-def execute_reproducer_on_vms(
-    path_debian_image_key: Path, qemu_ssh_port: int
-):
-    try:
+        # Step 2: Compile the reproducer inside the VM
+        logger.info("Compiling the reproducer inside the VM...")
+        compile_command = f"gcc -o /root/reproducer {remote_path}"
         subprocess.run(
             [
                 "ssh",
-                "-i",
-                path_debian_image_key,
-                "-p",
-                str(qemu_ssh_port),
-                "-o",
-                "StrictHostKeyChecking no",
+                "-i", ssh_key,
+                "-p", str(ssh_port),
+                "-o", "StrictHostKeyChecking=no",
                 "root@localhost",
-                "./reproducer",
-            ]
+                compile_command,
+            ],
+            check=True,
         )
-    except Exception as e:
-        raise ValueError(f"Error executing reproducer on VM: {e}")
+        logger.info("Reproducer compiled successfully inside the VM.")
+
+        # Step 3: Run the compiled reproducer inside the VM
+        logger.info("Running the reproducer inside the VM...")
+        run_command = "./reproducer"
+        result = subprocess.run(
+            [
+                "ssh",
+                "-i", ssh_key,
+                "-p", str(ssh_port),
+                "-o", "StrictHostKeyChecking=no",
+                "root@localhost",
+                run_command,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        logger.info(f"Reproducer output:\n{result.stdout}")
+        return result.stdout
+
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to run reproducer in the VM: {e}")
+        return None
+
+
+# def upload_reproducer_to_vms(
+#     path_reproducer_bin: Path, path_debian_image_key: Path, qemu_ssh_port: int
+# ):
+#     try:
+#         subprocess.run(
+#             [
+#                 "scp",
+#                 "-i",
+#                 path_debian_image_key,
+#                 "-p",
+#                 str(qemu_ssh_port),
+#                 "-o",
+#                 "StrictHostKeyChecking no",
+#                 str(path_reproducer_bin),
+#                 "root@localhost:/root",
+#             ]
+#         )
+#     except Exception as e:
+#         raise ValueError(f"Error uploading reproducer to VM: {e}")
+
+
+# def execute_reproducer_on_vms(
+#     path_debian_image_key: Path, qemu_ssh_port: int
+# ):
+#     try:
+#         subprocess.run(
+#             [
+#                 "ssh",
+#                 "-i",
+#                 path_debian_image_key,
+#                 "-p",
+#                 str(qemu_ssh_port),
+#                 "-o",
+#                 "StrictHostKeyChecking no",
+#                 "root@localhost",
+#                 "./reproducer",
+#             ]
+#         )
+#     except Exception as e:
+#         raise ValueError(f"Error executing reproducer on VM: {e}")
 
 def vm_crash_check(qemu_log_path: Path) -> bool:
     """Check if a VM crashed by looking at the QEMU log file.
@@ -468,7 +592,7 @@ def main():
     
     finally:
         cleanup_temporary_resources([Path(tmp_kernel_src.name), *kernel_image_paths])
-        terminate_qemu_procs([qemu_instance.pid for qemu_instance in qemu_instances if qemu_instance.pid])
+        # terminate_qemu_procs([qemu_instance.pid for qemu_instance in qemu_instances if qemu_instance.pid])
 
 if __name__ == "__main__":
     main()
