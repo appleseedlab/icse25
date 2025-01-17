@@ -1,7 +1,10 @@
 {
-    "kernel_commit_1": "/tmp/test1",
-    "kernel_commit_2": "/tmp/test2",
+    "kernel_commit_id": "80487a37def2a75f083388cf6e811bff9b6140df",
+    "kernel_src": "/home/eshgin/Desktop/experiments/new_icse/icse25/linux",
     "path_config_default": "/tmp/default",
     "path_config_repaired": "/tmp/repaired",
-    "path_reproducer": "/tmp/reproducer"
+    "path_reproducer": "/tmp/reproducer",
+    "output": "/home/eshgin/Desktop/experiments/new_icse/get_results_output",
+    "debian_image_src": "/home/eshgin/Desktop/debian_image/",
+    "cores": 4
 }
