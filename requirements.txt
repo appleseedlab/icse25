@@ -29,3 +29,4 @@ matplotlib-venn==1.1.1
 gitpython
 tqdm
 loguru
+gdown
