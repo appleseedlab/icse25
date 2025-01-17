@@ -184,7 +184,7 @@ function run_syzkaller_fuzz() {
 
     echo "[*] Running syzkaller fuzzing with config: $syz_cfg"
     # 12h fuzzing
-    timeout $fuzzing_time "$REPO_ROOT/$syzkaller_path/bin/syz-manager" \
+    timeout $fuzzing_time "$syzkaller_path/bin/syz-manager" \
         -config="$syz_cfg" 2>&1 | tee "$fuzzing_log"
     local exit_status_timeout="${PIPESTATUS[0]}"
 
@@ -205,7 +205,7 @@ function run_syzkaller_fuzz() {
 ################################################################################
 
 # We pick an initial port. If it's used, find_free_port will increment
-syzkaller_port=56700
+syzkaller_port=$(shuf -i 1024-65535 -n 1)
 syzkaller_port="$(find_free_port "$syzkaller_port")"
 
 echo "[*] Initial syzkaller port: $syzkaller_port"
@@ -256,7 +256,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
     echo "[+] Created syzkaller workdir: $workdir_name"
 
     # Create or overwrite syzkaller main config file
-    syz_cfg="$REPO_ROOT/$syzkaller_path/my.cfg"
+    syz_cfg="$syzkaller_path/$(date +%s).cfg"
     cat > "$syz_cfg" <<EOF
 {
   "target": "linux/amd64",
@@ -265,7 +265,7 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name;
   "kernel_obj": "$dir_linux_next",
   "image": "$debian_image_path/bullseye.img",
   "sshkey": "$debian_image_path/bullseye.id_rsa",
-  "syzkaller": "$REPO_ROOT/$syzkaller_path",
+  "syzkaller": "$syzkaller_path",
   "procs": 8,
   "type": "qemu",
   "vm": {
@@ -287,7 +287,6 @@ EOF
     echo "syz config path: $syz_cfg"
     echo "fuzzing_instance_log_path: $fuzzing_instance_log_path"
     echo "fuzzing_time $fuzzing_time"
-    sleep 100
     run_syzkaller_fuzz "$syz_cfg" "$fuzzing_instance_log_path" "$fuzzing_time"
 
     # Move to the next port if needed
