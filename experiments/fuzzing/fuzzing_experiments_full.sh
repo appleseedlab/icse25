@@ -67,7 +67,7 @@ if [[ ! -d "$debian_image_path" ]]; then
 fi
 
 # Check if klocalizer binary exists
-if [ command -v klocalizer &> /dev/null ]; then
+if [ -x "$(command -v klocalizer)" ]; then
     echo "[+] klocalizer binary found"
 else
     echo "[-] klocalizer binary not found"
