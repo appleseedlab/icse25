@@ -299,4 +299,3 @@ done < "$csv_file"
 
 echo "[*] All fuzzing done!"
 echo "[*] Final logs: $log_file"
-
