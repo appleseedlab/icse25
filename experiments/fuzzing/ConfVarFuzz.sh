@@ -13,14 +13,14 @@ REPO_ROOT="$(realpath "$SCRIPT_DIR/../../")"
 ################################################################################
 
 usage() {
-    echo "[!] Usage: $0 <experiment_type> <csv-file> <path to linux-next> <path to syzkaller>"
+    echo "[!] Usage: $0 <experiment_type> <fuzz_type> <csv-file> <path to linux-next> <path to syzkaller>"
     echo "           <path to debian image> <path to output folder> <fuzzing-time>"
     echo "[*] Example: $0 default experiments/fuzzing/fuzzing_parameters.csv linux-next syzkaller debian_image experiments/fuzzing/output 12h"
     echo "    where all paths except syzkaller_path are relative to \$REPO_ROOT."
     exit 9
 }
 
-if [[ $# -ne 7 ]]; then
+if [[ $# -ne 8 ]]; then
     usage
 fi
 
@@ -304,6 +304,7 @@ function run_klocalizer() {
     local config_file="$2"
     local repair_commit_hash="$3"
     local output_folder="$4"
+    local repaired_config_file="$5"
 
     # Change into the kernel source directory or exit if it fails
     pushd "$kernel_src" || {
@@ -328,7 +329,6 @@ function run_klocalizer() {
 
     # Check for 0-x86_64.config, move it to $output_folder if present
     if [[ -f "0-x86_64.config" ]]; then
-        repaired_config_file="$output_folder/repaired_${repair_commit_hash}.config"
         mv "0-x86_64.config" "$repaired_config_file"
     else
         echo "0-x86_64.config not found"
@@ -416,7 +416,8 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name 
 
             # Run klocalizer to generate a repaired config file
             echo "[*] Running klocalizer for commit: $commit_hash"
-            repaired_config_file=$(run_klocalizer "$dir_linux_next" "$syzbot_config_files_path/$syzbot_config_name" "$commit_hash" "$output_path")
+            repaired_config_file="${output_path}/repaired_${commit_hash}.config"
+            run_klocalizer "$dir_linux_next" "$syzbot_config_files_path/$syzbot_config_name" "$commit_hash" "$output_path" "$repaired_config_file"
             if [[ -z "$repaired_config_file" ]]; then
                 echo "[-] klocalizer failed for commit: $commit_hash"
                 continue
