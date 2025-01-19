@@ -49,7 +49,7 @@ def calculate_statistics(values):
         "25th_percentile": np.percentile(values, 25),
         "median": np.median(values),
         "75th_percentile": np.percentile(values, 75),
-        "99th_percentile": np.percentile(values, 99),
+        "90th_percentile": np.percentile(values, 90),
         "max": np.max(values),
     }
     return statistics
@@ -109,16 +109,27 @@ def create_pdf_table(stats):
     plt.close(fig)
 
 
+def get_config_changes(csv_file):
+    vals = []
+    with open(csv_file, mode='r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if len(row) >= 3:
+                vals.append(int(row[2]))
+    return vals
+
 def main():
     args = parse_args()
-    percentage_changes = calculate_percentage_changes(args.change_of_summaries_csv)
-    stats = calculate_statistics(percentage_changes)
+    # percentage_changes = calculate_percentage_changes(args.change_of_summaries_csv)
+    vals = get_config_changes(args.change_of_summaries_csv)
+    print(f"Vals: {vals}")
+    stats = calculate_statistics(vals)
 
     print(f"Minimum: {stats['min']:.2f}")
     print(f"25th Percentile: {stats['25th_percentile']:.2f}")
     print(f"Median: {stats['median']:.2f}")
     print(f"75th Percentile: {stats['75th_percentile']:.2f}")
-    print(f"99th Percentile: {stats['99th_percentile']:.2f}")
+    print(f"90th Percentile: {stats['90th_percentile']:.2f}")
     print(f"Maximum: {stats['max']:.2f}")
 
     create_pdf_table(stats)
