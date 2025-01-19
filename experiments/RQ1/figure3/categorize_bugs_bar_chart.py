@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 import csv
 from collections import Counter
+import os
 
 # Read kernel bugs from CSV file into a list
 kernel_bugs = []
-with open("icse25/experiments/RQ1/figure3/repaired_bugs2.csv", "r") as csvfile:
+script_dir = os.path.dirname(os.path.realpath(__file__))
+with open(f"{script_dir}/repaired_bugs2.csv", "r") as csvfile:
     csvreader = csv.reader(csvfile)
     for row in csvreader:
         if row:  # Check if row is not empty
@@ -109,7 +111,8 @@ for bar in bars:
     )  # Add a small buffer of +1 after width
 
 # Save the plot as a PDF file
-plt.savefig("kernel_bug_categories_bar_chart.pdf", format="pdf", bbox_inches="tight")
+print(f"Saving the plot at {script_dir}/kernel_bug_categories_bar_chart.pdf")
+plt.savefig(f"{script_dir}/kernel_bug_categories_bar_chart.pdf", format="pdf", bbox_inches="tight")
 
 # Show the plot
 plt.show()
