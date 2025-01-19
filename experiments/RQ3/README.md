@@ -22,10 +22,7 @@ to show how the vast majority of cases behave.
 The directory `table6` contains the data and scripts used to generate Table VI.
 
 To reproduce the Table VI data, use the following command:
-#TODO: This gives wrong results, fix asap.
 ```bash
 docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ3/table6/get_change_summary.sh";
 ```
-The script will output a file `table6/change_summary.pdf` containing the
-percentage change in the number of configuration options for the original and
-krepaired configuration files.
+The script will output the percentile information of the change summary study.
