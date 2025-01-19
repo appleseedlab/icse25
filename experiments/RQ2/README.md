@@ -98,11 +98,16 @@ processes, or other environmental conditions during execution.
 To ensure consistency and reproducibility in the reported results, we rely on
 the originally recorded data, which accurately reflects the conditions under which
 the measurements were initially conducted.
+
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
 docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/original/get_build_times.sh"
 ```
+> [!NOTE]
+> The script builds all 50 kernel images with the original configuration files.
+Running the script on a machine with 8 cores and 16 GB of RAM takes approximately
+around 22 hours to complete.
 
 To get the data for the 'Repaired Configurations' column of Table V,
 run the following command:
@@ -120,11 +125,16 @@ processes, or other environmental conditions during execution.
 To ensure consistency and reproducibility in the reported results, we rely on
 the originally recorded data, which accurately reflects the conditions under which
 the measurements were initially conducted.
+
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
 docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/repaired/get_build_times_repaired.sh"
 ```
+> [!NOTE]
+> The script builds all 50 kernel images with the repaired configuration files.
+Running the script on a machine with 8 cores and 16 GB of RAM takes approximately
+around 22 hours to complete.
 
 ### Fig. 4: Comparing syzkaller performance before and after using krepair.
 The directory `figure4` contains the data and scripts used to generate Fig. 4.
