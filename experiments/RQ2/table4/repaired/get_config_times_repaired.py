@@ -138,7 +138,7 @@ def main():
 
     data = read_from_csv(file_path)
     process_data(data, kernel_src, configs_dir, output_path)
-    # print(data)
+    print(f'Results written to {output_path}')
 
 if __name__ == '__main__':
     main()
