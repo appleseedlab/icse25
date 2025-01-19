@@ -3,9 +3,9 @@
 set -x
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(realpath "$SCRIPT_DIR/..")"
+REPO_ROOT="$(realpath "$SCRIPT_DIR/../../../../")"
 
-KERNEL_SRC="$REPO_ROOT/../../../linux-next"
+KERNEL_SRC="$REPO_ROOT/linux-next"
 # exit if kernel source directory does not exist
 if [ ! -d "$KERNEL_SRC" ]; then
     echo "[-] Kernel source directory does not exist. Please provide the correct path."
@@ -13,7 +13,7 @@ if [ ! -d "$KERNEL_SRC" ]; then
 fi
 
 SRC_CSV_FILE="$SCRIPT_DIR/../repaired_configs.csv"
-CONFIGS_DIR="$REPO_ROOT/../../../camera_ready/configuration_files/syzbot_configuration_files"
+CONFIGS_DIR="$REPO_ROOT/configuration_files/syzbot_configuration_files"
 
 # Read config_name, kernel_id, commit_id from csv file
 
@@ -34,3 +34,5 @@ do
     echo "$config_name,$kernel_id,$commit_id,$config_time" >> $SCRIPT_DIR/config_times.csv
 
 done < $SRC_CSV_FILE
+
+echo "Config times are saved in $SCRIPT_DIR/config_times.csv"
