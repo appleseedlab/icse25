@@ -1,10 +1,12 @@
 {
-    "kernel_commit_id": "80487a37def2a75f083388cf6e811bff9b6140df",
-    "kernel_src": "/home/eshgin/Desktop/experiments/new_icse/icse25/linux",
-    "path_config_default": "/tmp/default",
-    "path_config_repaired": "/tmp/repaired",
-    "path_reproducer": "/tmp/reproducer",
+    "kernel_commit_id": "b7455b10da762f2d447678c88e37cc1eb6cb45ee",
+    "kernel_src": "/home/eshgin/Desktop/experiments/new_icse/icse25/linux-next",
+    "path_config_default": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/configs/default_config/020421.config",
+    "path_config_repaired": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/configs/repaired_config/repaired_86ad9a24f21ea7aac7deed06fe9556392568d88a.config",
+    "path_reproducer": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/reproducer/reproducer.c",
     "output": "/home/eshgin/Desktop/experiments/new_icse/get_results_output",
     "debian_image_src": "/home/eshgin/Desktop/debian_image/",
+    "default_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/default_config_image/bzImage",
+    "repaired_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/repaired_config_image/bzImage",
     "cores": 4
 }
