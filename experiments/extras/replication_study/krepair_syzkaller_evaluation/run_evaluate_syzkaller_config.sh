@@ -15,15 +15,22 @@ if [ "$#" -lt 6 ]; then
 	exit -1
 fi
 
-linuxsrclone=${1}
-linuxsrclone=$(realpath ${linuxsrclone})
+linuxsrclone=$(realpath ${1})
 commit=${2}
 arch=${3}
 formulacache=${4}
 outdir=${5}
+syzkallersrc=$(realpath ${6})
 
-syzkallersrc=${6}
-syzkallersrc=$(realpath ${syzkallersrc})
+if [ ! -d $linuxsrclone ]; then
+    echo "ERROR: linux source directory does not exist"
+    exit 1
+fi
+
+if [ ! -d $syzkallersrc ]; then
+    echo "ERROR: syzkaller source directory does not exist"
+    exit 1
+fi
 
 if [ -d $outdir ]; then
 	echo "ERROR: output directory already exists"
@@ -32,8 +39,6 @@ else
 	mkdir -p $outdir
 fi
 outdir=$(realpath $outdir)
-
-build_flags=$7
 
 patch=${outdir}/commit.patch
 
@@ -60,6 +65,13 @@ echo "[+] Going to execute syz-kconf now..."
 (
 	cd ${syzkallersrc}
 	echo "[+] Current path: $PWD... Executing syz-kconf now:"
+
+    # check if ./tools/syz-kconf/syz-kconf exists
+    if [ ! -f ./tools/syz-kconf/syz-kconf ]; then
+        echo "ERROR: ./tools/syz-kconf/syz-kconf does not exist"
+        echo "INFO: Building syz-kconf..."
+        (cd ./tools/syz-kconf; go build)
+    fi
 
 	# modify main.yml to use commit id you specified to checkout the kernel source when building the config with syz-kconf
 	syzkconf_config_path=${syzkallersrc}/dashboard/config/linux/main.yml

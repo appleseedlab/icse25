@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
+# example: bash ./run_many_syzkaller_evaluations.sh ./coverable_patches ../../../linux/ x86_64 formulacache ./outdir/ ../../../syzkaller |& tee out
 
-# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_syzkaller_evaluations.sh localhost:45678 linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
+# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_many_cyzkaller_evaluations.sh localhost:45678 linux/ x86_64 formulacache outdir/ ~/Documents/syzkaller |& tee out
 
 # example:
 # java superc.util.FilenameService -server 45678 /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches &
@@ -13,25 +13,25 @@ set -x
 # used to find other scripts called
 script_dir=$(dirname $(realpath $0))
 
-if [ "$#" -lt 6 ]; then
-	echo "Illegal number of parameters"
-	exit -1
-fi
+default_linux_src=$(realpath "${script_dir}/../../../linux-next")
+default_syzkaller_src=$(realpath "${script_dir}/../../../syzkaller")
+default_outdir="${script_dir}/outdir"
+default_kaflsrc="${script_dir}/kafl.config"
+mkdir -p $default_outdir
 
 # the source of commit ids, either a /path/to/a/sample/file (no colon symbol permitted) or the server:port of a FilenameService
-source=${1}
-linuxsrclone=${2}
-linuxsrclone=$(realpath ${linuxsrclone})
-arch=${3}
-formulacache=${4}
-outdir=${5}
-syzkallersrc=${6}
-build_flags=${7}
+source=${1-"${script_dir}/coverable_patches"}
+linuxsrclone=$(realpath ${2-${default_linux_src}})
+arch=${3-x86_64}
+formulacache=${4-formulacache}
+outdir=$(realpath ${5-${default_outdir}})
+kaflsrc=$(realpath ${6-${default_kaflsrc}})
+
 
 run_eval() {
 	commit=$1
 	outdir_commit=${outdir}/${commit}
-	bash ${script_dir}/run_evaluate_syzkaller_config.sh ${linuxsrclone} ${commit} ${arch} ${formulacache} ${outdir_commit} ${syzkallersrc} ${build_flags}
+	bash ${script_dir}/run_evaluate_kafl_config.sh ${linuxsrclone} ${commit} ${arch} ${formulacache} ${outdir_commit} ${kaflsrc}
 }
 
 # assume it's a server:port if there is a colon

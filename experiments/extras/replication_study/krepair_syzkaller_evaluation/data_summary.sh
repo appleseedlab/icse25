@@ -1,17 +1,19 @@
+#!/bin/bash
+
 scriptsdir=$(dirname $0)
 
-experimentdir=${1}
-
-coverable_patches=${scriptsdir}/coverable_patches
+experimentdir=$(realpath ${1-"${scriptsdir}/outdir"})
+coverable_patches=${2-"${scriptsdir}/coverable_patches"}
 
 echo "commit,configfile,builderrcode,patchcoverage,buildtime"
 cat ${coverable_patches} | while read commit; do
 	commitdir=$(ls -d ${experimentdir}/${commit})
 	configdir=${commitdir}/syzkaller_config/results
+	koverageoutfile=${configdir}/koverage_outfile
 	echo -n ${commit},
 	echo -n syzkaller_config,
 	# echo -n $(cat ${commitdir}/syzkaller_config/results/build.errcode),
-	echo -n $(python3 ${scriptsdir}/patch_coverage.py ${configdir}/koverage_outfile | cut -d' ' -f4),
+	echo -n $(python3 ${scriptsdir}/patch_coverage.py ${koverageoutfile} | cut -d' ' -f4),
 	# echo -n $(cat ${commitdir}/syzkaller_config/results/build.time | head -n1)
 	echo
 done

@@ -22,6 +22,6 @@ grep "defconfig" $SCRIPT_DIR/defconfig_krepair_experiment_j8.csv | awk -F',' '{p
 # to obtain defconfig_krepair_patchcoverage.txt
 grep "krepair" $SCRIPT_DIR/defconfig_krepair_experiment_j8.csv | awk -F',' '{print $4}' > $SCRIPT_DIR/defconfig_krepair_patchcoverage.txt
 
-python3 $REPO_ROOT/figure1/calculate_confidence_interval.py --syzkaller_file $SCRIPT_DIR/syzkaller_config_patchcoverage.txt --krepair_file $SCRIPT_DIR/krepair_patchcoverage.txt --kafl_file $SCRIPT_DIR/kafl_config_patchcoverage.txt --kafl_krepair_file $SCRIPT_DIR/kafl_krepair_patchcoverage.txt --defconfig_file $SCRIPT_DIR/defconfig_config_patchcoverage.txt --defconfig_krepair_file $SCRIPT_DIR/defconfig_krepair_patchcoverage.txt --output_file $SCRIPT_DIR/patchcoverage.pdf
+python3 $SCRIPT_DIR/calculate_confidence_interval.py --syzkaller_file $SCRIPT_DIR/syzkaller_config_patchcoverage.txt --krepair_file $SCRIPT_DIR/krepair_patchcoverage.txt --kafl_file $SCRIPT_DIR/kafl_config_patchcoverage.txt --kafl_krepair_file $SCRIPT_DIR/kafl_krepair_patchcoverage.txt --defconfig_file $SCRIPT_DIR/defconfig_config_patchcoverage.txt --defconfig_krepair_file $SCRIPT_DIR/defconfig_krepair_patchcoverage.txt --output_file $SCRIPT_DIR/patchcoverage.pdf
 
 echo "Saved the figure to $SCRIPT_DIR/patchcoverage.pdf"
