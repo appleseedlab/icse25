@@ -190,7 +190,7 @@ def compile_kernel(
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Compile kernel")
+    parser = argparse.ArgumentParser(description="Compile kernel and run QEMU with options")
     parser.add_argument(
         "-c",
         "--config_file",
@@ -198,7 +198,14 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Path to the config file",
     )
-
+    parser.add_argument(
+        "-rt",
+        "--relationship-test",
+        type=str,
+        required=True,
+        choices=["kcov", "reproducer"],
+        help="Type of relationship test to run ('kcov' or 'reproducer')",
+    )
     return parser.parse_args()
 
 
@@ -224,6 +231,7 @@ def run_qemu(
     commit_id: str = "",
     config_type: str = "",
     reproducer_src = "",
+    test_type = ""
 ) -> bool:
     """
     Runs a QEMU instance with a kernel image and a Debian image, ensuring it terminates after the specified timeout.
@@ -311,34 +319,26 @@ def run_qemu(
                     self.check_vm_state()
 
             def check_vm_state(self):
+                if self.success:  # Stop further processing if already successful
+                    return
                 try:
                     with open(self.qemu_instance.log_path, "r") as log_file:
                         for line in log_file:
                             if "login:" in line or "Welcome to" in line:
                                 logger.info("VM booted successfully!")
                                 shutil.copy(self.qemu_instance.log_path, f"{icse_path}/log_before_repro.log")
-                                # Run the reproducer
-                                time.sleep(10)
-                                reproducer_output = run_reproducer(
-                                    self.qemu_instance, self.qemu_instance.ssh_port, reproducer_src,
-                                    config_type=config_type
-                                )
-                                logger.info(f"The result of the run is: {reproducer_output}")
-                                time.sleep(10)
                                 
-                                # Check if reproducer output indicates success
-                                if reproducer_output == "reproducer crashed the VM":
-                                    logger.info(reproducer_output)
-                                    self.success = True  # Update success flag
-                                    self.terminate_vm("booted", reproducer_output)
-                                elif reproducer_output == "timout":
-                                    self.success = False
-                                    logger.error(reproducer_output)
-                                    self.terminate_vm("failed")
-                                elif reproducer_output == "Reproducer did not affect VM":
-                                    self.success = False
-                                    self.terminate_vm("did not affect VM")
-                                    logger.error(reproducer_output)
+                                # Run the reproducer only once
+                                if not self.success:
+                                    time.sleep(10)
+                                    reproducer_output = run_reproducer(
+                                        self.qemu_instance.ssh_port, reproducer_src,
+                                        config_type, test_type
+                                    )
+                                    logger.info(f"The result of the run is: {reproducer_output}")
+                                    logger.info(f"The run is complete for: {config_type} config type")
+                                    self.success = True  # Mark success to avoid reruns
+                                self.terminate_vm("booted", reproducer_output)
                                 return
                             elif "Kernel panic" in line or "Error" in line:
                                 logger.error("VM crashed or encountered an error.")
@@ -346,6 +346,7 @@ def run_qemu(
                                 return
                 except Exception as e:
                     logger.error(f"Error reading log file: {e}")
+
 
 
             def terminate_vm(self, result, reproducer_output=None):
@@ -397,7 +398,7 @@ def run_qemu(
 
     return True
 
-def run_reproducer(qemu_instance: QemuInstance, ssh_port: int, reproducer_src, config_type="default") -> Optional[str]:
+def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov") -> Optional[str]:
     """
     Transfers, compiles, and runs the reproducer inside the VM.
 
@@ -483,7 +484,11 @@ def run_reproducer(qemu_instance: QemuInstance, ssh_port: int, reproducer_src, c
         # Step 4: Compile the reproducer inside the VM
         logger.info("Compiling the reproducer inside the VM...")
         try:
-            compile_command = f"cd {remote_dir} && gcc -o repro_binary ./reproducer.c && ./repro_binary 2>&1 | tee /root/{config_type}.trace"
+            if test_type == "reproducer":
+                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./reproducer.c && ./repro_binary 2>&1 | tee /root/{config_type}.trace"
+            else: 
+                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./reproducer.c && ./repro_binary"
+            
             res = subprocess.run(
                 f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "{compile_command}"',
                 shell=True,  # Use shell=True to interpret the command properly
@@ -494,50 +499,28 @@ def run_reproducer(qemu_instance: QemuInstance, ssh_port: int, reproducer_src, c
             )
 
             logger.info("Reproducer compiled successfully inside the VM.")
-            logger.info(f"Result of the run is: {res}")
-            pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
-            subprocess.run(
-                    pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type),
-                    check=True,
-                    shell=True,
-                    capture_output=True,
-                    text=True
-                )
-            return "reproducer crashed the VM"
+            
+            if test_type == "reproducer":
+                try:
+                    pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
+                    subprocess.run(
+                            pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type),
+                            check=True,
+                            shell=True,
+                            capture_output=True,
+                            text=True
+                        )
+                    return "Downloaded trace files successfully"
+                except Exception as e:
+                    logger.error(f"Downloading files failed with error: {e}")
+                    return "Downloading trace files failed"
         except subprocess.CalledProcessError as e:
             logger.error(f"Compiling reproducer failed: {e.stderr.strip()}")
-            
-            try:
-                pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
-                subprocess.run(
-                        pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type),
-                        check=True,
-                        shell=True,
-                        capture_output=True,
-                        text=True
-                    )
-                logger.info("Reproducer executed successfully.")
-                # Check logs or output for crash evidence if needed
-                return "Reproducer did not affect VM"
-            except Exception as e:
-                logger.error(f"Failed to retrieve long file from the VM: {e}")
-                return None
-            
-        except subprocess.TimeoutExpired:
-            logger.error("5 minutes passed, reproducer compilation timed out without crashing anything.")
-            pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
-            subprocess.run(
-                    pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type),
-                    check=True,
-                    shell=True,
-                    capture_output=True,
-                    text=True
-                )
-            return "timeout"
+            return "Reproducer crashed the VM"
 
     except subprocess.CalledProcessError as e:
         logger.error(f"Failed to run reproducer in the VM: {e}")
-        return None
+        return "Running reproducer failed"
 
 
 def main():
@@ -548,7 +531,7 @@ def main():
         return
 
     config = parse_config(args.config_file)
-
+    test_type = args.relationship_test
     debian_image = DebianImage(
         path_debian_image=config.debian_image_src / "bullseye.img",
         path_debian_image_key=config.debian_image_src / "bullseye.id_rsa",
@@ -573,7 +556,8 @@ def main():
                 timeout=300,
                 commit_id=config.kernel_commit_id,
                 config_type=config_type,
-                reproducer_src=config.path_reproducer
+                reproducer_src=config.path_reproducer,
+                test_type=test_type
             )
 
             if not boot_success:
@@ -592,13 +576,6 @@ def main():
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-
-
-    # finally:
-    #     # Cleanup resources
-    #     for path in kernel_image_paths.values():
-    #         shutil.rmtree(path.parent, ignore_errors=True)
-    #     logger.info("Temporary resources cleaned up.")
 
 if __name__ == "__main__":
     main()
