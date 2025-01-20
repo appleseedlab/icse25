@@ -29,6 +29,7 @@ class Config:
     path_config_repaired: Path = Path()
     default_config_image: Path = Path()
     repaired_config_image: Path = Path()
+    icse_path: Path = Path()
     path_reproducer: Path = Path()
     output: Path = Path("./output")
     debian_image_src: Path = Path()
@@ -62,6 +63,7 @@ def parse_config(config_file: Path) -> Config:
         default_config_image=Path(json_config["default_config_image"]),
         repaired_config_image=Path(json_config["repaired_config_image"]),
         path_reproducer=Path(json_config["path_reproducer"]),
+        icse_path=Path(json_config["icse_path"]),
         output=Path(json_config["output"]),
         debian_image_src=Path(json_config["debian_image_src"]),
         cores=json_config["cores"],
@@ -231,7 +233,11 @@ def run_qemu(
     commit_id: str = "",
     config_type: str = "",
     reproducer_src = "",
-    test_type = ""
+    test_type = "",
+    kernel_src="",
+    output="",
+    icse_path="",
+    debian_image_src=""
 ) -> bool:
     """
     Runs a QEMU instance with a kernel image and a Debian image, ensuring it terminates after the specified timeout.
@@ -249,7 +255,6 @@ def run_qemu(
     """
     qemu_instance.log_path = Path(kernel_image_path.parent, "qemu.log")
     qemu_instance.log_path.touch()
-    icse_path="/home/eshgin/Desktop/experiments/new_icse"
 
     qemu_instance.pid_path = Path(kernel_image_path.parent, f"vm_{uuid4().hex}.pid")
     if qemu_instance.pid_path.exists():
@@ -333,7 +338,8 @@ def run_qemu(
                                     time.sleep(10)
                                     reproducer_output = run_reproducer(
                                         self.qemu_instance.ssh_port, reproducer_src,
-                                        config_type, test_type
+                                        config_type, test_type, kernel_src=kernel_src, output=output, icse_path=icse_path,
+                                        debian_image_src=debian_image_src
                                     )
                                     logger.info(f"The result of the run is: {reproducer_output}")
                                     logger.info(f"The run is complete for: {config_type} config type")
@@ -346,8 +352,6 @@ def run_qemu(
                                 return
                 except Exception as e:
                     logger.error(f"Error reading log file: {e}")
-
-
 
             def terminate_vm(self, result, reproducer_output=None):
                 logger.info(f"Terminating VM with PID: {self.qemu_instance.pid}")
@@ -398,7 +402,82 @@ def run_qemu(
 
     return True
 
-def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov") -> Optional[str]:
+
+import subprocess
+
+def process_trace(config_type, output):
+    trace_file = f"{output}/trace_files/{config_type}.trace"
+    vmlinux_file = f"{output}/images/{config_type}_config_image/vmlinux"
+    output_file = f"{output}/trace_files/{config_type}.lines"
+    try:
+        with open(trace_file, "r") as trace, open(output_file, "w") as output_file:
+            for line in trace:
+                address = line.strip()  # Remove any whitespace or newline
+                if not address:
+                    continue  # Skip empty lines
+
+                # Run addr2line for the address
+                result = subprocess.run(
+                    ["addr2line", "-afi", "-e", vmlinux_file, address],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    check=True
+                )
+
+                # Filter the addr2line output for paths containing "linux-next"
+                for result_line in result.stdout.splitlines():
+                    if "linux-next" in result_line and ".c:" in result_line:
+                        # Extract the relevant path after "linux-next"
+                        parts = result_line.strip().split(":")
+                        if len(parts) == 2 and parts[0].endswith(".c"):
+                            file_path_start = parts[0].find("linux-next") + len("linux-next/")
+                            file_path = parts[0][file_path_start:]
+                            line_number = parts[1]
+                            output_file.write(f"{file_path}:{line_number}\n")
+        return "succeeded"
+    except Exception as e:
+        print(f"Error in process_trace: {e}")
+        return "failed"
+
+
+def process_lines_with_klocalizer(config_type, linux_ksrc, output):
+    input_file = f"{output}/trace_files/{config_type}.lines"
+    output_file = f"{output}/trace_files/{config_type}.kloc_deps"
+    try:
+        with open(input_file, "r") as infile, open(output_file, "w") as outfile:
+            for line in infile:
+                # Extract file path and line number
+                parts = line.strip().split(":")
+                if len(parts) == 2 and parts[0].endswith(".c"):
+                    file_path = parts[0]
+                    line_number = parts[1]
+                    
+                    # Format the include argument for klocalizer
+                    include_arg = f"{file_path}:[{line_number}]"
+                    
+                    # Run klocalizer
+                    command = [
+                        "klocalizer",
+                        "--view-kbuild",
+                        "--linux-ksrc", linux_ksrc,
+                        "--include", include_arg
+                    ]
+                    
+                    # Execute the command
+                    result = subprocess.run(command, text=True, capture_output=True, check=True)
+                    
+                    # Filter lines starting with "[" and write to the output file
+                    for output_line in result.stdout.splitlines():
+                        if output_line.startswith("["):
+                            outfile.write(output_line + "\n")
+        return "succeeded"
+    except Exception as e:
+        print(f"Error in process_lines_with_klocalizer: {e}")
+        return "failed"
+
+
+def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov", kernel_src="", output="", icse_path="", debian_image_src="") -> Optional[str]:
     """
     Transfers, compiles, and runs the reproducer inside the VM.
 
@@ -410,11 +489,10 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
     Returns:
         Optional[str]: The output of the reproducer run, or None if it fails.
     """
-    icse_path="/home/eshgin/Desktop/experiments/new_icse"
     logger.info("Transferring, compiling, and running reproducer in the VM...")
     try:
         remote_dir = "/root/repro0"
-        ssh_key = "/home/eshgin/Desktop/debian_image/bullseye.id_rsa"  # Use the correct private key
+        ssh_key = f"{debian_image_src}/bullseye.id_rsa"  # Use the correct private key
 
         # Step 1: Create remote directory
         try:
@@ -497,10 +575,11 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                 text=True,  # Decode stdout and stderr as text
                 timeout=10,  # Optional timeout to prevent indefinite execution
             )
-
+            logger.info(f"The output of repro run: {res}")
             logger.info("Reproducer compiled successfully inside the VM.")
             
             if test_type == "reproducer":
+                # Retrieve the corresponding trace file from the VM
                 try:
                     pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
                     subprocess.run(
@@ -510,10 +589,25 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                             capture_output=True,
                             text=True
                         )
-                    return "Downloaded trace files successfully"
+                    logger.success("Downloaded trace files successfully")
                 except Exception as e:
                     logger.error(f"Downloading files failed with error: {e}")
-                    return "Downloading trace files failed"
+                
+                # Run the command to get line information from traces
+                
+                process_res = process_trace(config_type=config_type, output=output)
+                if process_res == "succeeded":
+                    logger.success("Got line info successfully")
+                else:
+                    logger.error(f"Getting line info failed")
+                    
+                process_with_kloc_res = process_lines_with_klocalizer(
+                    config_type=config_type, linux_ksrc=kernel_src, output=output
+                )
+                if process_with_kloc_res == "succeeded":
+                    logger.success("run klocalizer successfully")
+                else:
+                    logger.error(f"run klocalizer failed")
         except subprocess.CalledProcessError as e:
             logger.error(f"Compiling reproducer failed: {e.stderr.strip()}")
             return "Reproducer crashed the VM"
@@ -557,7 +651,11 @@ def main():
                 commit_id=config.kernel_commit_id,
                 config_type=config_type,
                 reproducer_src=config.path_reproducer,
-                test_type=test_type
+                test_type=test_type,
+                kernel_src=config.kernel_src,
+                output=config.output,
+                icse_path=config.icse_path,
+                debian_image_src=config.debian_image_src
             )
 
             if not boot_success:
