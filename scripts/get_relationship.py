@@ -331,7 +331,7 @@ def run_qemu(
                         for line in log_file:
                             if "login:" in line or "Welcome to" in line:
                                 logger.info("VM booted successfully!")
-                                shutil.copy(self.qemu_instance.log_path, f"{icse_path}/log_before_repro.log")
+                                shutil.copy(self.qemu_instance.log_path, f"{output}/log_before_repro.log")
                                 
                                 # Run the reproducer only once
                                 if not self.success:
@@ -378,7 +378,7 @@ def run_qemu(
         event_handler = VMLogHandler(
             qemu_instance,
             timeout,
-            f"{icse_path}/get_results_output/pass_fail.csv",
+            f"{output}/pass_fail.csv",
             commit_id,
             config_type,
         )
@@ -581,9 +581,9 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
             if test_type == "reproducer":
                 # Retrieve the corresponding trace file from the VM
                 try:
-                    pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {icse_path}/get_results_output/trace_files"
+                    pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {output}/trace_files"
                     subprocess.run(
-                            pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type),
+                            pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type, output=output),
                             check=True,
                             shell=True,
                             capture_output=True,

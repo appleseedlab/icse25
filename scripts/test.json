@@ -8,6 +8,6 @@
     "debian_image_src": "/home/eshgin/Desktop/debian_image/",
     "default_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/default_config_image/bzImage",
     "repaired_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/repaired_config_image/bzImage",
-    "icse_path": "/home/eshgin/Desktop/experiments/new_icse",
+    "icse_path": "/home/eshgin/Desktop/experiments/new_icse/icse25",
     "cores": 4
 }
