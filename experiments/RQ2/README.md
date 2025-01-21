@@ -42,7 +42,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-bash table4/original/get_config_times.sh"
+bash table4/original/get_config_times.sh
 ```
 > This will create a file named `table4/original/config_times.csv` containing the
 newly generated timing results.
