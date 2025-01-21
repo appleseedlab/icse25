@@ -13,25 +13,92 @@ REPO_ROOT="$(realpath "$SCRIPT_DIR/../../")"
 ################################################################################
 
 usage() {
-    echo "[!] Usage: $0 <experiment_type> <fuzz_type> <csv-file> <path to linux-next> <path to syzkaller>"
-    echo "           <path to debian image> <path to output folder> <fuzzing-time>"
-    echo "[*] Example: $0 default experiments/fuzzing/fuzzing_parameters.csv linux-next syzkaller debian_image experiments/fuzzing/output 12h"
-    echo "    where all paths except syzkaller_path are relative to \$REPO_ROOT."
-    exit 9
+    echo "Usage: $0 [linux-next path] [syzkaller path] [debian image path] [output path] [csv path]"
+    echo "Usage: $0 [experiment_type] [fuzz_type] [csv-file] [linux-next path] [syzkaller path]" \
+         "[debian image path] [output path] [fuzzing-time] [procs] [vm_count] [cpu] [mem]"
+
+    echo "    experiment_type: default | repaired"
+    echo "    fuzz_type: prebuilt | full"
+    echo "    csv-file: path to the csv file containing the fuzzing parameters"
+    echo "    linux-next path: path to the linux-next repository. Default: $default_linux_next"
+    echo "    syzkaller path: path to the syzkaller repository. Default: $default_syzkaller"
+    echo "    debian image path: path to the debian image. Default: $default_debian_image"
+    echo "    output path: path to store the output of the experiments. Default: $default_path_output"
+    echo "    fuzzing-time: time for which the fuzzing instance should run. Default: $default_fuzzing_time"
+    echo "    procs: number of processes to run. Default: $default_procs"
+    echo "    vm_count: number of VMs to run. Default: $default_vm_count"
+    echo "    cpu: number of CPUs to use. Default: $default_cpu"
+    echo "    mem: amount of memory to use. Default: $default_mem"
+    echo "Example: $0 prebuilt default experiments/fuzzing/fuzzing_parameters.csv" \
+    "../../linux-next ../../syzkaller ../../debian_image ./output 12h 2 2 2 2048"
+    exit 1
 }
 
-if [[ $# -ne 8 ]]; then
-    usage
-fi
+cli_arguments() {
+    # This function prints the CLI arguments in a readable format
+    echo "=========================================================="
+    echo "Experiment type: $experiment_type"
+    echo "Fuzz type: $fuzz_type"
+    echo "CSV file: $csv_file"
+    echo "linux-next path: $dir_linux_next"
+    echo "syzkaller path: $syzkaller_path"
+    echo "Debian images path: $debian_image_path"
+    echo "Kernel images path: $kernel_images_path"
+    echo "Output path: $output_path"
+    echo "Fuzzing time: $fuzzing_time"
+    echo "syz-manager params:"
+    echo "  Procs: $procs"
+    echo "  VM count: $vm_count"
+    echo "  CPU: $cpu"
+    echo "  Memory: $mem"
+    echo "=========================================================="
+}
 
-experiment_type="$1"
-fuzz_type="$2"
-csv_file="$(realpath $3)"
-dir_linux_next="$(realpath $4)"
-syzkaller_path="$(realpath $5)"
-debian_image_path="$(realpath $6)"
-output_path="$(realpath $7)"
-fuzzing_time="$8"
+default_experiment_type="default"
+default_fuzz_type="prebuilt"
+default_csv_file="$SCRIPT_DIR/fuzzing_parameters.csv"
+default_linux_next="$REPO_ROOT/linux-next"
+default_syzkaller="$REPO_ROOT/syzkaller"
+default_debian_image="$REPO_ROOT/debian_image"
+default_kernel_images="$REPO_ROOT/kernel_images"
+default_output="$SCRIPT_DIR/fuzz_output"
+default_fuzzing_time="12h"
+
+# syzkaller related defaults
+# Note: We conducted our experiments on a server with 512GB RAM and 256 cores
+# Therefore, we set the default values to 8 procs, 8 VMs, 8 CPUs, and 4098MB RAM
+# You can adjust these values based on your server's resources
+default_procs=2
+default_vm_count=2
+default_cpu=2
+default_mem=2048
+
+experiment_type="${2:-$default_experiment_type}"
+fuzz_type="${1:-$default_fuzz_type}"
+
+csv_file="${3:-$default_csv_file}"
+csv_file="$(realpath "$csv_file")"
+
+dir_linux_next="${4:-$default_linux_next}"
+dir_linux_next="$(realpath "$dir_linux_next")"
+
+syzkaller_path="${5:-$default_syzkaller}"
+syzkaller_path="$(realpath "$syzkaller_path")"
+
+debian_image_path="${6:-$default_debian_image}"
+debian_image_path="$(realpath "$debian_image_path")"
+
+kernel_images_path="${7:-$default_kernel_images}"
+kernel_images_path="$(realpath "$kernel_images_path")"
+
+output_path="${8:-$default_output}"
+output_path="$(realpath "$output_path")"
+
+fuzzing_time="${9:-$default_fuzzing_time}"
+procs="${10:-$default_procs}"
+vm_count="${11:-$default_vm_count}"
+cpu="${12:-$default_cpu}"
+mem="${13:-$default_mem}"
 
 # Create a unique output directory based on the current time
 unix_time="$(date +%s)"
@@ -44,49 +111,65 @@ mkdir -p "$output_path"
 
 if [[ "$experiment_type" != "repaired" && "$experiment_type" != "default" ]]; then
     echo "[!] <experiment_type> must be one of: repaired | default"
+    usage
     exit 1
 fi
 
-if [[ "$fuzz_type" != "quickstart" && "$fuzz_type" != "prebuilt" && "$fuzz_type" != "full" ]]; then
-    echo "[!] <fuzz_type> must be one of: quickstart | prebuilt | full"
+if [[ "$fuzz_type" != "prebuilt" && "$fuzz_type" != "full" ]]; then
+    echo "[!] <fuzz_type> must be one of: prebuilt | full"
+    usage
     exit 1
 fi
 
 if [[ ! -f "$csv_file" ]]; then
     echo "[-] CSV file does not exist: $csv_file"
+    usage
     exit 1
 fi
 
 if [[ ! -d "$dir_linux_next" ]]; then
     echo "[-] linux-next directory does not exist: $dir_linux_next"
+    usage
     exit 1
 fi
 
 if [[ ! -d "$syzkaller_path" ]]; then
     echo "[-] syzkaller directory does not exist: $syzkaller_path"
+    usage
     exit 1
 fi
 
 if [[ ! -d "$debian_image_path" ]]; then
     echo "[-] Debian images directory does not exist: $debian_image_path"
+    usage
     exit 1
 fi
 
 # Check if klocalizer binary exists
-if [ -x "$(command -v klocalizer)" ]; then
-    echo "[+] klocalizer binary found"
-else
+if [ ! -x "$(command -v klocalizer)" ]; then
     echo "[-] klocalizer binary not found"
     echo "[-] Please install klocalizer with: pipx install kmax"
     exit 1
 fi
 
-echo "[+] Experiment type: $experiment_type"
-echo "[+] CSV file: $csv_file"
-echo "[+] linux-next path: $dir_linux_next"
-echo "[+] syzkaller path: $syzkaller_path"
-echo "[+] Debian images path: $debian_image_path"
-echo "[+] Output path: $output_path"
+# Check if /bin/syz-manager binary exists in syzkaller path
+if [ ! -x "$syzkaller_path/bin/syz-manager" ]; then
+    echo "[-] syz-manager binary not found"
+    echo "[*] Building syzkaller..."
+    (cd "$syzkaller_path" && make) || {
+        echo "[-] Failed to build syzkaller"
+        exit 1
+    }
+    echo "[+] syzkaller built successfully"
+fi
+
+if [[ "$fuzz_type == "prebuilt" ]]; then
+    output_path="${output_path}_prebuilt"
+elif [[ "$fuzz_type == "full" ]]; then
+    output_path="${output_path}_full"
+fi
+
+cli_arguments
 
 ################################################################################
 # Prepare output directory and logging
@@ -105,12 +188,6 @@ echo "[*] Logs saved in $log_file"
 # Paths to original and repaired syzbot config files
 syzbot_config_files_path="$REPO_ROOT/configuration_files/syzbot_configuration_files"
 repaired_config_files_path="$REPO_ROOT/configuration_files/repaired_configuration_files"
-
-if [[ "$experiment_type" == "repaired" ]]; then
-    mkdir -p "$output_path/coverage_commit_diff_files"
-    mkdir -p "$output_path/coverage_commit_koverage_files"
-    mkdir -p "$output_path/coverage_commit_configuration_files"
-fi
 
 ################################################################################
 # Helper functions
@@ -168,6 +245,7 @@ function build_linux_kernel() {
     ./scripts/config --enable CONFIG_KCOV \
                      --enable CONFIG_DEBUG_INFO \
                      --enable CONFIG_DEBUG_INFO_DWARF4 \
+                     --disable CONFIG_DEBUG_INFO_BTF \
                      --enable CONFIG_KASAN \
                      --enable CONFIG_KASAN_INLINE \
                      --enable CONFIG_CONFIGFS_FS \
@@ -199,8 +277,8 @@ function run_syzkaller_fuzz() {
 
     echo "[*] Running syzkaller fuzzing with config: $syz_cfg"
     # 12h fuzzing
-    timeout $fuzzing_time "$REPO_ROOT/$syzkaller_path/bin/syz-manager" \
-        -config="$syz_cfg" 2>&1 | tee "$fuzzing_log"
+    timeout $fuzzing_time "$syzkaller_path/bin/syz-manager" \
+        -config="$syz_cfg" 2>&1 | tee "$fuzzing_log" || true
     local exit_status_timeout="${PIPESTATUS[0]}"
 
     if [[ "$exit_status_timeout" -eq 0 ]]; then
@@ -213,92 +291,11 @@ function run_syzkaller_fuzz() {
     else
         echo "[-] Fuzzing instance exited with error code $exit_status_timeout"
     fi
+
+    # Added this so that the script does not exist as timeout returns 124
+    return 0
 }
 
-
-# get_commits_for_previous_date() {
-#     local date="$1"  # Date in YYYY-MM-DD format
-#     local kernel_src="$2"  # Path to the Linux kernel source directory
-#     local commit_hashes=()
-#
-#     if [ ! -d "$kernel_src/.git" ]; then
-#         echo "Error: $kernel_src is not a valid Git repository."
-#         return 1
-#     fi
-#
-#     # Calculate the previous date
-#     local previous_date
-#     previous_date=$(date -I -d "$date - 1 day")
-#     if [ $? -ne 0 ]; then
-#         echo "Error: Invalid date format or date calculation failed."
-#         return 1
-#     fi
-#
-#     echo "Searching for all commits on: $previous_date in $kernel_src"
-#
-#     # Change to the specified kernel source directory
-#     pushd "$kernel_src" > /dev/null
-#
-#     # Define start and end times for the previous day
-#     local day_start="${previous_date}T00:00:00"
-#     local day_end="${previous_date}T23:59:59"
-#
-#     # Get all commits for the previous date
-#     commits=$(git log --since="$day_start" --until="$day_end" --pretty=format:"%H")
-#
-#     if [ -z "$commits" ]; then
-#         echo "No commits found on $previous_date."
-#     else
-#         echo "Commits found on $previous_date:"
-#         echo "$commits"
-#         commit_hashes=($commits)
-#     fi
-#
-#     # Return to the original directory
-#     popd > /dev/null
-#
-#     # Return the array by echoing its elements (space-separated)
-#     echo "${commit_hashes[@]}"
-# }
-# get_diff_of_random_commit() {
-#     local date="$1"  # Date in YYYY-MM-DD format
-#     local kernel_src="$2"  # Path to the Linux kernel source directory
-#     local output_folder="$3"  # Path to the output folder
-#     local output_file="random_commit.diff"  # Default name for the diff file
-#
-#     # Ensure the output folder exists
-#     if [ ! -d "$output_folder" ]; then
-#         mkdir -p "$output_folder" || {
-#             echo "Error: Unable to create output folder $output_folder."
-#             return 1
-#         }
-#     fi
-#
-#     # Get commits for the previous day
-#     commit_hashes=($(get_commits_for_previous_date "$date" "$kernel_src"))
-#
-#     if [ ${#commit_hashes[@]} -eq 0 ]; then
-#         echo "No commits to process."
-#         return 1
-#     fi
-#
-#     # Shuffle the array
-#     shuffled_commits=($(shuf -e "${commit_hashes[@]}"))
-#
-#     # Select a random commit
-#     local random_commit="${shuffled_commits[0]}"
-#     echo "Randomly selected commit: $random_commit"
-#
-#     # Change to the kernel source directory to generate the diff
-#     pushd "$kernel_src" > /dev/null
-#     git show "$random_commit" > "$output_folder/$output_file"
-#     popd > /dev/null
-#
-#     local diff_path="$output_folder/$output_file"
-#     echo "Diff saved to: $diff_path"
-#     echo "$diff_path"
-# }
-#
 function run_klocalizer() {
     local kernel_src="$1"
     local config_file="$2"
@@ -320,6 +317,7 @@ function run_klocalizer() {
         --repair "$config_file" \
         --include-mutex "$diff_file" \
         --formulas "$output_folder/formulacache" \
+        --coverage-report "$output_folder/coverage_report.json" \
         --define CONFIG_KCOV \
         --define CONFIG_DEBUG_INFO_DWARF4 \
         --define CONFIG_KASAN \
@@ -346,7 +344,7 @@ function run_klocalizer() {
 }
 
 function utilize_artifacts() {
-    # This function is only used in 'quickstart' and 'prebuilt' fuzzing modes
+    # This function is only used in 'prebuilt' fuzzing mode
     # It first extracts the provided artifacts and gets bzImage and vmlinux
     # files, and then places them in the kernel source directory for syzkaller
     # to use.
@@ -366,12 +364,13 @@ function utilize_artifacts() {
         return 1
     }
 
+    echo "[+] Extracted $artifacts_path to $kernel_src"
+
     # Move the bzImage and vmlinux files to the kernel source directory
     # for syzkaller to use
     mv "$kernel_src"/bzImage "$kernel_src"/arch/x86/boot/bzImage
-    mv "$kernel_src"/vmlinux "$kernel_src"/vmlinux
 
-    echo "Artifacts utilized successfully."
+    echo "[+] Artifacts placed successfully in $kernel_src."
 
     return 0
 }
@@ -380,14 +379,14 @@ function utilize_artifacts() {
 # Main fuzzing loop
 ################################################################################
 
-# We pick an initial port. If it's used, find_free_port will increment
-syzkaller_port=56700
+# We pick a random initial port. If it's used, find_free_port will increment
+syzkaller_port=$(shuf -i 1024-65535 -n 1)
 syzkaller_port="$(find_free_port "$syzkaller_port")"
 
 echo "[*] Initial syzkaller port: $syzkaller_port"
 echo "[*] Starting fuzzing experiments..."
 
-while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name artifact; do
+while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name default_artifact repaired_artifact; do
     # Skip empty lines or lines with missing fields
     if [[ -z "$commit_hash" || -z "$syzbot_config_name" || -z "$git_tag" ]]; then
         echo "[!] Skipping malformed CSV line: $commit_hash,$syzbot_config_name,$git_tag,$repaired_config_name"
@@ -407,17 +406,22 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name 
     clean_linux_next_repo
     checkout_git_tag "$git_tag"
 
+    if [[ "$experiment_type" == "default" ]]; then
+        output_path_instance="${output_path}/default/${commit_hash}"
+        mkdir -p "$output_path_instance"
+    elif [[ "$experiment_type" == "repaired" ]]; then
+        output_path_instance="${output_path}/repaired/${commit_hash}"
+        mkdir -p "$output_path_instance"
+    fi
+
     if [[ "$fuzz_type" == "full" ]]; then
         repaired_config_file=""
 
         if [[ "$experiment_type" == "repaired" ]]; then
-            output_path="${output_path}/repaired/${commit_hash}"
-            mkdir -p "$output_path"
-
             # Run klocalizer to generate a repaired config file
             echo "[*] Running klocalizer for commit: $commit_hash"
-            repaired_config_file="${output_path}/repaired_${commit_hash}.config"
-            run_klocalizer "$dir_linux_next" "$syzbot_config_files_path/$syzbot_config_name" "$commit_hash" "$output_path" "$repaired_config_file"
+            repaired_config_file="${output_path_instance}/repaired_${commit_hash}.config"
+            run_klocalizer "$dir_linux_next" "$syzbot_config_files_path/$syzbot_config_name" "$commit_hash" "$output_path_instance" "$repaired_config_file"
             if [[ -z "$repaired_config_file" ]]; then
                 echo "[-] klocalizer failed for commit: $commit_hash"
                 continue
@@ -439,18 +443,23 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name 
         build_linux_kernel "$local_config_file" "$dir_linux_next" "$experiment_type"
     fi
 
-    if [[ "$fuzz_type" == "quickstart" || "$fuzz_type" == "prebuilt" ]]; then
+    if [[ "$fuzz_type" == "prebuilt" ]]; then
         # Utilize the provided artifacts
+        if [[ "$experiment_type" == "default" ]]; then
+            artifact="$kernel_images_path/default/$default_artifact"
+        elif [[ "$experiment_type" == "repaired" ]]; then
+            artifact="$kernel_images_path/repaired/$repaired_artifact"
+        fi
         utilize_artifacts "$artifact" "$dir_linux_next"
     fi
 
     # Prepare syzkaller workdir
-    workdir_name="$output_path/fuzzing_results/syzkaller_workdir_${syzbot_config_name}_${commit_hash}"
+    workdir_name="$output_path_instance/fuzzing_results/syzkaller_workdir_${syzbot_config_name}_${commit_hash}"
     mkdir -p "$workdir_name"
     echo "[+] Created syzkaller workdir: $workdir_name"
 
     # Create or overwrite syzkaller main config file
-    syz_cfg="$REPO_ROOT/$syzkaller_path/my.cfg"
+    syz_cfg="$syzkaller_path/$(date +%s).cfg"
     cat > "$syz_cfg" <<EOF
 {
   "target": "linux/amd64",
@@ -459,14 +468,14 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name 
   "kernel_obj": "$dir_linux_next",
   "image": "$debian_image_path/bullseye.img",
   "sshkey": "$debian_image_path/bullseye.id_rsa",
-  "syzkaller": "$REPO_ROOT/$syzkaller_path",
-  "procs": 8,
+  "syzkaller": "$syzkaller_path",
+  "procs": $procs,
   "type": "qemu",
   "vm": {
-    "count": 8,
+    "count": $vm_count,
     "kernel": "$dir_linux_next/arch/x86/boot/bzImage",
-    "cpu": 8,
-    "mem": 4098,
+    "cpu": $cpu,
+    "mem": $mem,
     "cmdline": "net.ifnames=0",
     "qemu_args": "-enable-kvm -cpu qemu64"
   }
@@ -474,8 +483,8 @@ while IFS=, read -r commit_hash syzbot_config_name git_tag repaired_config_name 
 EOF
 
     # Prepare the fuzzing log path
-    mkdir -p "$output_path/fuzzing_instance_logs/"
-    fuzzing_instance_log_path="$output_path/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
+    mkdir -p "$output_path_instance/fuzzing_instance_logs/"
+    fuzzing_instance_log_path="$output_path_instance/fuzzing_instance_logs/syzkaller_terminal_${syzbot_config_name}_${commit_hash}.log"
 
     # Run fuzzing
     echo "syz config path: $syz_cfg"
