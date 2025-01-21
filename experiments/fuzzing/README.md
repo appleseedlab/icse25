@@ -64,9 +64,8 @@ fuzzing mode or with the provided kernel images with **prebuilt** mode.
 |Subdirectory|Section|
 |----|----|
 |[fuzz.sh](fuzz.sh)|A quick-start script to run fuzzing with syzkaller using prebuilt kernel images with default and repaired configurations.|
-|[fuzzing_experiments.sh](fuzzing_experiments_full.sh)|Script to run the full experimental setup, including repairing configurations, building kernels, and fuzzing.|
+|[fuzzing_experiments.sh](fuzzing_experiments.sh)|The main fuzzing script that allows replicating the study of the paper with two modes: prebuilt and full|
 |[fuzzing_parameters.csv](fuzzing_parameters.csv)|CSV file that contains commit ids to repair config files with, original syzbot configuration files, repaired configuration files, linux-next tags that fuzzed kernel images were built with, and names of kernel images, default and repaired|
-|[output](output/)|The folder where the results of fuzzing runs are saved.|
 
 # Usage
 
