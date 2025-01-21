@@ -9,5 +9,6 @@
     "default_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/default_config_image/bzImage",
     "repaired_config_image": "/home/eshgin/Desktop/experiments/new_icse/get_results_output/images/repaired_config_image/bzImage",
     "icse_path": "/home/eshgin/Desktop/experiments/new_icse/icse25",
+    "relationship_test": "reproducer",
     "cores": 4
 }

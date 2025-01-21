@@ -20,11 +20,13 @@ import csv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import glob
+import magic
 
 @dataclass
 class Config:
     kernel_src: Path = Path()
     kernel_commit_id: str = ""
+    relationship_test: str = ""
     path_config_default: Path = Path()
     path_config_repaired: Path = Path()
     default_config_image: Path = Path()
@@ -66,6 +68,7 @@ def parse_config(config_file: Path) -> Config:
         icse_path=Path(json_config["icse_path"]),
         output=Path(json_config["output"]),
         debian_image_src=Path(json_config["debian_image_src"]),
+        relationship_test=json_config["relationship_test"],
         cores=json_config["cores"],
     )
 
@@ -199,14 +202,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help="Path to the config file",
-    )
-    parser.add_argument(
-        "-rt",
-        "--relationship-test",
-        type=str,
-        required=True,
-        choices=["kcov", "reproducer"],
-        help="Type of relationship test to run ('kcov' or 'reproducer')",
     )
     return parser.parse_args()
 
@@ -348,7 +343,7 @@ def run_qemu(
                                 return
                             elif "Kernel panic" in line or "Error" in line:
                                 logger.error("VM crashed or encountered an error.")
-                                self.terminate_vm("failed")
+                                self.terminate_vm("failed", "VM did not boot due to an error or kernel panic")
                                 return
                 except Exception as e:
                     logger.error(f"Error reading log file: {e}")
@@ -477,14 +472,21 @@ def process_lines_with_klocalizer(config_type, linux_ksrc, output):
         return "failed"
 
 
+import magic  # Ensure you have python-magic installed
+
 def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov", kernel_src="", output="", icse_path="", debian_image_src="") -> Optional[str]:
     """
     Transfers, compiles, and runs the reproducer inside the VM.
 
     Args:
-        qemu_instance (QemuInstance): The QEMU instance being monitored.
         ssh_port (int): The SSH port for accessing the VM.
         reproducer_src (str): Path to the reproducer source file.
+        config_type (str): Specifies the configuration type (default or repaired).
+        test_type (str): Specifies the relationship test type (kcov or reproducer).
+        kernel_src (str): Path to the kernel source.
+        output (str): Path to the output directory.
+        icse_path (str): Path to the ICSE experiments directory.
+        debian_image_src (str): Path to the Debian image directory.
 
     Returns:
         Optional[str]: The output of the reproducer run, or None if it fails.
@@ -494,9 +496,18 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
         remote_dir = "/root/repro0"
         ssh_key = f"{debian_image_src}/bullseye.id_rsa"  # Use the correct private key
 
-        # Step 1: Create remote directory
+        # Step 1: Determine the source language of the reproducer using `magic`
+        # Step 1: Determine the source language of the reproducer using `magic`
+        mime_type = magic.Magic(mime=True).from_file(str(reproducer_src))  # Ensure reproducer_src is a string
+        if "c" in mime_type:
+            reproducer_type = "c"
+        else:
+            reproducer_type = "syz"
+
+
+        # Step 2: Create remote directory
         try:
-            mkdir_command = f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null  -o StrictHostKeyChecking=no  -o IdentitiesOnly=yes root@localhost "mkdir -p /root/repro0"'
+            mkdir_command = f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "mkdir -p /root/repro0"'
             subprocess.run(
                 mkdir_command,
                 check=True,
@@ -504,14 +515,15 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                 capture_output=True,
                 text=True
             )
+            logger.info("Remote directory created successfully.")
         except Exception as e:
-            logger.error(f"creating remote directory failed: {e}")
-        logger.info(f"creating remote directory succeeded")
+            logger.error(f"Creating remote directory failed: {e}")
+            return "Failed to create remote directory"
 
-        # Step 2: Transfer binaries and reproducer to the VM
+        # Step 3: Transfer binaries and reproducer to the VM
         logger.info(f"Transferring binaries and reproducer to {remote_dir}...")
         syzkaller_binaries = glob.glob(f"{icse_path}/syzkaller/bin/linux_amd64/*")
-        scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes /{binary} root@localhost:/root/repro0/"
+        scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes {binary} root@localhost:/root/repro0/"
 
         try:
             for binary in syzkaller_binaries:
@@ -522,11 +534,6 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                     capture_output=True,
                     text=True
                 )
-        except Exception as e:
-            logger.error(f"Transferring binary files failed: {e}")
-        logger.info("Binaries transferred successfully.")
-
-        try:
             subprocess.run(
                 scp_command.format(binary=reproducer_src, ssh_key=ssh_key, ssh_port=ssh_port),
                 check=True,
@@ -534,11 +541,12 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                 capture_output=True,
                 text=True
             )
+            logger.info("Binaries and reproducer source file transferred successfully.")
         except Exception as e:
-            logger.error(f"transferring reproducer failed: {e}")
-        logger.info("Reproducer source file transferred successfully.")
+            logger.error(f"Transferring files failed: {e}")
+            return "Failed to transfer files"
 
-        # Step 3: Ensure all files are executable
+        # Step 4: Ensure all files are executable
         logger.info("Making all binaries executable...")
         try:
             subprocess.run(
@@ -556,65 +564,101 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                 capture_output=True,
                 text=True
             )
+            logger.info("All binaries made executable successfully.")
         except Exception as e:
-            logger.error(f"changing modes of files failed: {e}")
-        logger.info("changing modes of files succeeded.")
-        # Step 4: Compile the reproducer inside the VM
-        logger.info("Compiling the reproducer inside the VM...")
+            logger.error(f"Changing file modes failed with error: {e}")
+            return "Failed to set file permissions"
+
+        # Step 5: Compile or run the reproducer inside the VM
+        message = ""
+        logger.info("Executing treproducerhe reproducer inside the VM...")
         try:
-            if test_type == "reproducer":
-                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./reproducer.c && ./repro_binary 2>&1 | tee /root/{config_type}.trace"
-            else: 
-                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./reproducer.c && ./repro_binary"
-            
-            res = subprocess.run(
-                f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "{compile_command}"',
-                shell=True,  # Use shell=True to interpret the command properly
-                check=True,  # Raise an exception if the command fails
-                capture_output=True,  # Capture stdout and stderr
-                text=True,  # Decode stdout and stderr as text
-                timeout=10,  # Optional timeout to prevent indefinite execution
-            )
-            logger.info(f"The output of repro run: {res}")
-            logger.info("Reproducer compiled successfully inside the VM.")
-            
-            if test_type == "reproducer":
-                # Retrieve the corresponding trace file from the VM
+            reproducer_filename = os.path.basename(reproducer_src)
+            if reproducer_type == "c":
+                timeout = 10
+                logger.info("The passed reproducer type is: c-reproducer")
+                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./{reproducer_filename} && ./repro_binary"
+                if test_type == "reproducer":
+                    compile_command += f" 2>&1 | tee /root/{config_type}.trace"
+            elif reproducer_type == "syz":
+                timeout=300
+                logger.info("The passed reproducer type is: syz-reproducer")
+                compile_command = f"cd {remote_dir} && ./syz-execprog -enable=all -repeat=0 -procs=6 {reproducer_filename}"
+
+            try:
+                res = subprocess.run(
+                    f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "{compile_command}"',
+                    shell=True,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout
+                )
+                logger.success(f"Reproducer executed successfully: {res.stdout.strip()}")
+                message = "Reproducer executed successfully"
+            except subprocess.TimeoutExpired:
+                logger.error("Reproducer execution timed out.")
+                message = "execution timeout"
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to run reproducer in the VM: {e}")
+                message = "vm crash"
+            logger.info("Handling trace files...")
+            # Handle trace files if test_type is reproducer and reproducer is not syz
+            if test_type == "reproducer" and reproducer_type == "c":
                 try:
-                    pull_scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {output}/trace_files"
+                    # Retrieve the corresponding trace file from the VM
+                    pull_scp_command = (
+                        f"scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null "
+                        f"-o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {output}/trace_files"
+                    )
                     subprocess.run(
-                            pull_scp_command.format(icse_path=icse_path, ssh_key=ssh_key, ssh_port=ssh_port, config_type=config_type, output=output),
-                            check=True,
-                            shell=True,
-                            capture_output=True,
-                            text=True
-                        )
+                        pull_scp_command.format(
+                            icse_path=icse_path,
+                            ssh_key=ssh_key,
+                            ssh_port=ssh_port,
+                            config_type=config_type,
+                            output=output,
+                        ),
+                        check=True,
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                    )
                     logger.success("Downloaded trace files successfully")
                 except Exception as e:
-                    logger.error(f"Downloading files failed with error: {e}")
-                
-                # Run the command to get line information from traces
-                
+                    logger.error(f"Downloading trace files failed with error: {e}")
+
+                # Process the trace files
                 process_res = process_trace(config_type=config_type, output=output)
                 if process_res == "succeeded":
-                    logger.success("Got line info successfully")
+                    logger.success("Processed trace files successfully")
                 else:
-                    logger.error(f"Getting line info failed")
-                    
+                    logger.error("Processing trace files failed")
+
+                # Process lines with klocalizer
                 process_with_kloc_res = process_lines_with_klocalizer(
                     config_type=config_type, linux_ksrc=kernel_src, output=output
                 )
                 if process_with_kloc_res == "succeeded":
-                    logger.success("run klocalizer successfully")
+                    logger.success("Processed lines with klocalizer successfully")
                 else:
-                    logger.error(f"run klocalizer failed")
-        except subprocess.CalledProcessError as e:
-            logger.error(f"Compiling reproducer failed: {e.stderr.strip()}")
-            return "Reproducer crashed the VM"
+                    logger.error("Processing lines with klocalizer failed")
+            elif reproducer_type == "syz":
+                logger.warning(
+                    f"Trace file generation skipped for reproducer type 'syz'. Not supported for {reproducer_type}."
+                )
+            return message
 
-    except subprocess.CalledProcessError as e:
-        logger.error(f"Failed to run reproducer in the VM: {e}")
-        return "Running reproducer failed"
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Reproducer execution failed: {e.stderr.strip()}")
+            return "Reproducer execution failed"
+
+    except Exception as e:
+        logger.error(f"Unpredicted error: {e}")
+        return "Failed to run reproducer"
+
+    return "Reproducer executed successfully"
+
 
 
 def main():
@@ -625,7 +669,7 @@ def main():
         return
 
     config = parse_config(args.config_file)
-    test_type = args.relationship_test
+    test_type = config.relationship_test
     debian_image = DebianImage(
         path_debian_image=config.debian_image_src / "bullseye.img",
         path_debian_image_key=config.debian_image_src / "bullseye.id_rsa",
@@ -674,6 +718,15 @@ def main():
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
+    finally:
+        logger.info("Cleaning up .img files in /tmp directory...")
+        try:
+            for img_file in glob.glob("/tmp/*.img"):
+                os.remove(img_file)
+                logger.info(f"Removed temporary file: {img_file}")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+        logger.info("Cleanup completed.")
 
 if __name__ == "__main__":
     main()
