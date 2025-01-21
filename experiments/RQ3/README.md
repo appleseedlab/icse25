@@ -6,8 +6,6 @@ question of the paper.
 |Subdirectory|Description|
 |----|----|
 |[table6](table6)|Subdirectory that contains scripts and data to generate Table VI|
-|[krepair_syzkaller_evaluation](krepair_syzkaller_evaluation)|Subdirectory that contains results of change summary experiment with krepaired and default syzkaller configs|
-|[krepair_kafl_evaluation](krepair_kafl_evaluation)|Subdirectory that contains results of change summary experiment with krepaired and default KAFL configs|
 
 ## Figures and tables related to RQ3
 ### TABLE VI: Number of configurations options changed by krepair. (Change Summary Study)
@@ -30,6 +28,6 @@ The directory `table6` contains the data and scripts used to generate Table VI.
 
 To reproduce the Table VI data, use the following command:
 ```bash
-bash get_change_summary.sh
+bash table6/get_change_summary.sh
 ```
 The script will output the percentile information of the change summary study.
