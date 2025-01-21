@@ -12,15 +12,26 @@ import socket
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
-
+import threading
+from uuid import uuid4
+import os
+import signal
+import csv
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+import glob
+import magic
 
 @dataclass
 class Config:
     kernel_src: Path = Path()
-    kernel_commit_1: str = ""
-    kernel_commit_2: str = ""
+    kernel_commit_id: str = ""
+    relationship_test: str = ""
     path_config_default: Path = Path()
     path_config_repaired: Path = Path()
+    default_config_image: Path = Path()
+    repaired_config_image: Path = Path()
+    icse_path: Path = Path()
     path_reproducer: Path = Path()
     output: Path = Path("./output")
     debian_image_src: Path = Path()
@@ -41,20 +52,24 @@ class DebianImage:
     path_debian_image_key: Path = Path()
 
 
+
 def parse_config(config_file: Path) -> Config:
     with open(config_file, "r") as cf:
         json_config = json.load(cf)
 
     return Config(
-        json_config["kernel_src"],
-        json_config["kernel_commit_1"],
-        json_config["kernel_commit_2"],
-        json_config["path_config_default"],
-        json_config["path_config_repaired"],
-        json_config["path_reproducer"],
-        json_config["output"],
-        json_config["debian_image_src"],
-        json_config["cores"],
+        kernel_src=Path(json_config["kernel_src"]),
+        kernel_commit_id=json_config["kernel_commit_id"],
+        path_config_default=Path(json_config["path_config_default"]),
+        path_config_repaired=Path(json_config["path_config_repaired"]),
+        default_config_image=Path(json_config["default_config_image"]),
+        repaired_config_image=Path(json_config["repaired_config_image"]),
+        path_reproducer=Path(json_config["path_reproducer"]),
+        icse_path=Path(json_config["icse_path"]),
+        output=Path(json_config["output"]),
+        debian_image_src=Path(json_config["debian_image_src"]),
+        relationship_test=json_config["relationship_test"],
+        cores=json_config["cores"],
     )
 
 
@@ -63,33 +78,124 @@ def compile_kernel(
 ) -> tuple[bool, Optional[Path], Optional[Path]]:
     repo = Repo(kernel_src)
 
+    # Define the paths for the kernel images
     path_bzImage = output / "bzImage"
     path_vmlinux = output / "vmlinux"
 
     try:
+        # Reset and checkout the specified commit
         repo.git.clean("-xdf")
         repo.git.reset("--hard")
-        repo.git.checkout(kernel_commit)
-        subprocess.run(["make", "-C", kernel_src, "defconfig"])
-        shutil.copy(config_file, kernel_src / ".config")
-        subprocess.run(["make", "-C", kernel_src, "olddefconfig"])
-        subprocess.run(["make", "-C", kernel_src, f"-j{cores}"])
-    except Exception as e:
-        logger.error(f"Error compiling kernel: {e}")
-        return False, None, None
+        if kernel_commit:
+            logger.debug(f"Checking out commit: {kernel_commit}")
+            repo.git.checkout(kernel_commit)
 
-    try:
-        shutil.copy(kernel_src / "arch/x86/boot/bzImage", path_bzImage)
-        shutil.copy(kernel_src / "vmlinux", path_vmlinux)
+        # Ensure the output directory exists
+        if not output.exists():
+            logger.info(f"Creating output directory: {output}")
+            output.mkdir(parents=True, exist_ok=True)
+
+        # Step 1: Generate a default configuration
+        try:
+            subprocess.run(
+                ["make", "-C", str(kernel_src), "defconfig"],
+                check=True
+            )
+            logger.info("Default configuration generated successfully.")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"make defconfig failed: {e}")
+            return False, None, None
+        # add make kvm_guest.config
+        try:
+            subprocess.run(
+                ["make", "-C", str(kernel_src), "kvm_guest.config"],
+                check=True
+            )
+            logger.info("kvm_guest.config applied successfully.")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"make kvm_guest.config failed: {e}")
+            return False, None, None
+        
+        # Step 2: Replace the .config with the provided config file
+        config_path = kernel_src / ".config"
+        
+        # Check if the provided config file exists; create it if missing
+        if not config_file.exists():
+            raise FileNotFoundError("The config file is not present.")
+
+        try:
+            shutil.copy(config_file, config_path)
+            logger.info(f".config replaced with content from {config_file}")
+        except Exception as e:
+            logger.error(f"Failed to replace .config: {e}")
+            return False, None, None
+        
+        # Step 2.5: Add Syzkaller-specific configuration options to .config
+        config_path = kernel_src / ".config"
+        try:
+            with open(config_path, "a") as cf:
+                logger.info("Adding Syzkaller config options to .config")
+                cf.write(
+                    "\n".join([
+                        "# Syzkaller config options",
+                        "CONFIG_KCOV=y",
+                        "CONFIG_DEBUG_INFO_DWARF4=y",
+                        "CONFIG_KASAN=y",
+                        "CONFIG_KASAN_INLINE=y",
+                        "CONFIG_CONFIGFS_FS=y",
+                        "CONFIG_SECURITYFS=y",
+                        "CONFIG_CMDLINE_BOOL=y",
+                        'CONFIG_CMDLINE="net.ifnames=0"',
+                        ""
+                    ])
+                )
+        except Exception as e:
+            logger.error(f"Failed to add Syzkaller config options: {e}")
+            return False, None, None
+        
+        # Step 3: Regenerate dependencies based on the updated .config
+        try:
+            subprocess.run(["make", "-C", str(kernel_src), "olddefconfig"], check=True)
+            logger.info("Dependencies regenerated with olddefconfig.")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"make olddefconfig failed: {e}")
+            return False, None, None
+
+        # Step 4: Compile the kernel
+        try:
+            subprocess.run(["make", "-C", str(kernel_src), f"-j{cores}"], check=True)
+            logger.info("Kernel compiled successfully.")
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Kernel compilation failed: {e}")
+            return False, None, None
+
+        # Step 5: Copy the kernel images to the output directory
+        try:
+            bzImage_path = kernel_src / "arch/x86/boot/bzImage"
+            vmlinux_path = kernel_src / "vmlinux"
+
+            if not bzImage_path.exists():
+                raise FileNotFoundError(f"bzImage not found at {bzImage_path}")
+            if not vmlinux_path.exists():
+                raise FileNotFoundError(f"vmlinux not found at {vmlinux_path}")
+
+            shutil.copy(bzImage_path, path_bzImage)
+            shutil.copy(vmlinux_path, path_vmlinux)
+            logger.info("Kernel images copied successfully.")
+        except FileNotFoundError as e:
+            logger.error(f"Error copying kernel image: {e}")
+            return False, None, None
+
     except Exception as e:
-        logger.error(f"Error copying kernel image: {e}")
+        logger.error(f"Error during kernel compilation: {e}")
         return False, None, None
 
     return True, path_bzImage, path_vmlinux
 
 
+
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Compile kernel")
+    parser = argparse.ArgumentParser(description="Compile kernel and run QEMU with options")
     parser.add_argument(
         "-c",
         "--config_file",
@@ -97,7 +203,6 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="Path to the config file",
     )
-
     return parser.parse_args()
 
 
@@ -116,172 +221,445 @@ def get_free_port() -> int:
 
 
 def run_qemu(
-    kernel_image_path: Path, debian_image_path: Path, qemu_instance: QemuInstance
+    kernel_image_path: Path,
+    debian_image_path: Path,
+    qemu_instance: QemuInstance,
+    timeout: int = 300,
+    commit_id: str = "",
+    config_type: str = "",
+    reproducer_src = "",
+    test_type = "",
+    kernel_src="",
+    output="",
+    icse_path="",
+    debian_image_src=""
 ) -> bool:
-    """Check if a kernel image is bootable using QEMU.
-
-    The function starts a QEMU instance with the given kernel image and a Debian image.
-    It polls the log file every second for the given timeout period.
-    It then checks the QEMU log file for the "syzkaller login:" string, which indicates
-    that the kernel booted successfully.
+    """
+    Runs a QEMU instance with a kernel image and a Debian image, ensuring it terminates after the specified timeout.
 
     Args:
-        kernel_image_path (Path): path to the kernel image
-        debian_image_path (Path): path to the Debian image
+        kernel_image_path (Path): Path to the kernel image.
+        debian_image_path (Path): Path to the Debian image.
+        qemu_instance (QemuInstance): Instance to store QEMU details.
+        timeout (int): Timeout in seconds. Defaults to 300 seconds (5 minutes).
+        commit_id (str): Commit ID being tested.
+        config_type (str): Type of config being used (default or repaired).
 
     Returns:
-        bool: True if the kernel image is bootable, False otherwise
-
+        bool: True if QEMU starts successfully, False otherwise.
     """
     qemu_instance.log_path = Path(kernel_image_path.parent, "qemu.log")
     qemu_instance.log_path.touch()
 
-    qemu_instance.pid_path = Path(kernel_image_path.parent, "vm.pid")
-    qemu_instance.pid_path.touch()
+    qemu_instance.pid_path = Path(kernel_image_path.parent, f"vm_{uuid4().hex}.pid")
+    if qemu_instance.pid_path.exists():
+        logger.warning(f"PID file {qemu_instance.pid_path} exists. Deleting it to avoid conflicts.")
+        qemu_instance.pid_path.unlink()
 
     logger.debug(f"QEMU log path: {qemu_instance.log_path}")
-
     qemu_instance.ssh_port = get_free_port()
 
-    # create copy of debian image to prevent deadlocks when running multiple
-    # qemu instances
+    # Create a temporary Debian image copy
     with NamedTemporaryFile(delete=False, suffix=".img") as temp_debian:
         shutil.copyfile(debian_image_path, temp_debian.name)
         debian_image_path = Path(temp_debian.name)
 
-    logger.debug(f"Temporary debian image path: {debian_image_path}")
+    logger.debug(f"Temporary Debian image path: {debian_image_path}")
 
     command = (
         f"qemu-system-x86_64 "
         f"-m 2G "
         f"-smp 2 "
         f"-kernel {str(kernel_image_path)} "
-        f"-append 'console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0' "
+        f"-append 'console=ttyS0 root=/dev/sda rw earlyprintk=serial net.ifnames=0' "
         f"-drive file={str(debian_image_path)},format=raw "
-        f"-net user,host=10.0.2.10,hostfwd=tcp:127.0.0.1:{str(qemu_instance.ssh_port)}-:22 "
+        f"-net user,hostfwd=tcp:127.0.0.1:{str(qemu_instance.ssh_port)}-:22 "
         f"-net nic,model=e1000 "
         f"-enable-kvm "
         f"-nographic "
         f"-pidfile {str(qemu_instance.pid_path)} "
-        f"-serial file:{str(qemu_instance.log_path)} &"
+        f"-serial file:{str(qemu_instance.log_path)}"
     )
 
-    # Extract qemu vm pid
-    with open(qemu_instance.pid_path, "r") as pid_file:
-        qemu_instance.pid = int(pid_file.read().strip())
 
     try:
-        logger.debug(f"Command to be executed: {command}")
-        with open(qemu_instance.log_path, "w") as log_file:
-            subprocess.run(
-                command,
-                shell=True,
-                stdout=log_file,
-                stderr=log_file,
-            )
+        logger.debug(f"QEMU command: {command}")
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        # Wait for the PID file to be created and read the PID
+        for _ in range(10):  # Wait up to 10 seconds
+            if qemu_instance.pid_path.exists() and qemu_instance.pid_path.read_text().strip():
+                qemu_instance.pid = int(qemu_instance.pid_path.read_text().strip())
+                logger.info(f"QEMU PID: {qemu_instance.pid}")
+                break
+            time.sleep(1)
+        else:
+            logger.error("PID file not created or empty. Unable to monitor QEMU process.")
+            process.kill()
+            return False
+
+        # Watchdog Handler to Monitor Log File
+        class VMLogHandler(FileSystemEventHandler):
+            def __init__(self, qemu_instance, timeout, csv_path, commit_id, config_type):
+                self.qemu_instance = qemu_instance
+                self.timeout = timeout
+                self.csv_path = csv_path
+                self.commit_id = commit_id
+                self.config_type = config_type
+                self.start_time = time.time()
+                self.success = False
+
+            def on_modified(self, event):
+                if event.src_path == str(self.qemu_instance.log_path):
+                    self.check_vm_state()
+
+            def check_vm_state(self):
+                if self.success:  # Stop further processing if already successful
+                    return
+                try:
+                    with open(self.qemu_instance.log_path, "r") as log_file:
+                        for line in log_file:
+                            if "login:" in line or "Welcome to" in line:
+                                logger.info("VM booted successfully!")
+                                shutil.copy(self.qemu_instance.log_path, f"{output}/log_before_repro.log")
+                                
+                                # Run the reproducer only once
+                                if not self.success:
+                                    time.sleep(10)
+                                    reproducer_output = run_reproducer(
+                                        self.qemu_instance.ssh_port, reproducer_src,
+                                        config_type, test_type, kernel_src=kernel_src, output=output, icse_path=icse_path,
+                                        debian_image_src=debian_image_src
+                                    )
+                                    logger.info(f"The result of the run is: {reproducer_output}")
+                                    logger.info(f"The run is complete for: {config_type} config type")
+                                    self.success = True  # Mark success to avoid reruns
+                                self.terminate_vm("booted", reproducer_output)
+                                return
+                            elif "Kernel panic" in line or "Error" in line:
+                                logger.error("VM crashed or encountered an error.")
+                                self.terminate_vm("failed", "VM did not boot due to an error or kernel panic")
+                                return
+                except Exception as e:
+                    logger.error(f"Error reading log file: {e}")
+
+            def terminate_vm(self, result, reproducer_output=None):
+                logger.info(f"Terminating VM with PID: {self.qemu_instance.pid}")
+                if self.qemu_instance.pid:
+                    try:
+                        os.kill(self.qemu_instance.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        logger.warning(f"Process with PID {self.qemu_instance.pid} already terminated.")
+                self.append_csv(result, reproducer_output)
+                observer.stop()
+
+            def append_csv(self, result, reproducer_output=None):
+                csv_path = Path(self.csv_path)
+                header = ["commit_id", "config", "result", "reproducer_output"]
+                file_exists = csv_path.exists()
+                with open(csv_path, "a", newline="") as csvfile:
+                    writer = csv.writer(csvfile)
+                    if not file_exists:
+                        writer.writerow(header)
+                    writer.writerow([self.commit_id, self.config_type, result, reproducer_output or "N/A"])
+
+        # Set up watchdog observer
+        observer = Observer()
+        event_handler = VMLogHandler(
+            qemu_instance,
+            timeout,
+            f"{output}/pass_fail.csv",
+            commit_id,
+            config_type,
+        )
+        observer.schedule(event_handler, str(qemu_instance.log_path.parent), recursive=False)
+        observer.start()
+
+        # Monitor the VM process for the specified timeout
+        while time.time() - event_handler.start_time < timeout:
+            if not observer.is_alive():
+                break
+            time.sleep(5)
+
+        # If timeout expires without success
+        if not event_handler.success:
+            logger.warning("Timeout expired: VM did not boot successfully.")
+            event_handler.terminate_vm("failed")
 
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Error starting QEMU: {e}")
         return False
 
-    return False
+    return True
 
 
-def cleanup_temporary_resources(temporary_resources: list[Path]):
-    """Clean up temporary resources created for performing some operations"""
-    with tqdm(total=len(temporary_resources)) as pbar:
-        with ProcessPoolExecutor() as executor:
-            futures = {
-                executor.submit(shutil.rmtree, resource, ignore_errors=True): resource
-                for resource in temporary_resources
-            }
+import subprocess
 
-            for future in as_completed(futures):
-                try:
-                    future.result()
-                    pbar.update(1)
-                except Exception as e:
-                    logger.error(f"Failed to clean up temporary resource: {e}")
-
-
-def terminate_qemu_procs(qemu_pids: list[int]):
-    if not qemu_pids:
-        logger.error("No QEMU processes to terminate")
-        return
-
-    for qemu_pid in qemu_pids:
-        try:
-            subprocess.run(["kill", "-9", str(qemu_pid)])
-        except Exception as e:
-            logger.error(f"Error terminating QEMU process: {e}")
-
-
-def compile_reproducer(path_reproducer: Path, output: Path):
-    # Compile reproducer C file
+def process_trace(config_type, output):
+    trace_file = f"{output}/trace_files/{config_type}.trace"
+    vmlinux_file = f"{output}/images/{config_type}_config_image/vmlinux"
+    output_file = f"{output}/trace_files/{config_type}.lines"
     try:
-        subprocess.run(["gcc", "-o", "reproducer", path_reproducer])
+        with open(trace_file, "r") as trace, open(output_file, "w") as output_file:
+            for line in trace:
+                address = line.strip()  # Remove any whitespace or newline
+                if not address:
+                    continue  # Skip empty lines
+
+                # Run addr2line for the address
+                result = subprocess.run(
+                    ["addr2line", "-afi", "-e", vmlinux_file, address],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    check=True
+                )
+
+                # Filter the addr2line output for paths containing "linux-next"
+                for result_line in result.stdout.splitlines():
+                    if "linux-next" in result_line and ".c:" in result_line:
+                        # Extract the relevant path after "linux-next"
+                        parts = result_line.strip().split(":")
+                        if len(parts) == 2 and parts[0].endswith(".c"):
+                            file_path_start = parts[0].find("linux-next") + len("linux-next/")
+                            file_path = parts[0][file_path_start:]
+                            line_number = parts[1]
+                            output_file.write(f"{file_path}:{line_number}\n")
+        return "succeeded"
     except Exception as e:
-        raise ValueError(f"Error compiling reproducer: {e}")
-
-    path_reproducer_bin = output / "reproducer"
-    shutil.move("reproducer", path_reproducer_bin)
+        print(f"Error in process_trace: {e}")
+        return "failed"
 
 
-def upload_reproducer_to_vms(
-    path_reproducer_bin: Path, path_debian_image_key: Path, qemu_ssh_port: int
-):
+def process_lines_with_klocalizer(config_type, linux_ksrc, output):
+    input_file = f"{output}/trace_files/{config_type}.lines"
+    output_file = f"{output}/trace_files/{config_type}.kloc_deps"
     try:
-        subprocess.run(
-            [
-                "scp",
-                "-i",
-                path_debian_image_key,
-                "-p",
-                str(qemu_ssh_port),
-                "-o",
-                "StrictHostKeyChecking no",
-                str(path_reproducer_bin),
-                "root@localhost:/root",
-            ]
-        )
+        with open(input_file, "r") as infile, open(output_file, "w") as outfile:
+            for line in infile:
+                # Extract file path and line number
+                parts = line.strip().split(":")
+                if len(parts) == 2 and parts[0].endswith(".c"):
+                    file_path = parts[0]
+                    line_number = parts[1]
+                    
+                    # Format the include argument for klocalizer
+                    include_arg = f"{file_path}:[{line_number}]"
+                    
+                    # Run klocalizer
+                    command = [
+                        "klocalizer",
+                        "--view-kbuild",
+                        "--linux-ksrc", linux_ksrc,
+                        "--include", include_arg
+                    ]
+                    
+                    # Execute the command
+                    result = subprocess.run(command, text=True, capture_output=True, check=True)
+                    
+                    # Filter lines starting with "[" and write to the output file
+                    for output_line in result.stdout.splitlines():
+                        if output_line.startswith("["):
+                            outfile.write(output_line + "\n")
+        return "succeeded"
     except Exception as e:
-        raise ValueError(f"Error uploading reproducer to VM: {e}")
+        print(f"Error in process_lines_with_klocalizer: {e}")
+        return "failed"
 
 
-def execute_reproducer_on_vms(
-    path_debian_image_key: Path, qemu_ssh_port: int
-):
-    try:
-        subprocess.run(
-            [
-                "ssh",
-                "-i",
-                path_debian_image_key,
-                "-p",
-                str(qemu_ssh_port),
-                "-o",
-                "StrictHostKeyChecking no",
-                "root@localhost",
-                "./reproducer",
-            ]
-        )
-    except Exception as e:
-        raise ValueError(f"Error executing reproducer on VM: {e}")
+import magic  # Ensure you have python-magic installed
 
-def vm_crash_check(qemu_log_path: Path) -> bool:
-    """Check if a VM crashed by looking at the QEMU log file.
+def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov", kernel_src="", output="", icse_path="", debian_image_src="") -> Optional[str]:
+    """
+    Transfers, compiles, and runs the reproducer inside the VM.
 
     Args:
-        qemu_log_path (Path): path to the QEMU log file
+        ssh_port (int): The SSH port for accessing the VM.
+        reproducer_src (str): Path to the reproducer source file.
+        config_type (str): Specifies the configuration type (default or repaired).
+        test_type (str): Specifies the relationship test type (kcov or reproducer).
+        kernel_src (str): Path to the kernel source.
+        output (str): Path to the output directory.
+        icse_path (str): Path to the ICSE experiments directory.
+        debian_image_src (str): Path to the Debian image directory.
 
     Returns:
-        bool: True if the VM crashed, False otherwise
-
+        Optional[str]: The output of the reproducer run, or None if it fails.
     """
-    with open(qemu_log_path, "r") as log_file:
-        log_content = log_file.read()
+    logger.info("Transferring, compiling, and running reproducer in the VM...")
+    try:
+        remote_dir = "/root/repro0"
+        ssh_key = f"{debian_image_src}/bullseye.id_rsa"  # Use the correct private key
 
-    return "Kernel panic" in log_content
+        # Step 1: Determine the source language of the reproducer using `magic`
+        # Step 1: Determine the source language of the reproducer using `magic`
+        mime_type = magic.Magic(mime=True).from_file(str(reproducer_src))  # Ensure reproducer_src is a string
+        if "c" in mime_type:
+            reproducer_type = "c"
+        else:
+            reproducer_type = "syz"
+
+
+        # Step 2: Create remote directory
+        try:
+            mkdir_command = f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "mkdir -p /root/repro0"'
+            subprocess.run(
+                mkdir_command,
+                check=True,
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            logger.info("Remote directory created successfully.")
+        except Exception as e:
+            logger.error(f"Creating remote directory failed: {e}")
+            return "Failed to create remote directory"
+
+        # Step 3: Transfer binaries and reproducer to the VM
+        logger.info(f"Transferring binaries and reproducer to {remote_dir}...")
+        syzkaller_binaries = glob.glob(f"{icse_path}/syzkaller/bin/linux_amd64/*")
+        scp_command = "scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes {binary} root@localhost:/root/repro0/"
+
+        try:
+            for binary in syzkaller_binaries:
+                subprocess.run(
+                    scp_command.format(binary=binary, ssh_key=ssh_key, ssh_port=ssh_port),
+                    check=True,
+                    shell=True,
+                    capture_output=True,
+                    text=True
+                )
+            subprocess.run(
+                scp_command.format(binary=reproducer_src, ssh_key=ssh_key, ssh_port=ssh_port),
+                check=True,
+                shell=True,
+                capture_output=True,
+                text=True
+            )
+            logger.info("Binaries and reproducer source file transferred successfully.")
+        except Exception as e:
+            logger.error(f"Transferring files failed: {e}")
+            return "Failed to transfer files"
+
+        # Step 4: Ensure all files are executable
+        logger.info("Making all binaries executable...")
+        try:
+            subprocess.run(
+                [
+                    "ssh",
+                    "-i", ssh_key,
+                    "-p", str(ssh_port),
+                    "-o", "UserKnownHostsFile=/dev/null",
+                    "-o", "StrictHostKeyChecking=no",
+                    "-o", "IdentitiesOnly=yes",
+                    "root@localhost",
+                    f"chmod +x {remote_dir}/*",
+                ],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+            logger.info("All binaries made executable successfully.")
+        except Exception as e:
+            logger.error(f"Changing file modes failed with error: {e}")
+            return "Failed to set file permissions"
+
+        # Step 5: Compile or run the reproducer inside the VM
+        message = ""
+        logger.info("Executing treproducerhe reproducer inside the VM...")
+        try:
+            reproducer_filename = os.path.basename(reproducer_src)
+            if reproducer_type == "c":
+                timeout = 10
+                logger.info("The passed reproducer type is: c-reproducer")
+                compile_command = f"cd {remote_dir} && gcc -o repro_binary ./{reproducer_filename} && ./repro_binary"
+                if test_type == "reproducer":
+                    compile_command += f" 2>&1 | tee /root/{config_type}.trace"
+            elif reproducer_type == "syz":
+                timeout=300
+                logger.info("The passed reproducer type is: syz-reproducer")
+                compile_command = f"cd {remote_dir} && ./syz-execprog -enable=all -repeat=0 -procs=6 {reproducer_filename}"
+
+            try:
+                res = subprocess.run(
+                    f'ssh -i {ssh_key} -p {ssh_port} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost "{compile_command}"',
+                    shell=True,
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout
+                )
+                logger.success(f"Reproducer executed successfully: {res.stdout.strip()}")
+                message = "Reproducer executed successfully"
+            except subprocess.TimeoutExpired:
+                logger.error("Reproducer execution timed out.")
+                message = "execution timeout"
+            except subprocess.CalledProcessError as e:
+                logger.error(f"Failed to run reproducer in the VM: {e}")
+                message = "vm crash"
+            logger.info("Handling trace files...")
+            # Handle trace files if test_type is reproducer and reproducer is not syz
+            if test_type == "reproducer" and reproducer_type == "c":
+                try:
+                    # Retrieve the corresponding trace file from the VM
+                    pull_scp_command = (
+                        f"scp -i {ssh_key} -P {ssh_port} -o UserKnownHostsFile=/dev/null "
+                        f"-o StrictHostKeyChecking=no -o IdentitiesOnly=yes root@localhost:/root/{config_type}.trace {output}/trace_files"
+                    )
+                    subprocess.run(
+                        pull_scp_command.format(
+                            icse_path=icse_path,
+                            ssh_key=ssh_key,
+                            ssh_port=ssh_port,
+                            config_type=config_type,
+                            output=output,
+                        ),
+                        check=True,
+                        shell=True,
+                        capture_output=True,
+                        text=True,
+                    )
+                    logger.success("Downloaded trace files successfully")
+                except Exception as e:
+                    logger.error(f"Downloading trace files failed with error: {e}")
+
+                # Process the trace files
+                process_res = process_trace(config_type=config_type, output=output)
+                if process_res == "succeeded":
+                    logger.success("Processed trace files successfully")
+                else:
+                    logger.error("Processing trace files failed")
+
+                # Process lines with klocalizer
+                process_with_kloc_res = process_lines_with_klocalizer(
+                    config_type=config_type, linux_ksrc=kernel_src, output=output
+                )
+                if process_with_kloc_res == "succeeded":
+                    logger.success("Processed lines with klocalizer successfully")
+                else:
+                    logger.error("Processing lines with klocalizer failed")
+            elif reproducer_type == "syz":
+                logger.warning(
+                    f"Trace file generation skipped for reproducer type 'syz'. Not supported for {reproducer_type}."
+                )
+            return message
+
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Reproducer execution failed: {e.stderr.strip()}")
+            return "Reproducer execution failed"
+
+    except Exception as e:
+        logger.error(f"Unpredicted error: {e}")
+        return "Failed to run reproducer"
+
+    return "Reproducer executed successfully"
+
+
 
 def main():
     args = parse_args()
@@ -291,77 +669,66 @@ def main():
         return
 
     config = parse_config(args.config_file)
-
-    # clone kernel source into a temporary directory
-    tmp_kernel_src = TemporaryDirectory()
-    Repo.clone_from(config.kernel_src, tmp_kernel_src.name)
-
-    commits = [config.kernel_commit_1, config.kernel_commit_2]
-    configs = [config.path_config_default, config.path_config_repaired]
-
-    kernel_image_paths: list[Path] = []
-    qemu_instances: list[QemuInstance] = []
+    test_type = config.relationship_test
     debian_image = DebianImage(
         path_debian_image=config.debian_image_src / "bullseye.img",
         path_debian_image_key=config.debian_image_src / "bullseye.id_rsa",
     )
 
-    try:
-        for commit, config_file in zip(commits, configs):
-            compilation_res, kernel_image_path, vmlinux_path = compile_kernel(
-                Path(tmp_kernel_src.name),
-                commit,
-                config_file,
-                config.cores,
-                config.output,
-            )
-            if not compilation_res:
-                logger.error("Error compiling kernel")
-                return
-            if kernel_image_path is not None:
-                kernel_image_paths.append(kernel_image_path)
+    kernel_image_paths = {}
+    qemu_instances = []
 
-        logger.info("Kernel compiled successfully")
+    try:    
+        kernel_image_paths["repaired"] = config.repaired_config_image
+        kernel_image_paths["default"] = config.default_config_image
+        logger.info(config.default_config_image)
+        logger.info(config.repaired_config_image)
+        for config_type, kernel_image_path in kernel_image_paths.items():
+            logger.info(f"Starting QEMU for {config_type}...")
 
-        for kernel_image_path in kernel_image_paths:
             qemu_instance = QemuInstance()
-            boot_res = run_qemu(
-                kernel_image_path, debian_image.path_debian_image, qemu_instance
+            boot_success = run_qemu(
+                kernel_image_path=kernel_image_path,
+                debian_image_path=debian_image.path_debian_image,
+                qemu_instance=qemu_instance,
+                timeout=300,
+                commit_id=config.kernel_commit_id,
+                config_type=config_type,
+                reproducer_src=config.path_reproducer,
+                test_type=test_type,
+                kernel_src=config.kernel_src,
+                output=config.output,
+                icse_path=config.icse_path,
+                debian_image_src=config.debian_image_src
             )
-            if not boot_res:
-                logger.error("Error booting kernel")
-                return
+
+            if not boot_success:
+                logger.error(f"Failed to start QEMU for {config_type}. Skipping...")
+                continue
+
+            logger.info(f"QEMU started successfully for {config_type}.")
             qemu_instances.append(qemu_instance)
 
-        logger.info(
-            f"Started QEMU instances with pids: {[qemu_instance.pid for qemu_instance in qemu_instances]}"
-        )
-
-        compile_reproducer(config.path_reproducer, config.output)
-
-        logger.info("Reproducer compiled successfully")
-
-        for qemu_instance in qemu_instances:
-            upload_reproducer_to_vms(
-                config.output / "reproducer", debian_image.path_debian_image_key, qemu_instance.ssh_port
+        if qemu_instances:
+            logger.info(
+                f"QEMU instances started with PIDs: {[qemu_instance.pid for qemu_instance in qemu_instances]}"
             )
-            logger.info("Reproducer uploaded to VM")
-            execute_reproducer_on_vms(
-                debian_image.path_debian_image_key, qemu_instance.ssh_port
-            )
-            logger.info("Reproducer executed on VM")
-            # wait for reproducer to execute
-            time.sleep(20)
-            if vm_crash_check(qemu_instance.log_path):
-                logger.info("VM crashed")
-            else:
-                logger.info("VM did not crash")
+        else:
+            logger.warning("No QEMU instances were started.")
 
     except Exception as e:
-        logger.error(f"Error: {e}")
-        cleanup_temporary_resources([Path(tmp_kernel_src.name), *kernel_image_paths])
-        terminate_qemu_procs([qemu_instance.pid for qemu_instance in qemu_instances])
-
+        logger.error(f"An error occurred: {e}")
+    finally:
+        logger.info("Cleaning up .img files in /tmp directory...")
+        try:
+            for img_file in glob.glob("/tmp/*.img"):
+                os.remove(img_file)
+                logger.info(f"Removed temporary file: {img_file}")
+        except Exception as e:
+            logger.error(f"Error during cleanup: {e}")
+        logger.info("Cleanup completed.")
 
 if __name__ == "__main__":
     main()
+
+

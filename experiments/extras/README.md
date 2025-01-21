@@ -98,4 +98,131 @@ python3 icse25/experiments/extras/bootability_study/test_100_randconfigs.py
 > This script outputs a csv file named `bootability_study.csv` under `bootability_study/` directory.
 
 # TABLE VIII: Bugs that depended on configuration variety to be found.
-#TODO: Add data, scripts, and description of the table.
+The `get_relationship.py` script is designed to extract the list of configuration options necessary for issuing syscalls that can trigger specific kernel bugs. By analyzing the relationship between kernel configurations and bug-triggering syscalls, the script helps evaluate whether the krepair tool has enabled the required configurations to trigger these bugs.
+
+<h2>Functionality</h2>
+The script includes functionality to compile the kernel, but in its current state, it uses pre-built kernel images for both default and repaired configuration files. For each image, whether built with the default or repaired config files, it launches a virtual machine using QEMU. Once the virtual machine is running, the script transfers and executes reproducer files inside it. 
+
+
+The script also determines whether the provided reproducer is a <strong>C-reproducer</strong> or a <strong>syz-reproducer</strong> by analyzing the file type. Based on the reproducer type and the specified relationship test in the configuration file, the script handles the processing as follows:
+<ul>
+    <li>
+        <strong>C-reproducer:</strong>
+        <ul>
+            <li>If the relationship test is set to <code>reproducer</code>, the script processes the trace files generated during the kernel execution.</li>
+            <li>The processing includes mapping trace file addresses to source code lines and identifying required kernel configuration options using <code>klocalizer</code>.</li>
+        </ul>
+    </li>
+    <li>
+        <strong>syz-reproducer:</strong>
+        <ul>
+            <li>The script runs the reproducer using the appropriate <code>./syz-execprog -enable=all -repeat=0 -procs=6 reproducer_file </code> command.</li>
+            <li>Trace file generation and processing are skipped, and a warning is logged indicating that this functionality is not supported for syz-reproducers.</li>
+        </ul>
+    </li>
+</ul>
+
+The timeout for executing reproducer files differs based on their type:
+- **C-reproducers:** Timeout is set to 10 seconds, as they typically run quickly.
+- **Syz-reproducers:** Timeout is set to 5 minutes, as they often require more time and are more likely to crash the operating system.
+
+This distinction ensures the script adapts appropriately to the nature of the reproducer being tested.
+<p>This functionality ensures that the script handles different reproducer types appropriately and provides clear feedback in the logs for unsupported operations.</p>
+
+## Command-Line Usage
+To run the script, the following command can be used:
+```bash
+python3 get_relationship.py -c <config_file>
+```
+
+<h2>Example Configuration File</h2>
+<p>The script requires a configuration file in JSON format. Below is an explanation of the required fields:</p>
+<ul>
+    <li><strong>kernel_commit_id:</strong> The commit ID of the kernel to be tested.</li>
+    <li><strong>kernel_src:</strong> The path to the kernel source directory.</li>
+    <li><strong>path_config_default:</strong> The path to the default kernel configuration file.</li>
+    <li><strong>path_config_repaired:</strong> The path to the repaired kernel configuration file.</li>
+    <li><strong>path_reproducer:</strong> The path to the reproducer file, either a C-reproducer or a syz-reproducer.</li>
+    <li><strong>output:</strong> The path to the output directory where results will be stored.</li>
+    <li><strong>debian_image_src:</strong> The path to the Debian image source directory.</li>
+    <li><strong>default_config_image:</strong> The path to the kernel image built with the default configuration.</li>
+    <li><strong>repaired_config_image:</strong> The path to the kernel image built with the repaired configuration.</li>
+    <li><strong>icse_path:</strong> The path to the ICSE experiments directory.</li>
+    <li><strong>relationship_test:</strong> Specifies the type of test to perform:
+        <ul>
+            <li><code>reproducer:</code> Processes trace files for C-reproducers and skips trace processing for syz-reproducers.</li>
+            <li><code>kcov:</code> Does not process trace files but appends results to the CSV file.</li>
+        </ul>
+    </li>
+    <li><strong>cores:</strong> The number of cores to use for kernel compilation.</li>
+</ul>
+
+
+### Command-Line Arguments
+The script takes a couple of command line arguments
+<ul>
+    <li>
+        <strong><code>-c</code> or <code>--config_file</code></strong> (required):
+        <ul>
+            <li>The path to the configuration file (e.g., <code>test.json</code>).</li>
+            <li>This file contains paths to the necessary files and directories for the script to function, 
+                including kernel source paths, output directories, Syzkaller binaries, and other dependencies.
+            </li>
+        </ul>
+    </li>
+    <li>
+        <strong>The file also contains a relationship_test field that determines the type of analysis performed by the script. The <code>--relationship-test</code> can have one of the following values: </strong> (required):
+        <ul>
+            <li><strong><code>kcov</code></strong>: 
+                <ul>
+                    <li>Boots kernel images with both default and repaired configurations inside QEMU instances.</li>                  
+                    <li>Analyzes trace files using <code>kcov</code> and appends the results to a CSV file, 
+                        including details such as the kernel commit and boot status.</li>
+                </ul>
+            </li>
+            <li><strong><code>reproducer</code></strong>: 
+                <ul>
+                    <li>Does everything that kcov does plus:</li>
+                    <ul>
+                        <li>Downloads trace files generated during kernel execution from QEMU.</li>
+                        <li>Processes the trace files to extract memory addresses and map them to source code lines.</li>
+                        <li>Identifies the kernel configuration options required for those lines using 
+                            <code>klocalizer</code>.</li>
+                    </ul>
+                </ul>
+            </li>
+        </ul>
+    </li>
+</ul>
+
+
+<h2>Outputs</h2>
+    <ul>
+        <li>
+            <strong>CSV File</strong>:
+            <ul>
+                <li>Records details of each test run, including:</li>
+                <ul>
+                    <li>Commit ID</li>
+                    <li>Whether the kernel images booted in QEMU</li>
+                    <li>Configuration options extracted for each test</li>
+                    <li>Results for both default and repaired configurations</li>
+                </ul>
+            </ul>
+        </li>
+        <li>
+            <strong>Processed Trace Files</strong>:
+            <ul>
+                <li><code>`config_type`.trace</code>: memory addresses</li> 
+                <li><code>`config_type`.lines</code>: lines with file paths</li>
+                <li><code>`config_type`.kloc_deps</code>: config options required for the syzcall</li>
+            </ul>
+        </li>
+        <li>
+            <strong>Log Files</strong>:
+            <ul>
+                <li>The <code>log_before_repro.log</code> file in the <code>output</code> directory (can be set inside config file) which holds the state of the VM logs before reproducer executtion. This helps us examine how the execution of reproducer affected VMs </li>
+                <li>Log files (<code>qemu.log</code>) for the each VM. They are saved into the corresponding parent directory of images</li>
+            </ul>
+        </li>
+    </ul>
