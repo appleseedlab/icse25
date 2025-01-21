@@ -69,7 +69,7 @@ Link to the preprint of the paper can be found [here](https://paulgazzillo.com/p
 
 # Setup
 
-## :hardware: Hardware Requirements
+## :floppy_disk: Hardware Requirements
 A workstation with at least 16GB of RAM and 100GB of free disk space is recommended.
 
 ## :computer: Software Requirements
