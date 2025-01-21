@@ -29,7 +29,7 @@ CONFIGS_DIR="$(realpath $CONFIGS_DIR)"
 while IFS=, read -r commit_id config_name kernel_id
 do
     # checkout to the kernel_id
-    (cd $KERNEL_SRC; git -f checkout $kernel_id -q)
+    (cd $KERNEL_SRC; git checkout -f $kernel_id -q)
 
     # make defconfig
     (cd $KERNEL_SRC; make defconfig)
