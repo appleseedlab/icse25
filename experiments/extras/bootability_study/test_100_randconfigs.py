@@ -198,7 +198,12 @@ def generate_randconfigs(kernel_src, output_dir) -> tuple[list, Path]:
             logging.error(e)
 
         logging.debug(f"Copying config file from {config_path} to {output_config_path}")
-        shutil.copy(config_path, output_config_path)
+        try:
+            shutil.copy(config_path, output_config_path)
+        except Exception as e:
+            logging.error(f"Falied to copy config file: {e}")
+            logging.error("make randconfig must have failed")
+
         generated_config_files.append(output_config_path)
         save_to_csv(csv_file_path, seed, prob, output_config_path, csvname_seed)
 
