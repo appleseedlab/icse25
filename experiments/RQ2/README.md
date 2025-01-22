@@ -67,7 +67,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-python3 table4/repaired/get_config_times_repaired.py"
+python3 table4/repaired/get_config_times_repaired.py
 ```
 > This will create a file named `table4/repaired/config_times.csv` containing the
 newly generated timing results.
@@ -102,7 +102,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-bash table5/original/get_build_times.sh"
+bash table5/original/get_build_times.sh
 ```
 > [!NOTE]
 > The script builds all 50 kernel images with the original configuration files.
@@ -129,7 +129,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-bash table5/repaired/get_build_times_repaired.sh"
+bash table5/repaired/get_build_times_repaired.sh
 ```
 > [!NOTE]
 > The script builds all 50 kernel images with the repaired configuration files.
