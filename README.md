@@ -123,5 +123,5 @@ To get a demo of the fuzzing experiments with and without configuration variety,
 you can run the following command to conduct the experiment on a default and a
 repaired kernel image for 15 minutes:
 ```bash
-bash /experiments/fuzzing/fuzz.sh
+bash ./experiments/fuzzing/fuzz.sh
 ```
