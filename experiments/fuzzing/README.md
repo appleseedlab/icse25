@@ -123,6 +123,14 @@ Parameters include:
 [cpu] - Number of CPUs to use for fuzzing.
 [mem] - Amount of memory to use for fuzzing.
 ```
+> [!NOTE]
+> To only provide some of the optional parameters, use "" for the parameters you want to skip.
+> For example, to only provide the `linux-next path` parameter, use:
+> ```Bash
+> ./fuzzing_experiments.sh "" "" "" /path/to/linux-next
+> ```
+> This will skip the first three parameters, the parameters after the `linux-next path`
+parameter, and only provide the `linux-next path` parameter.
 
 The script with the provided command above will run each fuzzing run on one kernel
 image built with default and repaired configurations for 50 runs.
