@@ -28,7 +28,7 @@ error_exit() {
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || error_exit "Failed to get script directory."
 REPO_ROOT="$(realpath "$SCRIPT_DIR/../../../../")" || error_exit "Failed to resolve repository root."
 
-default_kernel_src="$REPO_ROOT/linux-next"
+default_kernel_src="$REPO_ROOT/linux-next/1"
 
 # Assign default or provided arguments
 KERNEL_SRC=${1:-$default_kernel_src}
