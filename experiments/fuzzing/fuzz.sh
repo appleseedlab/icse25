@@ -183,11 +183,3 @@ wait
 
 echo "[+] Fuzzing experiments completed"
 echo "[+] Results are stored in $output_path"
-
-# Cleanup
-echo "[+] Cleaning up..."
-rm -rf $tmp_csv_file
-rm -rf $dir_linux_next_default
-rm -rf $dir_linux_next_repaired
-rm -rf $debian_image_path_default
-rm -rf $debian_image_path_repaired
