@@ -59,4 +59,4 @@ RUN python3 -m pip install -r "${ICSE25_PATH}/requirements.txt"
 # 12) Download files from google drive
 RUN gdown 17CqozrdX3Iehx9hmZdgGBD7i0KMGueKZ -O "${ICSE25_PATH}/debian_image.7z" && \
     gdown 1Y2dr6nbXxzS_6y-iDUWKCkUH9iucwhv3 -O "${ICSE25_PATH}/linux_next.7z" && \
-    7z x "${ICSE25_PATH}/debian_image.7z" && 7z x "${ICSE25_PATH}/linux_next.7z" \
+    7z x "${ICSE25_PATH}/debian_image.7z -o${ICSE25_PATH}" && 7z x "${ICSE25_PATH}/linux_next.7z -o${ICSE25_PATH}" \
