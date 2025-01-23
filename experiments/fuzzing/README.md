@@ -61,7 +61,7 @@ fuzzing mode or with the provided kernel images with **prebuilt** mode.
 ---
 
 # Structure
-|Subdirectory|Section|
+|File|Description|
 |----|----|
 |[fuzz.sh](fuzz.sh)|A quick-start script to run fuzzing with syzkaller using prebuilt kernel images with default and repaired configurations.|
 |[fuzzing_experiments.sh](fuzzing_experiments.sh)|The main fuzzing script that allows reproducing the study of the paper with two modes: prebuilt and full|
