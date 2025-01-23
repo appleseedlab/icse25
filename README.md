@@ -101,11 +101,21 @@ Link to the preprint of the paper can be found [here](https://paulgazzillo.com/p
 # Setup
 
 ## :floppy_disk: Hardware Requirements
-A workstation with at least 8 threads, 16GB of RAM and >100GB of free disk space is recommended.
+A workstation with:
+- At least 8 threads,
+- 16GB of RAM
+- \>100GB of free disk space is recommended.
 
 ## :computer: Software Requirements
-The experiments are conducted in a Docker container.
-Therefore, you need to have Docker installed on your system.
+- Linux-based operating system (Tested on Ubuntu 22.04),
+- Docker(Tested on version 26.0.0),
+
+We aim to provide a reproducible environment for the experiments in the form of
+a Docker container.
+
+Therefore, we expect that the user has basic proficiency in using Docker and
+Linux-based operating systems.
+
 You can download Docker from the [official website](https://docs.docker.com/get-docker/).
 
 ---
@@ -113,9 +123,7 @@ You can download Docker from the [official website](https://docs.docker.com/get-
 # Usage
 
 ## :wrench: Prerequisites
-Before running the experiments, please make sure that you have Python 3.9 or later
-installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).
-Next, you need to run setup.sh script to install the required dependencies.
+
 ```bash
 sudo bash ./setup.sh
 ```
