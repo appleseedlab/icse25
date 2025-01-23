@@ -1,121 +1,174 @@
 #!/usr/bin/env bash
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+REPO_ROOT=$(realpath "$SCRIPT_DIR/../../")
 
 usage(){
-    echo "Usage: $0 [linux-next path] [syzkaller path] [debian image path] [output path]" \
-         "[csv path] [kernel images path] [fuzzing time]"
-    echo "    linux-next path: path to the linux-next repository. Default: $default_linux_next"
-    echo "    syzkaller path: path to the syzkaller repository. Default: $default_syzkaller"
-    echo "    debian image path: path to the debian image. Default: $default_debian_image"
-    echo "    output path: path to store the output of the experiments. Default: $default_path_output"
-    echo "    csv path: path to the csv file containing the fuzzing parameters. Default: $default_path_csv"
-    echo "    kernel images path: path to the kernel images. Default: $default_path_kernel_images"
-    echo "    fuzzing time: time to run the fuzzing experiments. Default: $default_fuzzing_time"
+        echo "Usage: $0 [csv-file] [linux-next path] [syzkaller path] [debian image path] [kernel images path] [output path] [fuzzing-time] [procs] [vm_count] [cpu] [mem]"
+    echo
+    echo "    csv-file: path to the csv file containing the fuzzing parameters"
+    echo "    linux-next path: path to the linux-next repository. Default: \$default_linux_next"
+    echo "    syzkaller path: path to the syzkaller repository. Default: \$default_syzkaller"
+    echo "    debian image path: path to the debian image. Default: \$default_debian_image"
+    echo "    kernel images path: path to the prebuilt kernel images. Default: \$default_kernel_images"
+    echo "    output path: path to store the output. Default: \$default_output"
+    echo "    fuzzing-time: time for which the fuzzing instance should run. Default: \$default_fuzzing_time"
+    echo "    procs: number of processes to run. Default: \$default_procs"
+    echo "    vm_count: number of VMs to run. Default: \$default_vm_count"
+    echo "    cpu: number of CPUs to use. Default: \$default_cpu"
+    echo "    mem: amount of memory to use. Default: \$default_mem"
+    echo
+    echo "Example:"
+    echo "  $0 prebuilt path/to/fuzzing_parameters.csv \\"
+    echo "     ../../linux-next ../../syzkaller ../../debian_image \\"
+    echo "     ../../kernel_images ./output 12h 2 2 2 2048"
+
 }
 
-default_linux_next="$SCRIPT_DIR/linux-next"
-default_syzkaller="$SCRIPT_DIR/syzkaller"
-default_debian_image="$SCRIPT_DIR/debian_image"
-default_path_output="$SCRIPT_DIR/quickstart_fuzz_output"
-default_path_csv="$SCRIPT_DIR/experiments/fuzzing/fuzzing_parameters.csv"
-default_path_kernel_images="$SCRIPT_DIR/kernel_images"
+default_csv_file="$SCRIPT_DIR/fuzzing_parameters.csv"
+default_linux_next="$REPO_ROOT/linux-next"
+default_syzkaller="$REPO_ROOT/syzkaller"
+default_debian_image="$REPO_ROOT/debian_image"
+default_output_path="$SCRIPT_DIR/quickstart_fuzz_output"
+default_kernel_images="$REPO_ROOT/kernel_images"
 default_fuzzing_time="15m"
 
-path_linux_next=${1:-$default_linux_next}
-path_linux_next=$(realpath $path_linux_next)
+default_procs=2
+default_vm_count=2
+default_cpu=2
+default_mem=2048
 
-path_syzkaller=${2:-$default_syzkaller}
-path_syzkaller=$(realpath $path_syzkaller)
+csv_file="${1:-$default_csv_file}"
+csv_file="$(realpath "$csv_file")"
 
-path_debian_image=${3:-$default_debian_image}
-path_debian_image=$(realpath $path_debian_image)
+dir_linux_next="${2:-$default_linux_next}"
+dir_linux_next="$(realpath "$dir_linux_next")"
 
-path_output=${4:-$default_path_output}
+syzkaller_path="${3:-$default_syzkaller}"
+syzkaller_path="$(realpath "$syzkaller_path")"
 
-path_csv=${5:-$default_path_csv}
-path_csv=$(realpath $path_csv)
+debian_image_path="${4:-$default_debian_image}"
+debian_image_path="$(realpath "$debian_image_path")"
 
-path_kernel_images=${6:-$default_path_kernel_images}
-path_kernel_images=$(realpath $path_kernel_images)
+kernel_images_path="${5:-$default_kernel_images}"
+kernel_images_path="$(realpath "$kernel_images_path")"
 
-fuzzing_time=${7:-$default_fuzzing_time}
+output_path="${6:-$default_output_path}"
+output_path="$(realpath "$output_path")"
 
-echo "=========================================================="
-echo "[+] Got CLI Arguments:"
-echo "    linux-next path         = $path_linux_next"
-echo "    syzkaller path          = $path_syzkaller"
-echo "    debian image path       = $path_debian_image"
-echo "    output path             = $path_output"
-echo "    csv path                = $path_csv"
-echo "    kernel images path      = $path_kernel_images"
-echo "    fuzzing time            = $fuzzing_time"
-echo "=========================================================="
+fuzzing_time="${7:-$default_fuzzing_time}"
+procs="${8:-$default_procs}"
+vm_count="${9:-$default_vm_count}"
+cpu="${10:-$default_cpu}"
+mem="${11:-$default_mem}"
+
+cli_arguments(){
+    echo "=========================================================="
+    echo "    linux-next path         = $dir_linux_next"
+    echo "    syzkaller path          = $syzkaller_path"
+    echo "    debian image path       = $debian_image_path"
+    echo "    output path             = $output_path"
+    echo "    csv path                = $csv_file"
+    echo "    kernel images path      = $kernel_images_path"
+    echo "    fuzzing time            = $fuzzing_time"
+    echo "    log file:               = $log_file"
+    echo "    syz-manager configs: "
+    echo "      procs                   = $procs"
+    echo "      vm_count                = $vm_count"
+    echo "      cpu                     = $cpu"
+    echo "      mem                     = $mem"
+    echo "=========================================================="
+}
 
 # Preliminary checks
-if [ ! -d "$path_linux_next" ]; then
-    echo "[-] Error: $path_linux_next doesn't exist"
+if [ ! -d "$dir_linux_next" ]; then
+    echo "[-] Error: $dir_linux_next doesn't exist"
     usage
     exit 1
 fi
 
-if [ ! -d "$path_syzkaller" ]; then
-    echo "[-] Error: $path_syzkaller doesn't exist"
+if [ ! -d "$syzkaller_path" ]; then
+    echo "[-] Error: $syzkaller_path doesn't exist"
     usage
     exit 1
 fi
 
-if [ ! -d "$path_debian_image" ]; then
-    echo "[-] Error: $path_debian_image doesn't exist"
+if [ ! -d "$debian_image_path" ]; then
+    echo "[-] Error: $debian_image_path doesn't exist"
     usage
     exit 1
 fi
 
-if [ ! -f "$path_csv" ]; then
-    echo "[-] Error: $path_csv doesn't exist"
+if [ ! -f "$csv_file" ]; then
+    echo "[-] Error: $csv_file doesn't exist"
     usage
     exit 1
 fi
 
-if [ ! -d "$path_kernel_images" ]; then
-    echo "[-] Error: $path_kernel_images doesn't exist"
+if [ ! -d "$kernel_images_path" ]; then
+    echo "[-] Error: $kernel_images_path doesn't exist"
     usage
     exit 1
 fi
 
-path_output_default="$path_output/default"
-path_output_repaired="$path_output/repaired"
-mkdir -p $path_output_default
-mkdir -p $path_output_repaired
+mkdir -p $output_path
+log_file="$output_path/fuzz.log"
+exec > >(tee -i "$log_file") 2>&1
 
-tmp_path_csv=$(mktemp)
-head -n 1 $path_csv > $tmp_path_csv
+cli_arguments
+
+tmp_csv_file=$(mktemp)
+head -n 1 $csv_file > $tmp_csv_file
 
 echo "[+] Creating temporary directories for linux-next and debian image to work on them in parallel"
-path_linux_next_default=$(mktemp -d)
-rsync -a $path_linux_next/ $path_linux_next_default/
-path_linux_next_repaired=$(mktemp -d)
-rsync -a $path_linux_next/ $path_linux_next_repaired/
+dir_linux_next_default=$(mktemp -d)
+rsync -a $dir_linux_next/ $dir_linux_next_default/
+dir_linux_next_repaired=$(mktemp -d)
+rsync -a $dir_linux_next/ $dir_linux_next_repaired/
 
-path_debian_image_default=$(mktemp -d)
-rsync -a $path_debian_image/ $path_debian_image_default/
-path_debian_image_repaired=$(mktemp -d)
-rsync -a $path_debian_image/ $path_debian_image_repaired/
+debian_image_path_default=$(mktemp -d)
+rsync -a $debian_image_path/ $path_debian_image_default/
+debian_image_path_repaired=$(mktemp -d)
+rsync -a $debian_image_path/ $path_debian_image_repaired/
 
 echo "[+] Succesfully created temporary directories"
 
 # Fuzz kernel images built with default and repaired configuration files, 15 minutes each
-bash "$SCRIPT_DIR/experiments/fuzzing/fuzzing_experiments.sh" prebuilt default $tmp_path_csv $path_linux_next_default $path_syzkaller $path_debian_image $path_kernel_images $path_output_default $fuzzing_time &
-bash "$SCRIPT_DIR/experiments/fuzzing/fuzzing_experiments.sh" prebuilt repaired $tmp_path_csv $path_linux_next_repaired $path_syzkaller $path_debian_image $path_kernel_images $path_output_repaired $fuzzing_time &
+bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
+    prebuilt default \
+    $tmp_csv_file \
+    $dir_linux_next_default \
+    $syzkaller_path \
+    $debian_image_path \
+    $kernel_images_path \
+    $output_path \
+    $fuzzing_time \
+    $procs \
+    $vm_count \
+    $cpu \
+    $mem &
+bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
+    prebuilt repaired \
+    $tmp_csv_file \
+    $dir_linux_next_repaired \
+    $syzkaller_path \
+    $debian_image_path \
+    $kernel_images_path \
+    $output_path \
+    $fuzzing_time \
+    $procs \
+    $vm_count \
+    $cpu \
+    $mem &
 
 wait
 
 echo "[+] Fuzzing experiments completed"
-echo "[+] Results are stored in $path_output_default and $path_output_repaired"
+echo "[+] Results are stored in $output_path"
 
 # Cleanup
-rm -rf $tmp_path_csv
-rm -rf $path_linux_next_default
-rm -rf $path_linux_next_repaired
-rm -rf $path_debian_image_default
-rm -rf $path_debian_image_repaired
+rm -rf $tmp_csv_file
+rm -rf $dir_linux_next_default
+rm -rf $dir_linux_next_repaired
+rm -rf $debian_image_path_default
+rm -rf $debian_image_path_repaired
