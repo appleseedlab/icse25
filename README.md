@@ -42,6 +42,35 @@ with the kernel maintainers can be found [here](
 https://lore.kernel.org/lkml/?q=Sanan+Hasanov).
 
 ---
+# Table of Contents
+- [Table of Contents](#table-of-contents)
+- [Structure](#structure)
+- [Purpose](#purpose)
+- [Provenance](#provenance)
+- [Setup](#setup)
+  - [:floppy_disk: Hardware Requirements](#floppy_disk-hardware-requirements)
+  - [:computer: Software Requirements](#computer-software-requirements)
+- [Usage](#usage)
+  - [:wrench: Prerequisites](#wrench-prerequisites)
+  - [:rocket: Quick Start](#rocket-quick-start)
+
+# Structure
+|Subdirectory|Description|
+|----|----|
+|[configuration_files](configuration_files)|Default(the ones utilized by syzbot) and repaired linux kernel configuration files used in experiments.|
+|[data_tables](data_tables)|Workbooks that contain information about bugs found during the experiments.|
+|[experiments](experiments)|Subdirectory that contains scripts and instructions to replicate results of the paper.|
+|[images](images)|Images to display on README of the repository.|
+|[syzkaller](syzkaller)|Subdirectory that contains the source code of syzkaller version used in experiments.|
+|[Dockerfile](Dockerfile)|Dockerfile to build the docker image for the experiments.|
+|[LICENSE](LICENSE)|License file for the repository.|
+|[README.md](README.md)|This file.|
+|[SUMMARY.md](SUMMARY.md)|Summary of the experimental setup and set of actions that are performed during experiments.|
+|[icse25.pdf](icse25.pdf)|Preprint of the paper.|
+|[requirements.txt](requirements.txt)|Python requirements file.|
+|[setup.sh](setup.sh)|Script to install the required dependencies.|
+
+---
 
 # Purpose
 
@@ -85,7 +114,7 @@ Before running the experiments, please make sure that you have Python 3.9 or lat
 installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).
 Next, you need to run setup.sh script to install the required dependencies.
 ```bash
-sudo ./setup.sh
+sudo bash ./setup.sh
 ```
 
 ## :rocket: Quick Start
@@ -93,5 +122,5 @@ To get a demo of the fuzzing experiments with and without configuration variety,
 you can run the following command to conduct the experiment on a default and a
 repaired kernel image for 15 minutes:
 ```bash
-./fuzz.sh
+bash /experiments/fuzzing/fuzz.sh
 ```
