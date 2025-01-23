@@ -8,24 +8,57 @@
 # java superc.util.FilenameService -server 45678 /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/coverable_patches &
 # for sdd in {1..3}; do for instance in {0..9}; do linuxdir=/data${sdd}/test_experiment/inputs/linux${instance}; outdir=/data${sdd}/test_experiment/krepair_out${instance}; log=/data${sdd}/test_experiment/krepair_out${instance}.log; source=localhost:45678; bash /data1/anon/kmax/scripts/krepair_evaluation/paper/run_many_evaluations.sh ${source} ${linuxdir} x86_64 /data1/anon/kmax/scripts/krepair_evaluation/assets_linuxv513/build_targets.json formulacache ${outdir} -j8 > ${log} 2>&1 & sleep 1; done; done
 
-set -x
+# set -x
+#
+
+usage(){
+    echo "Usage: $0 [source] [linuxsrclone] [arch] [formulacache] [outdir] [kaflsrc]"
+    echo "source: the source of commit ids, either a /path/to/a/sample/file (no colon symbol permitted) or the server:port of a FilenameService"
+    echo "linuxsrclone: the path to the linux source code clone"
+    echo "arch: the architecture of the linux source code"
+    echo "formulacache: the path to the formula cache"
+    echo "outdir: the path to the output directory"
+    echo "kaflsrc: the path to the kafl.config file"
+}
 
 # used to find other scripts called
 script_dir=$(dirname $(realpath $0))
 
-default_linux_src=$(realpath "${script_dir}/../../../linux-next")
-default_syzkaller_src=$(realpath "${script_dir}/../../../syzkaller")
+default_linux_src=$(realpath "${script_dir}/../../../../linux-next")
+default_arch="x86_64"
+default_formulacache="${script_dir}/formulacache"
+default_syzkaller_src=$(realpath "${script_dir}/../../../../syzkaller")
 default_outdir="${script_dir}/outdir"
 default_kaflsrc="${script_dir}/kafl.config"
-mkdir -p $default_outdir
 
 # the source of commit ids, either a /path/to/a/sample/file (no colon symbol permitted) or the server:port of a FilenameService
 source=${1-"${script_dir}/coverable_patches"}
-linuxsrclone=$(realpath ${2-${default_linux_src}})
-arch=${3-x86_64}
-formulacache=${4-formulacache}
-outdir=$(realpath ${5-${default_outdir}})
-kaflsrc=$(realpath ${6-${default_kaflsrc}})
+
+linuxsrclone=${2-${default_linux_src}}
+linuxsrclone=$(realpath ${linuxsrclone})
+
+arch=${3-${default_arch}}
+
+formulacache=${4-${default_formulacache}}
+
+outdir=${5-${default_outdir}}
+outdir="${outdir}/$(date +%s)"
+mkdir -p ${outdir}
+outdir=$(realpath ${outdir})
+
+kaflsrc=${6-${default_kaflsrc}}
+kaflsrc=$(realpath ${kaflsrc})
+
+# Preliminary checks
+if [ ! -d "${linuxsrclone}" ]; then
+    echo "Error: ${linuxsrclone} is not a directory"
+    exit 1
+fi
+
+if [ ! -f "$kaflsrc" ]; then
+    echo "Error: ${kaflsrc} is not a file"
+    exit 1
+fi
 
 
 run_eval() {
