@@ -76,7 +76,7 @@ execute the quick-start script `fuzz.sh` as follows:
 ./fuzz.sh
 ```
 This will by default run fuzzing experiments using prebuilt kernel images with default and repaired configurations
-in parallel and save results in the `fuzz_output/` directory.
+in parallel and save results in the `quickstart_fuzz_output/` directory.
 
 ## Replicate the study using prebuilt kernel images
 To replicate the entire fuzzing experiments using prebuilt kernel images,

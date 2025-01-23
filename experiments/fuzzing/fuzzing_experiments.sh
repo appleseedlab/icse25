@@ -195,10 +195,6 @@ unix_time="$(date +%s)"
 output_path="$output_path/$unix_time"
 mkdir -p "$output_path"
 
-log_file="$output_path/$experiment_type/main_script_logs.log"
-mkdir -p "$(dirname "$log_file")"
-exec > >(tee -i "$log_file") 2>&1
-
 ################################################################################
 # Additional directories
 ################################################################################
@@ -373,6 +369,11 @@ function utilize_artifacts() {
 ################################################################################
 function do_fuzzing_pass() {
     local pass_type="$1"  # "default" or "repaired"
+
+    log_file="$output_path/$pass_type/main_script_logs.log"
+    mkdir -p "$(dirname "$log_file")"
+    exec > >(tee -i "$log_file") 2>&1
+
     echo "[*] Starting fuzzing pass for experiment_type=$pass_type"
 
     # We'll do a separate synergy port range for each pass just to avoid collisions
@@ -481,11 +482,6 @@ EOF
     echo "[*] Fuzzing pass ($pass_type) done!"
 }
 
-################################################################################
-# -- CHANGES START HERE --
-################################################################################
-
-#
 # If experiment_type == "all", we run two passes:
 #   1) do_fuzzing_pass "default"
 #   2) do_fuzzing_pass "repaired"
