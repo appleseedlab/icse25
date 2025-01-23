@@ -103,7 +103,7 @@ Link to the preprint of the paper can be found [here](https://paulgazzillo.com/p
 ## :floppy_disk: Hardware Requirements
 A workstation with:
 - At least 8 threads,
-- 16GB of RAM
+- 16GB of RAM,
 - \>100GB of free disk space is recommended.
 
 ## :computer: Software Requirements
@@ -125,7 +125,7 @@ You can download Docker from the [official website](https://docs.docker.com/get-
 ## :wrench: Prerequisites
 
 ```bash
-sudo bash ./setup.sh
+sudo bash setup.sh
 ```
 
 ## :rocket: Quick Start
@@ -133,5 +133,5 @@ To get a demo of the fuzzing experiments with and without configuration variety,
 you can run the following command to conduct the experiment on a default and a
 repaired kernel image for 15 minutes:
 ```bash
-bash ./experiments/fuzzing/fuzz.sh
+bash experiments/fuzzing/fuzz.sh
 ```
