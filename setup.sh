@@ -49,40 +49,17 @@ check_command() {
 ###############################################################################
 # FUNCTIONS
 ###############################################################################
-install_go() {
-    log_info "Installing Go ${GOVER}"
-    check_command wget
-    wget -q "$GOURL" -O "$GOTAR" || { log_error "Failed to download Go tarball"; exit 1; }
-
-    sudo rm -rf /usr/local/go
-    sudo tar -C /usr/local -xzf "$GOTAR"
-    rm "$GOTAR"
-
-    # Update PATH for the current session
-    export PATH=$PATH:/usr/local/go/bin
-
-    # Ensure Go is available in future shells
-    if ! grep -q "/usr/local/go/bin" ~/.bashrc; then
-        echo "export PATH=\$PATH:/usr/local/go/bin" >> ~/.bashrc
-    fi
-
-    check_command go
-    log_info "Go ${GOVER} installed."
-
-}
-
-install_dependencies() {
-    log_info "Installing system dependencies"
-    check_command apt
-    sudo apt-get update -y
-    sudo apt-get install -y build-essential make libncurses-dev qemu-system-x86 debootstrap python3 python3-pip git-lfs git wget curl p7zip-full flex bison bc libelf-dev libssl-dev
+enable_venv(){
+    # create a python virtual environment
+    python3 -m venv venv
+    source venv/bin/activate
 }
 
 install_gdown() {
     log_info "Ensuring gdown is installed"
     if ! command -v gdown &>/dev/null; then
         # Install gdown without affecting system packages too heavily
-        python3 -m pip install gdown --break-system-packages
+        python3 -m pip install gdown
         # Refresh shell hash
         hash -r
         if ! command -v gdown &>/dev/null; then
@@ -93,111 +70,20 @@ install_gdown() {
     log_info "gdown is installed."
 }
 
-install_syzkaller() {
-    log_info "Installing syzkaller"
-    check_command git
-    if [ ! -d "$SYZKALLER_SRC" ]; then
-        log_error "Syzkaller source directory not found at $SYZKALLER_SRC."
-        exit 1
-    fi
-    (cd "$SYZKALLER_SRC"; git submodule update --init --recursive; make)
-    log_info "Syzkaller installation complete."
-}
+run_docker_container(){
+    containername="icse25-artifacts"
+    image_home="/home/apprunner"
 
-install_docker() {
-    log_info "Installing Docker"
+    docker build -t $containername .
 
-    # Detect distro
-    source /etc/os-release
-    if [[ "$ID" == "ubuntu" ]]; then
-        REPO_URL="https://download.docker.com/linux/ubuntu"
-    elif [[ "$ID" == "debian" && "$VERSION_CODENAME" == "bookworm" ]]; then
-        REPO_URL="https://download.docker.com/linux/debian"
-    else
-        echo "This script currently only supports Ubuntu and Debian 12 (bookworm)."
-        return 1
-    fi
+    docker ps -aq --filter "name=$containername" | grep -q . && \
+        docker stop $containername && docker rm $containername
 
-    # Update packages, install prerequisites
-    sudo apt-get update
-    sudo apt-get install -y ca-certificates curl
-
-    # Setup Docker GPG key
-    sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL "${REPO_URL}/gpg" -o /etc/apt/keyrings/docker.asc
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
-
-    # Add Docker repo
-    echo \
-      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] $REPO_URL \
-      $VERSION_CODENAME stable" | \
-      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-    # Final install
-    sudo apt-get update
-    sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-
-    check_command docker
-    log_info "Docker is installed."
-}
-
-#!/usr/bin/env bash
-
-function install_required_gcc() {
-  local required_version="11.4.0"
-
-  # 1. Update system packages and install prerequisites
-  sudo apt-get update
-  sudo apt-get install -y build-essential software-properties-common \
-       libgmp-dev libmpfr-dev libmpc-dev zlib1g-dev flex bison wget
-
-  # 2. Download and unpack GCC 11.4.0 source
-  wget https://ftp.gnu.org/gnu/gcc/gcc-"$required_version"/gcc-"$required_version".tar.gz
-  tar -xvf gcc-"$required_version".tar.gz
-  cd gcc-"$required_version" || exit 1
-
-  # 3. Fetch additional prerequisites
-  ./contrib/download_prerequisites
-
-  # 4. Create a build directory and configure
-  mkdir build && cd build || exit 1
-  ../configure --enable-languages=c,c++ --disable-multilib
-
-  # 5. Build and install
-  make -j"$(nproc)"
-  sudo make install
-
-  # 6. Register /usr/local/bin/gcc & g++ with update-alternatives
-  #    Use a high priority (e.g., 100) and set them as the default
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/local/bin/gcc 100
-  sudo update-alternatives --install /usr/bin/g++ g++ /usr/local/bin/g++ 100
-  sudo update-alternatives --set gcc /usr/local/bin/gcc
-  sudo update-alternatives --set g++ /usr/local/bin/g++
-
-  # 7. Verify installation
-  if [ "$(gcc --version | grep -oP '(?<=gcc \(GCC\) )\d+\.\d+\.\d+')" != "$required_version" ]; then
-    log_info "GCC $required_version installation failed."
-    exit 1
-  fi
-
-  log_info "Installed GCC version $(gcc --version | grep -oP '(?<=gcc \(GCC\) )\d+\.\d+\.\d+') successfully."
-
-}
-
-create_debian_image() {
-    log_info "Creating a Debian image"
-    mkdir -p "$IMAGE_DIR"
-    (cd "$IMAGE_DIR"; wget -q "$DEBIAN_IMAGE_URL" -O create-image.sh)
-    chmod +x "$IMAGE_DIR/create-image.sh"
-
-    # Consider checking if create-image.sh was downloaded successfully
-    if [ ! -f "$IMAGE_DIR/create-image.sh" ]; then
-        log_error "Failed to download create-image.sh"
-        exit 1
-    fi
-
-    (cd "$IMAGE_DIR"; ./create-image.sh)
-    log_info "Debian image creation complete."
+    docker run -it \
+    -v $(pwd)/kernel_images:$image_home/icse25/kernel_images \
+    -v $(pwd)/linux-next:$image_home/icse25/linux-next \
+    -v $(pwd)/debian_image:$image_home/icse25/debian_image \
+    $containername  /bin/bash
 }
 
 download_reproducers() {
@@ -244,18 +130,14 @@ check_if_user_in_kvm_group() {
 ###############################################################################
 # MAIN
 ###############################################################################
-install_go
-install_dependencies
-install_docker
-check_if_user_in_kvm_group
-install_required_gcc
-install_gdown
-install_syzkaller
-create_debian_image
-download_linux_next
-download_reproducers
-extract_linux_next
-extract_reproducers
+run_docker_container
+# enable_venv
+# check_if_user_in_kvm_group
+# install_gdown
+# download_linux_next
+# download_reproducers
+# extract_linux_next
+# extract_reproducers
 
 log_info "Setup completed successfully."
 
