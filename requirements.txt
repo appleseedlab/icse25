@@ -30,4 +30,4 @@ gitpython
 tqdm
 loguru
 gdown
-scipy
+scipy==1.15.1
