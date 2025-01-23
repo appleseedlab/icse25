@@ -14,18 +14,29 @@ echo "Executing run_many_syzkaller_evaluations..."
 
 # used to find other scripts called
 script_dir=$(dirname $(realpath $0))
-default_linux_src=$(realpath "${script_dir}/../../../linux-next")
-default_syzkaller_src=$(realpath "${script_dir}/../../../syzkaller")
+default_linux_src=$(realpath "${script_dir}/../../../../linux-next")
+default_formulacache="${script_dir}/formulacache"
+default_arch="x86_64"
+default_syzkaller_src=$(realpath "${script_dir}/../../../../syzkaller")
 default_outdir="${script_dir}/outdir"
 mkdir -p $default_outdir
 
 # the source of commit ids, either a /path/to/a/sample/file (no colon symbol permitted) or the server:port of a FilenameService
-source=${1-"${script_dir}/coverable_patches"}
-linuxsrclone=$(realpath ${2-${default_linux_src}})
-arch=${3-x86_64}
-formulacache=${4-formulacache}
-outdir=$(realpath ${5-${default_outdir}})
-syzkallersrc=$(realpath ${6-${default_syzkaller_src}})
+source=${1:-"${script_dir}/coverable_patches"}
+
+linuxsrclone=${2:-$default_linux_src}
+linuxsrclone=$(realpath ${linuxsrclone})
+
+arch=${3:-$default_arch}
+
+formulacache=${4:-$default_formulacache}
+formulacache=$(realpath ${formulacache})
+
+outdir=${5:-$default_outdir}
+outdir=$(realpath $outdir)
+
+syzkallersrc=${6:-$default_syzkaller_src}
+syzkallersrc=$(realpath $syzkallersrc)
 
 run_eval() {
 	commit=$1
