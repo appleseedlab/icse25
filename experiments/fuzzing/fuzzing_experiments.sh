@@ -181,9 +181,9 @@ fi
 ################################################################################
 
 if [[ "$fuzz_type" == "prebuilt" ]]; then
-    output_path="${output_path}_prebuilt"
+    output_path="${output_path}/prebuilt"
 elif [[ "$fuzz_type" == "full" ]]; then
-    output_path="${output_path}_full"
+    output_path="${output_path}/full"
 fi
 
 ################################################################################
@@ -195,8 +195,8 @@ unix_time="$(date +%s)"
 output_path="$output_path/$unix_time"
 mkdir -p "$output_path"
 
-log_file="$output_path/main_script_logs.log"
-# All output is tee'd to main_script_logs.log
+log_file="$output_path/$experiment_type/main_script_logs.log"
+mkdir -p "$(dirname "$log_file")"
 exec > >(tee -i "$log_file") 2>&1
 
 ################################################################################
