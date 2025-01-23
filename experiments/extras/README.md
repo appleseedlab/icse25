@@ -101,7 +101,8 @@ python3 bootability_study/test_100_randconfigs.py
 The `get_relationship.py` script is designed to extract the list of configuration options necessary for issuing syscalls that can trigger specific kernel bugs. By analyzing the relationship between kernel configurations and bug-triggering syscalls, the script helps evaluate whether the krepair tool has enabled the required configurations to trigger these bugs.
 
 <h2>Functionality</h2>
-The script includes functionality to compile the kernel, but in its current state, it uses pre-built kernel images for both default and repaired configuration files. For each image, whether built with the default or repaired config files, it launches a virtual machine using QEMU. Once the virtual machine is running, the script transfers and executes reproducer files inside it.
+
+The script includes functionality to compile the kernel, but in its current state, it uses pre-built kernel images for both default and repaired configuration files. For each image, whether built with the default or repaired config files, it launches a virtual machine using QEMU. Once the virtual machine is running, the script transfers and executes reproducer files inside it. 
 
 
 The script also determines whether the provided reproducer is a <strong>C-reproducer</strong> or a <strong>syz-reproducer</strong> by analyzing the file type. Based on the reproducer type and the specified relationship test in the configuration file, the script handles the processing as follows:
@@ -165,7 +166,7 @@ The script takes a couple of command line arguments
         <strong><code>-c</code> or <code>--config_file</code></strong> (required):
         <ul>
             <li>The path to the configuration file (e.g., <code>test.json</code>).</li>
-            <li>This file contains paths to the necessary files and directories for the script to function,
+            <li>This file contains paths to the necessary files and directories for the script to function, 
                 including kernel source paths, output directories, Syzkaller binaries, and other dependencies.
             </li>
         </ul>
@@ -173,20 +174,20 @@ The script takes a couple of command line arguments
     <li>
         <strong>The file also contains a relationship_test field that determines the type of analysis performed by the script. The <code>--relationship-test</code> can have one of the following values: </strong> (required):
         <ul>
-            <li><strong><code>kcov</code></strong>:
+            <li><strong><code>kcov</code></strong>: 
                 <ul>
-                    <li>Boots kernel images with both default and repaired configurations inside QEMU instances.</li>
-                    <li>Analyzes trace files using <code>kcov</code> and appends the results to a CSV file,
+                    <li>Boots kernel images with both default and repaired configurations inside QEMU instances.</li>                  
+                    <li>Analyzes trace files using <code>kcov</code> and appends the results to a CSV file, 
                         including details such as the kernel commit and boot status.</li>
                 </ul>
             </li>
-            <li><strong><code>reproducer</code></strong>:
+            <li><strong><code>reproducer</code></strong>: 
                 <ul>
                     <li>Does everything that kcov does plus:</li>
                     <ul>
                         <li>Downloads trace files generated during kernel execution from QEMU.</li>
                         <li>Processes the trace files to extract memory addresses and map them to source code lines.</li>
-                        <li>Identifies the kernel configuration options required for those lines using
+                        <li>Identifies the kernel configuration options required for those lines using 
                             <code>klocalizer</code>.</li>
                     </ul>
                 </ul>
@@ -213,7 +214,7 @@ The script takes a couple of command line arguments
         <li>
             <strong>Processed Trace Files</strong>:
             <ul>
-                <li><code>`config_type`.trace</code>: memory addresses</li>
+                <li><code>`config_type`.trace</code>: memory addresses</li> 
                 <li><code>`config_type`.lines</code>: lines with file paths</li>
                 <li><code>`config_type`.kloc_deps</code>: config options required for the syzcall</li>
             </ul>
