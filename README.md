@@ -58,17 +58,20 @@ https://lore.kernel.org/lkml/?q=Sanan+Hasanov).
 |Subdirectory|Description|
 |----|----|
 |[configuration_files](configuration_files)|Default(the ones utilized by syzbot) and repaired linux kernel configuration files used in experiments.|
+|[kernel_images](kernel_images)|Default(the ones utilized by syzbot) and repaired linux kernel images used in experiments.|
 |[data_tables](data_tables)|Workbooks that contain information about bugs found during the experiments.|
 |[experiments](experiments)|Subdirectory that contains scripts and instructions to replicate results of the paper.|
-|[images](images)|Images to display on README of the repository.|
 |[syzkaller](syzkaller)|Subdirectory that contains the source code of syzkaller version used in experiments.|
+|[linux-next](linux-next)|Subdirectory that contains the source code of linux-next version used in experiments.|
+|[debian_image](debian_image)|Subdirectory for the debian image used by QEMU in experiments.|
 |[Dockerfile](Dockerfile)|Dockerfile to build the docker image for the experiments.|
-|[LICENSE](LICENSE)|License file for the repository.|
-|[README.md](README.md)|This file.|
-|[SUMMARY.md](SUMMARY.md)|Summary of the experimental setup and set of actions that are performed during experiments.|
-|[icse25.pdf](icse25.pdf)|Preprint of the paper.|
 |[requirements.txt](requirements.txt)|Python requirements file.|
 |[setup.sh](setup.sh)|Script to install the required dependencies.|
+|[README.md](README.md)|This file.|
+|[SUMMARY.md](SUMMARY.md)|Summary of the experimental setup and set of actions that are performed during experiments.|
+|[LICENSE](LICENSE)|License file for the repository.|
+|[icse25.pdf](icse25.pdf)|Preprint of the paper.|
+|[images](images)|Images to display on README of the repository.|
 
 ---
 
@@ -83,7 +86,6 @@ experiments along with the detailed instructions.
 
 Therefore, we would like to apply for the following badges:
 - Available
-- Functional
 - Reusable
 
 ---
