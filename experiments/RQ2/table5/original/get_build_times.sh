@@ -26,7 +26,6 @@ KERNEL_SRC="$REPO_ROOT/linux-next"
 SRC_CSV_FILE="$REPO_ROOT/experiments/RQ2/table5/repaired_configs.csv"
 CONFIGS_DIR="$REPO_ROOT/configuration_files/syzbot_configuration_files"
 OUTPUT_CSV_FILE="$SCRIPT_DIR/build_times.csv"
-<<<<<<< HEAD
 
 # Validate paths
 if [ ! -d "$KERNEL_SRC" ]; then
@@ -43,23 +42,14 @@ if [ ! -d "$CONFIGS_DIR" ]; then
     echo "[-] Error: Configuration directory ($CONFIGS_DIR) does not exist."
     usage
 fi
-=======
->>>>>>> master
 
 # Read config_name, kernel_id, commit_id from csv file
 while IFS=, read -r commit_id config_name kernel_id
 do
-<<<<<<< HEAD
     (cd "$KERNEL_SRC" && git clean -dfx -q)
 
     # Checkout to the kernel_id
     (cd "$KERNEL_SRC" && git checkout -f "$kernel_id" -q)
-=======
-    (cd $KERNEL_SRC; git clean -dfx -q)
-
-    # checkout to the kernel_id
-    (cd $KERNEL_SRC; git checkout -f $kernel_id)
->>>>>>> master
 
     # Copy config file to .config
     cp "$CONFIGS_DIR/$config_name" "$KERNEL_SRC/.config"
@@ -71,20 +61,11 @@ do
     build_time=$(cd "$KERNEL_SRC" && (time -p make -j$(nproc)) 2>&1 | grep "^real" | awk '{print $2}')
 
     if [ $? -eq 0 ]; then
-<<<<<<< HEAD
         echo "$config_name,$kernel_id,$commit_id,$build_time" >> "$OUTPUT_CSV_FILE"
     else
         echo "$config_name,$kernel_id,$commit_id,-1" >> "$OUTPUT_CSV_FILE"
     fi
 
 done < "$SRC_CSV_FILE"
-=======
-        echo "$config_name,$kernel_id,$commit_id,$build_time" >> $OUTPUT_CSV_FILE
-    else
-        echo "$config_name,$kernel_id,$commit_id,-1" >> $OUTPUT_CSV_FILE
-    fi
-
-done < $SRC_CSV_FILE
->>>>>>> master
 
 echo "Build times are saved to $OUTPUT_CSV_FILE"
