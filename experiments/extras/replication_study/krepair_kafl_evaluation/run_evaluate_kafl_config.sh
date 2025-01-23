@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/run_evaluate_syzkaller_config.sh linux/ c07ba878ca199a6089cdb323bf526adbeeb4201f x86_64 formulacache outdir_with_build_j/c07ba878ca199a6089cdb323bf526adbeeb4201f ~/Documents/syzkaller
+# example: bash ./run_evaluate_kafl_config.sh linux/ c07ba878ca199a6089cdb323bf526adbeeb4201f x86_64 formulacache ./outdir/c07ba878ca199a6089cdb323bf526adbeeb4201f ./kafl.config
 
 set -x
 
@@ -10,20 +10,17 @@ script_dir=$(dirname $(realpath $0))
 krepaironly=true
 all=
 
-if [ "$#" -lt 6 ]; then
-	echo "Illegal number of parameters"
-	exit -1
-fi
+default_linux_src=$(realpath "${script_dir}/../../../linux-next")
+default_outdir="${script_dir}/outdir"
+default_kaflsrc="${script_dir}/kafl.config"
+mkdir -p $default_outdir
 
-linuxsrclone=${1}
-linuxsrclone=$(realpath ${linuxsrclone})
+linuxsrclone=$(realpath ${1-$default_linux_src})
 commit=${2}
 arch=${3}
 formulacache=${4}
-outdir=${5}
-
-kafl_config_src=${6}
-kafl_config_src=$(realpath ${kafl_config_src})
+outdir=${5-$default_outdir}
+kafl_config_src=$(realpath ${6-$default_kaflsrc})
 
 if [ -d $outdir ]; then
 	echo "ERROR: output directory already exists"
@@ -31,9 +28,18 @@ if [ -d $outdir ]; then
 else
 	mkdir -p $outdir
 fi
-outdir=$(realpath $outdir)
 
-build_flags=$7
+if [ ! -d $linuxsrclone ]; then
+    echo "ERROR: linux source directory does not exist"
+    exit 1
+fi
+
+if [ ! -f $kafl_config_src ]; then
+    echo "ERROR: kafl config file does not exist"
+    exit 1
+fi
+
+outdir=$(realpath $outdir)
 
 patch=${outdir}/commit.patch
 

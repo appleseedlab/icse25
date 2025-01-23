@@ -14,4 +14,4 @@ mentioned in the paper.
 |Subdirectory|Description|
 |----|----|
 |[fuzzing](fuzzing)|Subdirectory that contains information about the fuzzing experiments with and without configuration variety|
-|[extras](extras)|Data that was used to back up points mentioned in the paper|
+|[extras](extras)|Data and scripts to replicate mini studies conducted in the paper, such as replication study, bootability study, etc.|

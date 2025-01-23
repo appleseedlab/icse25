@@ -41,6 +41,45 @@ Reports of the bugs found with fuzzing with configuration variety, and discussio
 with the kernel maintainers can be found [here](
 https://lore.kernel.org/lkml/?q=Sanan+Hasanov).
 
+---
+
+# Purpose
+
+The purpose of the artifacts is to provide a reproducible environment for the
+experiments conducted in the paper.
+Dockerized environment is provided to ensure that the experiments can be
+reproduced on any system without any dependency issues.
+In addition, the scripts are provided to automate the process of running the
+experiments along with the detailed instructions.
+
+Therefore, we would like to apply for the following badges:
+- Available
+- Functional
+- Reusable
+
+---
+
+# Provenance
+
+#TODO: Add zenodo link
+The artifacts can be found [here]()
+Link to the preprint of the paper can be found [here](https://paulgazzillo.com/papers/icse25.pdf)
+
+---
+
+# Setup
+
+## :floppy_disk: Hardware Requirements
+A workstation with at least 16GB of RAM and 100GB of free disk space is recommended.
+
+## :computer: Software Requirements
+The experiments are conducted in a Docker container. Therefore, you need to have
+Docker installed on your system. You can download Docker from the [official website](https://docs.docker.com/get-docker/).
+
+---
+
+# Usage
+
 ## :wrench: Prerequisites
 Before running the experiments, please make sure that you have Python 3.9 or later
 installed on your system. You can download Python from the [official website](https://www.python.org/downloads/).

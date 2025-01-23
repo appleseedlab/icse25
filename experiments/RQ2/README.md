@@ -26,7 +26,7 @@ The directory `table4` contains the data and scripts used to generate Table IV.
 To reproduce the 'Original Configurations' column data,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table4/original/default_config_times.csv";
+python3 five_point_summary.py --file table4/original/default_config_times.csv
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel configuration
@@ -42,7 +42,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table4/original/get_config_times.sh"
+bash table4/original/get_config_times.sh
 ```
 > This will create a file named `table4/original/config_times.csv` containing the
 newly generated timing results.
@@ -51,7 +51,7 @@ newly generated timing results.
 To reproduce the 'Repaired Configurations' column data,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table4/repaired/repaired_config_times.csv";
+python3 five_point_summary.py --file table4/repaired/repaired_config_times.csv
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate repaired Linux kernel configuration
@@ -67,7 +67,7 @@ the measurements were initially conducted.
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 -m pip install loguru; python3 icse25/experiments/RQ2/table4/repaired/get_config_times_repaired.py"
+python3 table4/repaired/get_config_times_repaired.py"
 ```
 > This will create a file named `table4/repaired/config_times.csv` containing the
 newly generated timing results.
@@ -85,7 +85,7 @@ machine, build times were less than 10 minutes in all cases.
 To get the data for the 'Original Configurations' column of Table V,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table5/original/default_build_times.csv";
+python3 five_point_summary.py --file table5/original/default_build_times.csv
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel images
@@ -98,16 +98,21 @@ processes, or other environmental conditions during execution.
 To ensure consistency and reproducibility in the reported results, we rely on
 the originally recorded data, which accurately reflects the conditions under which
 the measurements were initially conducted.
+
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/original/get_build_times.sh"
+bash table5/original/get_build_times.sh"
 ```
+> [!NOTE]
+> The script builds all 50 kernel images with the original configuration files.
+Running the script on a machine with 8 cores and 16 GB of RAM takes approximately
+around 22 hours to complete.
 
 To get the data for the 'Repaired Configurations' column of Table V,
 run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/five_point_summary.py --file icse25/experiments/RQ2/table5/repaired/repaired_build_times.csv";
+python3 five_point_summary.py --file table5/repaired/repaired_build_times.csv
 ```
 > [!NOTE]
 > The script used to measure the time taken to generate Linux kernel images
@@ -120,11 +125,16 @@ processes, or other environmental conditions during execution.
 To ensure consistency and reproducibility in the reported results, we rely on
 the originally recorded data, which accurately reflects the conditions under which
 the measurements were initially conducted.
+
 > However, if readers still wish to run the script to generate the timing results
 themselves, they can use the following command:
 ```bash
-docker exec -it artifacts-container sh -c "bash icse25/experiments/RQ2/table5/repaired/get_build_times_repaired.sh"
+bash table5/repaired/get_build_times_repaired.sh"
 ```
+> [!NOTE]
+> The script builds all 50 kernel images with the repaired configuration files.
+Running the script on a machine with 8 cores and 16 GB of RAM takes approximately
+around 22 hours to complete.
 
 ### Fig. 4: Comparing syzkaller performance before and after using krepair.
 The directory `figure4` contains the data and scripts used to generate Fig. 4.
@@ -133,11 +143,18 @@ The directory `figure4` contains the data and scripts used to generate Fig. 4.
 
 To get Fig. 4a, run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/figure4/syscall_exec_bar_chart.py"; docker cp artifacts-container:/home/apprunner/icse25/experiments/RQ2/figure4/syscalls_comparison_chart.pdf ./syscalls_comparison_chart.pdf; open ./syscalls_comparison_chart.pdf
+python3 figure4/syscall_exec_bar_chart.py
 ```
 The script will output a file `figure4/syscalls_comparison_chart.pdf` which is
 a bar chart comparing the throughput of the original and krepaired configuration
 files.
+
+To view the pdf file generated by the script, you can copy the file from the
+container to the host machine and view it by running the following command:
+```bash
+docker cp <container-id>:/home/apprunner/icse25/experiments/RQ2/figure4/syscalls_comparison_chart.pdf ./syscalls_comparison_chart.pdf
+open ./syscalls_comparison_chart.pdf
+```
 > [!NOTE]
 > Throughput data across fuzzing runs for the original and krepaired is hardcoded
 in the script. Throughtput data is obtained from syzkaller logs. You can view
@@ -147,11 +164,18 @@ the throughput data in `data_tables/Table_of_all_crashes.xlsx` file.
 
 To get Fig. 4b, run the following command:
 ```bash
-docker exec -it artifacts-container sh -c "python3 icse25/experiments/RQ2/figure4/block_coverage_bar_chart.py"; docker cp artifacts-container:/home/apprunner/icse25/experiments/RQ2/figure4/block_coverage_comparison_chart.pdf ./block_coverage_comparison_chart.pdf; open ./block_coverage_comparison_chart.pdf
+python3 figure4/block_coverage_bar_chart.py
 ```
 The script will output a file `figure4/block_coverage_comparison_chart.pdf` which is
 a bar chart comparing the block coverage of the original and krepaired configuration
 files.
+
+To view the pdf file generated by the script, you can copy the file from the
+container to the host machine and view it by running the following command:
+```bash
+docker cp <container-id>:/home/apprunner/icse25/experiments/RQ2/figure4/block_coverage_comparison_chart.pdf ./block_coverage_comparison_chart.pdf
+open ./block_coverage_comparison_chart.pdf
+```
 > [!NOTE]
 > Coverage data across fuzzing runs for the original and krepaired is hardcoded
 in the script. Coverage data is obtained from syzkaller logs. You can view

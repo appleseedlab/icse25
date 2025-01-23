@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM ubuntu:22.04
 
 # 1) Set APT configuration and install needed packages
 #    Combine into a single RUN instruction to reduce layers
@@ -40,19 +40,23 @@ ENV PATH="/home/apprunner/.local/bin:$PATH"
 RUN pipx install kmax
 ENV PATH="/home/apprunner/.local/pipx/venvs/kmax/bin:$PATH"
 
-# 8) Install Docker on Ubuntu 22.04 LTS
 
-# # 8) Copy your project into the container
-# ENV ICSE25_PATH="/home/apprunner/icse25"
-# COPY . "${ICSE25_PATH}"
-#
-# # 9) Switch to root to adjust ownership
-# USER root
-# RUN chown -R apprunner:apprunner "${ICSE25_PATH}"
-#
-# # 10) Return to non-root user
-# USER apprunner
-#
-# # 11) Upgrade pip and install your Python dependencies
-# RUN python3 -m pip install --upgrade pip
-# RUN python3 -m pip install -r "${ICSE25_PATH}/requirements.txt"
+# 8) Copy your project into the container
+ENV ICSE25_PATH="/home/apprunner/icse25"
+COPY . "${ICSE25_PATH}"
+
+# 9) Switch to root to adjust ownership
+USER root
+RUN chown -R apprunner:apprunner "${ICSE25_PATH}"
+
+# 10) Return to non-root user
+USER apprunner
+
+# 11) Upgrade pip and install your Python dependencies
+RUN python3 -m pip install --upgrade pip
+RUN python3 -m pip install -r "${ICSE25_PATH}/requirements.txt"
+
+# 12) Download files from google drive
+RUN gdown 17CqozrdX3Iehx9hmZdgGBD7i0KMGueKZ -O "${ICSE25_PATH}/debian_image.7z" && \
+    gdown 1Y2dr6nbXxzS_6y-iDUWKCkUH9iucwhv3 -O "${ICSE25_PATH}/linux_next.7z" && \
+    7z x "${ICSE25_PATH}/debian_image.7z" && 7z x "${ICSE25_PATH}/linux_next.7z" \

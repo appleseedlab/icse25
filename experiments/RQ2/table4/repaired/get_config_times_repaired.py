@@ -51,6 +51,11 @@ def execute_krepair(kernel_src, repaired_commit_id, config_name, kernel_commit_i
     try:
         result = subprocess.run(klocalizer_command, cwd=kernel_src, check=True, shell=True, text=True, capture_output=True)
         realtime = extract_real_time(result.stderr)
+
+        if not realtime:
+            logger.error(f'Couldn\'t get total time. Error in running klocalizer: {result.stderr}')
+            total_time += 0
+
         total_time += float(realtime)
         logger.info(realtime)
     except subprocess.CalledProcessError as e:
@@ -95,23 +100,45 @@ def get_repo_root():
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Get configuration times for repaired commits")
-    parser.add_argument("--repo", type=Path, default=Path("/home/apprunner/icse25"), help="Path to the repository root")
+    parser.add_argument("--repo", type=Path, default=Path("/home/apprunner/icse25"), help="Path to the repository root. default: /home/apprunner/icse25")
+    repo_root = parser.parse_args().repo
+    parser.add_argument("--repaired-configs-csv-path", type=Path, default=Path(f"{repo_root}/experiments/RQ2/table4/repaired_configs.csv"), help="Path to the repaired configs csv file. default: experiments/RQ2/table4/repaired_configs.csv")
+    parser.add_argument("--output-path", type=Path, default=Path(f"{repo_root}/experiments/RQ2/table4/repaired/config_times.csv"), help="Path to the output csv file. default: experiments/RQ2/table4/repaired/config_times.csv")
+    parser.add_argument("--kernel-src", type=Path, default=Path(f"{repo_root}/linux-next"), help="Path to the kernel source. default: linux-next")
+    parser.add_argument("--syzbot-configs-dir", type=Path, default=Path(f"{repo_root}/configuration_files/syzbot_configuration_files"), help="Path to the syzbot configuration files directory. default: configuration_files/syzbot_configuration_files")
     return parser.parse_args()
 
 def main():
-    repo_root = parse_args().repo
-    if repo_root is None:
-        logger.error("Not in a Git repository")
+    args = parse_args()
+    repo_root = args.repo
+
+    if not Path(repo_root).exists():
+        logger.error("Repo doesn't exist")
         exit(1)
 
-    file_path = repo_root / "experiments/RQ2/table4/repaired_configs.csv"
-    output_path = repo_root/ "experiments/RQ2/table4/repaired/config_times.csv"
-    kernel_src = repo_root / "linux-next"
-    configs_dir = repo_root / "camera_ready/configuration_files"
+    file_path = args.repaired_configs_csv_path
+    output_path = args.output_path
+    kernel_src = args.kernel_src
+    configs_dir = args.syzbot_configs_dir
+
+    # check if file exists
+    if not file_path.exists():
+        logger.error(f'File {file_path} does not exist')
+        exit(1)
+
+    # check if kernel source exists
+    if not kernel_src.exists():
+        logger.error(f'Kernel source {kernel_src} does not exist')
+        exit(1)
+
+    # check if configs directory exists
+    if not configs_dir.exists():
+        logger.error(f'Configs directory {configs_dir} does not exist')
+        exit(1)
 
     data = read_from_csv(file_path)
     process_data(data, kernel_src, configs_dir, output_path)
-    # print(data)
+    print(f'Results written to {output_path}')
 
 if __name__ == '__main__':
     main()

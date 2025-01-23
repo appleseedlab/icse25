@@ -30,3 +30,4 @@ gitpython
 tqdm
 loguru
 gdown
+scipy

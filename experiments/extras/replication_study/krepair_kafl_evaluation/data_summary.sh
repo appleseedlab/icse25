@@ -1,8 +1,10 @@
+#!/bin/bash
+
 scriptsdir=$(dirname $0)
 
 experimentdir=${1}
 
-coverable_patches=${scriptsdir}/coverable_patches
+coverable_patches=${2-"${scriptsdir}/coverable_patches"}
 
 echo "commit,configfile,builderrcode,patchcoverage,buildtime"
 cat ${coverable_patches} | while read commit; do
@@ -19,17 +21,18 @@ done
 cat ${coverable_patches} | while read commit; do
 	commitdir=$(ls -d ${experimentdir}/${commit})
 	configdir=${commitdir}/kafl_config/results
+    koverage_outfile=${configdir}/repaired_koverage_outfile
 	echo -n ${commit},
 	echo -n krepair,
 	if [[ -e ${configdir}/patch_covered ]]; then
 		# echo -n $(cat ${commitdir}/kafl_config/results/build.errcode),
-		echo -n $(python3 ${scriptsdir}/patch_coverage.py ${configdir}/koverage_outfile | cut -d' ' -f4),
+		echo -n $(python3 ${scriptsdir}/patch_coverage.py ${configsdir}/koverage_outfile | cut -d' ' -f4),
 		# echo -n $(cat ${commitdir}/kafl_config/results/build.time | head -n1)
 	else
 		if [[ -e ${configdir}/krepair_one ]]; then
 			# builderrcode=$(cat ${commitdir}/kafl_config/results/repaired_build.errcode)
 			# echo -n ${builderrcode},
-			echo -n $(python3 ${scriptsdir}/patch_coverage.py ${configdir}/repaired_koverage_outfile | cut -d' ' -f4),
+			echo -n $(python3 ${scriptsdir}/patch_coverage.py ${koverage_outfile} | cut -d' ' -f4),
 			# echo -n $(cat ${commitdir}/kafl_config/results/repaired_build.time | head -n1)
 		else
 			# echo -n n/a,

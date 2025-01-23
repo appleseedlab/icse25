@@ -80,4 +80,5 @@ ax.legend(fontsize=16)
 
 # Save the plot to a PDF file
 pdf_filename = Path(script_dir) / str("syscalls_comparison_chart.pdf")
+print(f"Saving the plot to {pdf_filename}")
 plt.savefig(pdf_filename)

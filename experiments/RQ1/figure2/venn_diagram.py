@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
+import os
 
 # NOTE: The numbers below are manually obtained from the data tables provided
 
@@ -12,6 +13,8 @@ overlap_bugs = 31  # The number of bugs found by both tools
 tool1_new_bugs = 24  # Tool 1 found 24 new bugs
 tool2_new_bugs = 2  # Tool 2 found 2 new bugs
 overlap_new_bugs = 11  # The number of bugs found by both tools
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 plt.figure(figsize=(8, 4))
 # Creating the Venn diagram
@@ -35,7 +38,8 @@ venn.get_patch_by_id("11").set_color("red")  # Overlap color
 # Display the plot
 # plt.title("Venn Diagram of Bugs Found by Tools")
 pdf_filename = "all_bugs_venn_diagram.pdf"
-plt.savefig(pdf_filename)
+print(f"Saved all bugs venn diagram to {script_dir}/{pdf_filename}")
+plt.savefig(f"{script_dir}/{pdf_filename}")
 plt.clf()
 
 plt.figure(figsize=(8, 4))
@@ -58,5 +62,6 @@ venn_new.get_patch_by_id("10").set_color("#1f77b4")  # Tool 1 unique color
 venn_new.get_patch_by_id("01").set_color("#ff7f0e")  # Tool 2 unique color
 venn_new.get_patch_by_id("11").set_color("red")  # Overlap color
 
-pdf_filename_new = "new_bugs_venn_diagram.pdf"
+pdf_filename_new = f"{script_dir}/new_bugs_venn_diagram.pdf"
+print(f"Saved new bugs venn diagram to {pdf_filename_new}")
 plt.savefig(pdf_filename_new)

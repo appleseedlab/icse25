@@ -46,8 +46,13 @@ fi
 # Read config_name, kernel_id, commit_id from the CSV file
 while IFS=, read -r commit_id config_name kernel_id
 do
+<<<<<<< HEAD
     # Clean the repo
     (cd "$KERNEL_SRC" && git clean -dfx -q)
+=======
+    # clean the repo
+    (cd $KERNEL_SRC; git clean -dfx -q)
+>>>>>>> master
 
     # Git checkout to kernel_id
     (cd "$KERNEL_SRC" && git checkout -f "$kernel_id")
@@ -55,8 +60,13 @@ do
     # Get patch diff
     (cd "$KERNEL_SRC" && git show "$commit_id" > patch.diff)
 
+<<<<<<< HEAD
     # Use klocalizer to repair the config file and measure the time
     klocalizer_config_time=$(cd "$KERNEL_SRC" && (time -p klocalizer -v -a x86_64 --repair "$CONFIGS_DIR/$config_name" --include-mutex "$KERNEL_SRC/patch.diff" --formulas ../formulacache --define CONFIG_KCOV --define CONFIG_DEBUG_INFO_DWARF4 --define CONFIG_KASAN --define CONFIG_KASAN_INLINE --define CONFIG_CONFIGFS_FS --define CONFIG_SECURITYFS --define CONFIG_CMDLINE_BOOL; rm -rf koverage_files/) 2>&1 | grep "^real" | awk -F' ' '{print $2}' )
+=======
+    # use klocalizer to repair the config file and measure the time
+    klocalizer_config_time=$(cd $KERNEL_SRC; (time -p klocalizer -v -a x86_64 --repair "$CONFIGS_DIR/$config_name" --include-mutex $KERNEL_SRC/patch.diff --formulas ../formulacache --define CONFIG_KCOV --define CONFIG_DEBUG_INFO_DWARF4 --define CONFIG_KASAN --define CONFIG_KASAN_INLINE --define CONFIG_CONFIGFS_FS --define CONFIG_SECURITYFS --define CONFIG_CMDLINE_BOOL; rm -rf koverage_files/;) 2>&1 | grep "^real" | awk -F' ' '{print $2}' )
+>>>>>>> master
 
     # Copy repaired config file to .config
     (cd "$KERNEL_SRC" && cp 0-x86_64.config "$KERNEL_SRC/.config")
@@ -68,9 +78,15 @@ do
     build_time=$(cd "$KERNEL_SRC" && (time -p make -j$(nproc)) 2>&1 | grep "^real" | awk '{print $2}')
 
     if [ $? -eq 0 ]; then
+<<<<<<< HEAD
         echo "$config_name,$kernel_id,$commit_id,$build_time" >> "$OUTPUT_CSV_FILE"
     else
         echo "$config_name,$kernel_id,$commit_id,-1" >> "$OUTPUT_CSV_FILE"
+=======
+        echo "$config_name,$kernel_id,$commit_id,$build_time" >> $OUTPUT_CSV_FILE
+    else
+        echo "$config_name,$kernel_id,$commit_id,-1" >> $OUTPUT_CSV_FILE
+>>>>>>> master
     fi
 
 done < "$SRC_CSV_FILE"

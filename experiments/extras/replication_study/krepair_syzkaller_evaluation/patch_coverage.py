@@ -31,4 +31,9 @@ if os.path.exists(covfile):
                     if status == 'INCLUDED':
                         covered_lines += 1
 
-print("patch_coverage %d %d %f" % (covered_lines, total_lines, covered_lines / total_lines))
+if (total_lines == 0):
+    total_coverage = 0
+else:
+    total_coverage = covered_lines / total_lines
+
+print("patch_coverage %d %d %f" % (covered_lines, total_lines, total_coverage))

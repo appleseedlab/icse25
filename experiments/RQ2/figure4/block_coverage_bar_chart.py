@@ -76,5 +76,6 @@ plt.legend(fontsize=16)
 
 # Show the plot
 plt.tight_layout()
+print(f"Saving plot to {Path(script_dir) / 'block_coverage_comparison_chart.pdf'}")
 plt.savefig(Path(script_dir) / "block_coverage_comparison_chart.pdf")
 plt.close()
