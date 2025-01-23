@@ -99,11 +99,12 @@ Link to the preprint of the paper can be found [here](https://paulgazzillo.com/p
 # Setup
 
 ## :floppy_disk: Hardware Requirements
-A workstation with at least 16GB of RAM and 100GB of free disk space is recommended.
+A workstation with at least 8 threads, 16GB of RAM and >100GB of free disk space is recommended.
 
 ## :computer: Software Requirements
-The experiments are conducted in a Docker container. Therefore, you need to have
-Docker installed on your system. You can download Docker from the [official website](https://docs.docker.com/get-docker/).
+The experiments are conducted in a Docker container.
+Therefore, you need to have Docker installed on your system.
+You can download Docker from the [official website](https://docs.docker.com/get-docker/).
 
 ---
 
