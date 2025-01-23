@@ -9,7 +9,7 @@ RUN echo 'APT::Install-Suggests "0";' >> /etc/apt/apt.conf.d/00-docker && \
       python3 python3-pip python3-dev gcc build-essential pipx \
       jq bc flex bison libssl-dev libelf-dev git wget \
       libz3-java libjson-java sat4j unzip xz-utils lftp \
-      p7zip-full vim time qemu-system && \
+      p7zip-full vim time qemu-system openssh-client rsync && \
     rm -rf /var/lib/apt/lists/*
 
 # 2) Create a non-root user
@@ -37,9 +37,8 @@ ENV CLASSPATH="/usr/share/java/org.sat4j.core.jar:/usr/share/java/json-lib.jar:/
 ENV PATH="/home/apprunner/.local/bin:$PATH"
 
 # 7) Install kmax via pipx; update PATH for kmax
-RUN pipx install kmax
+RUN pipx install kmax==4.5.2
 ENV PATH="/home/apprunner/.local/pipx/venvs/kmax/bin:$PATH"
-
 
 # 8) Copy your project into the container
 ENV ICSE25_PATH="/home/apprunner/icse25"
@@ -57,6 +56,6 @@ RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install -r "${ICSE25_PATH}/requirements.txt"
 
 # 12) Download files from google drive
-RUN gdown 17CqozrdX3Iehx9hmZdgGBD7i0KMGueKZ -O "${ICSE25_PATH}/debian_image.7z" && \
-    gdown 1Y2dr6nbXxzS_6y-iDUWKCkUH9iucwhv3 -O "${ICSE25_PATH}/linux_next.7z" && \
-    7z x "${ICSE25_PATH}/debian_image.7z -o${ICSE25_PATH}" && 7z x "${ICSE25_PATH}/linux_next.7z -o${ICSE25_PATH}" \
+# RUN gdown 17CqozrdX3Iehx9hmZdgGBD7i0KMGueKZ -O "${ICSE25_PATH}/debian_image.7z" && \
+#     gdown 1Y2dr6nbXxzS_6y-iDUWKCkUH9iucwhv3 -O "${ICSE25_PATH}/linux_next.7z" && \
+#     7z x "${ICSE25_PATH}/debian_image.7z -o${ICSE25_PATH}" && 7z x "${ICSE25_PATH}/linux_next.7z -o${ICSE25_PATH}" \
