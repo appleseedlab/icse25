@@ -111,6 +111,24 @@ if [ ! -d "$kernel_images_path" ]; then
     exit 1
 fi
 
+# Check klocalizer
+if [ ! -x "$(command -v klocalizer)" ]; then
+    echo "[-] klocalizer binary not found"
+    echo "[-] Please install klocalizer with: pipx install kmax"
+    exit 1
+fi
+
+# Build syzkaller if needed
+if [ ! -x "$syzkaller_path/bin/syz-manager" ]; then
+    echo "[-] syz-manager binary not found"
+    echo "[*] Building syzkaller..."
+    (cd "$syzkaller_path" && make) || {
+        echo "[-] Failed to build syzkaller"
+        exit 1
+    }
+    echo "[+] syzkaller built successfully"
+fi
+
 mkdir -p $output_path
 log_file="$output_path/fuzz.log"
 exec > >(tee -i "$log_file") 2>&1
