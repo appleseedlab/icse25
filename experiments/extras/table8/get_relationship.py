@@ -9,7 +9,7 @@ import shutil
 from loguru import logger
 import argparse
 import socket
-from tempfile import NamedTemporaryFile, TemporaryDirectory
+from tempfile import NamedTemporaryFile, TemporaryDirectory, gettempdir
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
 import threading
@@ -474,7 +474,22 @@ def process_lines_with_klocalizer(config_type, linux_ksrc, output):
 
 import magic  # Ensure you have python-magic installed
 
-def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="kcov", kernel_src="", output="", icse_path="", debian_image_src="") -> Optional[str]:
+
+def check_reproducer_type(reproducer_src, mime_type):
+    if "c" in mime_type:
+        reproducer_type = "c"
+        if str(reproducer_src).endswith(".cprog"):
+            new_path = os.path.splitext(reproducer_src)[0] + ".c"
+            os.rename(reproducer_src, new_path)  # Rename the file
+            reproducer_src = new_path  # Update the reproducer_src path
+            logger.info(f"Renamed reproducer file from .cprog to .c: {reproducer_src}")
+    else:
+        reproducer_type = "syz"
+        
+    return reproducer_type
+    
+
+def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_type="reproducer", kernel_src="", output="", icse_path="", debian_image_src="") -> Optional[str]:
     """
     Transfers, compiles, and runs the reproducer inside the VM.
 
@@ -496,14 +511,29 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
         remote_dir = "/root/repro0"
         ssh_key = f"{debian_image_src}/bullseye.id_rsa"  # Use the correct private key
 
-        # Step 1: Determine the source language of the reproducer using `magic`
-        # Step 1: Determine the source language of the reproducer using `magic`
-        mime_type = magic.Magic(mime=True).from_file(str(reproducer_src))  # Ensure reproducer_src is a string
-        if "c" in mime_type:
-            reproducer_type = "c"
-        else:
-            reproducer_type = "syz"
+        try:
+            mime_type = ""
+            reproducer_type = ""
 
+            # Check if the file ends with `.cprog`
+            if str(reproducer_src).endswith(".cprog"):
+                # Create a copy with a `.c` extension in the /tmp directory
+                temp_dir = gettempdir()
+                new_path = os.path.join(temp_dir, os.path.basename(os.path.splitext(reproducer_src)[0] + ".c"))
+                shutil.copy(reproducer_src, new_path)
+                reproducer_src = new_path  # Update to use the new file
+                logger.info(f"Copied .cprog file to .c file in /tmp directory: {reproducer_src}")
+
+            # Determine the source language of the reproducer using `magic`
+            mime_type = magic.Magic(mime=True).from_file(str(reproducer_src))
+            reproducer_type = check_reproducer_type(reproducer_src, mime_type)
+
+            logger.info(f"Reproducer source: {reproducer_src}, Mime type: {mime_type}")
+            logger.info(f"Reproducer type: {reproducer_type}")
+
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            raise
 
         # Step 2: Create remote directory
         try:
@@ -571,14 +601,14 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
 
         # Step 5: Compile or run the reproducer inside the VM
         message = ""
-        logger.info("Executing treproducerhe reproducer inside the VM...")
+        logger.info("Executing the reproducer inside the VM...")
         try:
             reproducer_filename = os.path.basename(reproducer_src)
             if reproducer_type == "c":
-                timeout = 10
+                timeout = 40
                 logger.info("The passed reproducer type is: c-reproducer")
                 compile_command = f"cd {remote_dir} && gcc -o repro_binary ./{reproducer_filename} && ./repro_binary"
-                if test_type == "reproducer":
+                if test_type == "kcov":
                     compile_command += f" 2>&1 | tee /root/{config_type}.trace"
             elif reproducer_type == "syz":
                 timeout=300
@@ -604,7 +634,7 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
                 message = "vm crash"
             logger.info("Handling trace files...")
             # Handle trace files if test_type is reproducer and reproducer is not syz
-            if test_type == "reproducer" and reproducer_type == "c":
+            if test_type == "kcov" and reproducer_type == "c":
                 try:
                     # Retrieve the corresponding trace file from the VM
                     pull_scp_command = (
@@ -657,7 +687,7 @@ def run_reproducer(ssh_port: int, reproducer_src, config_type="default", test_ty
         logger.error(f"Unpredicted error: {e}")
         return "Failed to run reproducer"
 
-    return "Reproducer executed successfully"
+    # return "Reproducer executed successfully"
 
 
 
@@ -675,6 +705,14 @@ def main():
         path_debian_image_key=config.debian_image_src / "bullseye.id_rsa",
     )
 
+    output = config.output
+    trace_files_dir = output / "trace_files"
+    # Creating some necessary directories if they do not exist
+    if not output.exists():
+        output.mkdir(parents=True, exist_ok=True)
+    if not trace_files_dir.exists():
+        trace_files_dir.mkdir(parents=True, exist_ok=True)
+    
     kernel_image_paths = {}
     qemu_instances = []
 
@@ -697,7 +735,7 @@ def main():
                 reproducer_src=config.path_reproducer,
                 test_type=test_type,
                 kernel_src=config.kernel_src,
-                output=config.output,
+                output=output,
                 icse_path=config.icse_path,
                 debian_image_src=config.debian_image_src
             )
