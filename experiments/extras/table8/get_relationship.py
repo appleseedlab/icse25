@@ -12,7 +12,6 @@ import socket
 from tempfile import NamedTemporaryFile, TemporaryDirectory, gettempdir
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from tqdm import tqdm
-import threading
 from uuid import uuid4
 import os
 import signal
