@@ -149,6 +149,9 @@ Note: As a sample config file, the `defaults.json` file inside the table8 folder
 - **`repaired_config_image`**: The path to the kernel image built with the repaired configuration. Same as `default_config_image` option, but please select one sample from repaired directory.
 - **`icse_path`**: Simply absolute path to the `icse25/` directory
 
+The other options do not need to be changed. 
+
+
 ---
 ## Command-Line Usage
 To run the script after necessary modifications are made, the following command can be used:
@@ -165,7 +168,7 @@ python3 get_relationship.py -c defaults.json
   - Configuration options extracted for each test
   - Results for both default and repaired configurations
 
-  
+
 It will be located inside `icse25/get_results_output` directory
 
 ### Processed Trace Files
