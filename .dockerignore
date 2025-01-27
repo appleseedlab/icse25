@@ -1,0 +1,4 @@
+linux-next/
+kernel_images/
+debian_image/
+*.7z

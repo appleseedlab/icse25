@@ -10,6 +10,16 @@
 
 #set -x
 
+usage() {
+    echo "Usage: $0 [source] [linuxsrclone] [arch] [formulacache] [outdir] [syzkallersrc]"
+    echo "source: the source of commit ids, either a /path/to/a/sample/file or the server:port of a FilenameService"
+    echo "linuxsrclone: the path to the linux source code clone"
+    echo "arch: the architecture of the linux source code"
+    echo "formulacache: the path to the formula cache"
+    echo "outdir: the path to the output directory"
+    echo "syzkallersrc: the path to the syzkaller source code"
+}
+
 echo "Executing run_many_syzkaller_evaluations..."
 
 # used to find other scripts called
@@ -19,7 +29,6 @@ default_formulacache="${script_dir}/formulacache"
 default_arch="x86_64"
 default_syzkaller_src=$(realpath "${script_dir}/../../../../syzkaller")
 default_outdir="${script_dir}/outdir"
-mkdir -p $default_outdir
 
 # the source of commit ids, either a /path/to/a/sample/file (no colon symbol permitted) or the server:port of a FilenameService
 source=${1:-"${script_dir}/coverable_patches"}
@@ -33,10 +42,25 @@ formulacache=${4:-$default_formulacache}
 formulacache=$(realpath ${formulacache})
 
 outdir=${5:-$default_outdir}
+outdir="${outdir}/$(date +%s)"
+mkdir -p $outdir
 outdir=$(realpath $outdir)
 
 syzkallersrc=${6:-$default_syzkaller_src}
 syzkallersrc=$(realpath $syzkallersrc)
+
+# Preliminary checks
+if [ ! -d ${linuxsrclone} ]; then
+    echo "Error: ${linuxsrclone} is not a directory"
+    usage
+    exit 1
+fi
+
+if [ ! -d ${syzkallersrc} ]; then
+    echo "Error: ${syzkallersrc} is not a directory"
+    usage
+    exit 1
+fi
 
 run_eval() {
 	commit=$1

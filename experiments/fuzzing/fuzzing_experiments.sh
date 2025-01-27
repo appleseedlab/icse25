@@ -350,12 +350,12 @@ function utilize_artifacts() {
     local artifacts_path="$1"
     local kernel_src="$2"
 
+    echo "[*] Utilizing artifacts from $artifacts_path"
+
     if [ ! -d "$artifacts_path" ]; then
         echo "Error: Provided artifacts path does not exist."
         return 1
     fi
-
-    echo "[+] Extracted $artifacts_path to $kernel_src"
 
     cp "$artifacts_path/bzImage" "$kernel_src/arch/x86/boot/bzImage"
     cp "$artifacts_path/vmlinux" "$kernel_src/vmlinux"

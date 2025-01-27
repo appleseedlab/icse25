@@ -117,8 +117,6 @@ The script determines whether the provided reproducer is a **C-reproducer** or a
 - Trace file generation and processing are skipped.
 - A warning is logged indicating that this functionality is not supported for syz-reproducers.
 
-
-
 The timeout for executing reproducer files differs based on their type:
 - **C-reproducers:** Timeout is set to 40 seconds, as they typically run quickly.
 - **Syz-reproducers:** Timeout is set to 5 minutes, as they often require more time and are more likely to crash the operating system.
@@ -137,7 +135,8 @@ The script accepts the following command-line arguments:
 - The path to the configuration file (e.g., `test.json`).
 - This file contains paths to the necessary files and directories for the script to function, including kernel source paths, output directories, Syzkaller binaries, and other dependencies.
 
-Note: As a sample config file, the `defaults.json` file inside the table8 folder can be used. It currently contains paths in the environmental setup that may be unique to every individual. However, once the necessary parameters are updated, the script will work perfectly fine. The parameters that needs to be updated are:
+> [!NOTE] 
+> As a sample config file, the `defaults.json` file inside the table8 folder can be used. It currently contains paths in the environmental setup that may be unique to every individual. However, once the necessary parameters are updated, the script will work perfectly fine. The parameters that needs to be updated are:
 # Example Configuration File
 - **`kernel_src`**: The path to the linux-next directory, is accessible inside `icse25/` directory
 - **`path_config_default`**: The path to the default kernel configuration file. They can be found inside `icse25/configuration_files/syzbot_configuration_files/` directory
@@ -183,3 +182,4 @@ They will be located inside `icse25/get_results_output/trace_files` directory
 - **`log_before_repro.log`**: Captures the state of VM logs before reproducer execution, stored in the `icse25/get_results_output` directory (as defined in the configuration file).
 - **QEMU Logs**:
   - Log files (`qemu.log`) for each VM are saved into the corresponding parent directory of images.
+

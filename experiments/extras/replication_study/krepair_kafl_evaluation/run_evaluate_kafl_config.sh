@@ -2,7 +2,7 @@
 
 # example: bash ./run_evaluate_kafl_config.sh linux/ c07ba878ca199a6089cdb323bf526adbeeb4201f x86_64 formulacache ./outdir/c07ba878ca199a6089cdb323bf526adbeeb4201f ./kafl.config
 
-set -x
+# set -x
 
 # used to find other scripts called
 script_dir=$(dirname $(realpath $0))

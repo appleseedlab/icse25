@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # example: bash /data1/anon/kmax/scripts/krepair_syzkaller_evaluation/paper/evaluate_syzkaller_config.sh linux/ c07ba878ca199a6089cdb323bf526adbeeb4201f x86_64 formulacache outdir_with_build_j/c07ba878ca199a6089cdb323bf526adbeeb4201f
-set -x
+# set -x
 
 # used to find other scripts called
 script_dir=$(dirname $(realpath $0))
