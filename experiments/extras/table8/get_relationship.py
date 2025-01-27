@@ -401,7 +401,7 @@ import subprocess
 
 def process_trace(config_type, output):
     trace_file = f"{output}/trace_files/{config_type}.trace"
-    vmlinux_file = f"{output}/images/{config_type}_config_image/vmlinux"
+    vmlinux_file = f"/tmp/{config_type}_vmlinux"
     output_file = f"{output}/trace_files/{config_type}.lines"
     try:
         with open(trace_file, "r") as trace, open(output_file, "w") as output_file:
@@ -716,8 +716,12 @@ def main():
     qemu_instances = []
 
     try:    
-        kernel_image_paths["repaired"] = config.repaired_config_image
-        kernel_image_paths["default"] = config.default_config_image
+        kernel_image_paths["repaired"] = config.repaired_config_image / "bzImage"
+        kernel_image_paths["default"] = config.default_config_image / "bzImage"
+        
+        shutil.copy(config.repaired_config_image / "vmlinux", "/tmp/repaired_vmlinux")
+        shutil.copy(config.default_config_image / "vmlinux", "/tmp/default_vmlinux")
+        
         logger.info(config.default_config_image)
         logger.info(config.repaired_config_image)
         for config_type, kernel_image_path in kernel_image_paths.items():
