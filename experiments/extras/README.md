@@ -165,12 +165,18 @@ python3 get_relationship.py -c defaults.json
   - Configuration options extracted for each test
   - Results for both default and repaired configurations
 
+  
+It will be located inside `icse25/get_results_output` directory
+
 ### Processed Trace Files
 - `<config_type>.trace`: Memory addresses.
 - `<config_type>.lines`: Lines with file paths.
 - `<config_type>.kloc_deps`: Configuration options required for the syscall.
 
+
+They will be located inside `icse25/get_results_output/trace_files` directory
+
 ### Log Files
-- **`log_before_repro.log`**: Captures the state of VM logs before reproducer execution, stored in the `output` directory (as defined in the configuration file).
+- **`log_before_repro.log`**: Captures the state of VM logs before reproducer execution, stored in the `icse25/get_results_output` directory (as defined in the configuration file).
 - **QEMU Logs**:
   - Log files (`qemu.log`) for each VM are saved into the corresponding parent directory of images.
