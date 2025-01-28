@@ -92,8 +92,7 @@ Therefore, we would like to apply for the following badges:
 
 # Provenance
 
-#TODO: Add zenodo link
-The artifacts can be found [here]()
+The artifacts of our work are [available](https://doi.org/10.5281/zenodo.13332542)
 Link to the preprint of the paper can be found [here](https://paulgazzillo.com/papers/icse25.pdf)
 
 ---
