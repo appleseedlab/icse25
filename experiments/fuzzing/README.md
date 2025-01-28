@@ -73,6 +73,7 @@ fuzzing mode or with the provided kernel images with **prebuilt** mode.
 To have a jumpstart and run fuzzing with configuration variety,
 execute the quick-start script `fuzz.sh` as follows:
 ```Bash
+chmod +x fuzz.sh
 ./fuzz.sh
 ```
 This will by default run fuzzing experiments using prebuilt kernel images with default and repaired configurations
@@ -82,6 +83,7 @@ in parallel and save results in the `quickstart_fuzz_output/` directory.
 To replicate the entire fuzzing experiments using prebuilt kernel images,
 use the script `fuzzing_experiments.sh` as follows:
 ```Bash
+chmod +x fuzzing_experiments.sh
 ./fuzzing_experiments.sh prebuilt all
 ```
 We provide two parameters to the script:
@@ -147,6 +149,7 @@ To replicate the entire fuzzing experiments from scratch, use the script
 `fuzzing_experiments.sh` as follows:
 
 ```Bash
+chmod +x fuzzing_experiments.sh
 ./fuzzing_experiments.sh full all
 ```
 
