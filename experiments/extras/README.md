@@ -98,7 +98,7 @@ python3 bootability_study/test_100_randconfigs.py
 > This script outputs a csv file named `bootability_study.csv` under `bootability_study/` directory.
 
 # TABLE VIII: Bugs that depended on configuration variety to be found.
-The `get_relationship.py` script is designed to extract the list of configuration options necessary for issuing syscalls that can trigger specific kernel bugs. By analyzing the relationship between kernel configurations and bug-triggering syscalls, the script helps evaluate whether the krepair tool has enabled the required configurations to trigger these bugs.
+The `get_relationship.py` script is designed to extract the list of configuration options necessary for issuing syscalls that can trigger specific kernel bugs. By analyzing the relationship between kernel configurations and bug-triggering calls, the script helps evaluate whether configuration-aware fuzzing has enabled to trigger these bugs.
 
 ## Functionality
 
@@ -136,7 +136,7 @@ The script accepts the following command-line arguments:
 - This file contains paths to the necessary files and directories for the script to function, including kernel source paths, output directories, Syzkaller binaries, and other dependencies.
 
 
-> [!NOTE] 
+> [!NOTE]
 > As a sample config file, the `defaults.json` file inside the table8 folder can be used. It currently contains paths in the environmental setup that may be unique to every individual. However, once the necessary parameters are updated, the script will work perfectly fine. The parameters that needs to be updated are:
 
 # Example Configuration File
@@ -145,16 +145,21 @@ The script accepts the following command-line arguments:
 - **`path_config_repaired`**: The path to the repaired kernel configuration file. They can be found inside `icse25/configuration_files/repaired_configuration_files/` directory
 - **`path_reproducer`**: The path to the reproducer file, either a C-reproducer or a syz-reproducer. They can be found inside the `icse25/experiments/extras/table8/kcov_trace_test` and `icse25/experiments/extras/table8/reproducer_test/`. If you would like to collect trace files, please make sure you set `relationship_test` option inside the defaults.json file to `kcov`, and you have set `path_reproducer` path to one of the reproducers inside the `kcov_trace_test/` directory.
 - **`output`**: The path to the output directory where results will be stored. It does not have specific path. When this script was tested, the output directory was set to the parent directory of icse25.
-- **`debian_image_src`**: The path to the Debian image source directory. It can be found inside `icse25/debian_image` folder. 
+- **`debian_image_src`**: The path to the Debian image source directory. It can be found inside `icse25/debian_image` folder.
 - **`default_config_image`**: The path to the kernel image built with the default configuration. The kernel images will be provided in the icse25/kernel_images directory, there will be default and repaired folder which will contain corresponding image paths (built with default configs, and with repaired configs respectively). Please select one sample image directory from the default directory.
 - **`repaired_config_image`**: The path to the kernel image built with the repaired configuration. Same as `default_config_image` option, but please select one sample from repaired directory.
 - **`relationship_test`**: Specifies the type of test to perform:
   - **`reproducer`**: Does not process trace files but appends results to the CSV file. This mode checks whether the reproducer has crashed the VM or not. In the end it appends the result to the VM.
-  - **`kcov`**: Does similar thing to `reproducer` option, but in addition to that, it processes trace files for C-reproducers and skips trace processing for syz-reproducers. 
+  - **`kcov`**: Does similar thing to `reproducer` option, but in addition to that, it processes trace files for C-reproducers and skips trace processing for syz-reproducers.
 - **`icse_path`**: Simply absolute path to the `icse25/` directory
 
-The other options do not need to be changed. 
+The other options do not need to be changed.
 
+
+`table8/relationship-table.csv` can be used to provide right values to each option
+in the configuration file provided to the script.
+The table has the following structure:
+`reproducer-file-path, default-config-path, repaired-config-path, default-kernel-image, repaired-kernel-image-path, mode`
 
 ---
 ## Command-Line Usage
