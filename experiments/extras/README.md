@@ -135,8 +135,10 @@ The script accepts the following command-line arguments:
 - The path to the configuration file (e.g., `test.json`).
 - This file contains paths to the necessary files and directories for the script to function, including kernel source paths, output directories, Syzkaller binaries, and other dependencies.
 
+
 > [!NOTE] 
 > As a sample config file, the `defaults.json` file inside the table8 folder can be used. It currently contains paths in the environmental setup that may be unique to every individual. However, once the necessary parameters are updated, the script will work perfectly fine. The parameters that needs to be updated are:
+
 # Example Configuration File
 - **`kernel_src`**: The path to the linux-next directory, is accessible inside `icse25/` directory
 - **`path_config_default`**: The path to the default kernel configuration file. They can be found inside `icse25/configuration_files/syzbot_configuration_files/` directory
@@ -146,6 +148,9 @@ The script accepts the following command-line arguments:
 - **`debian_image_src`**: The path to the Debian image source directory. It can be found inside `icse25/debian_image` folder. 
 - **`default_config_image`**: The path to the kernel image built with the default configuration. The kernel images will be provided in the icse25/kernel_images directory, there will be default and repaired folder which will contain corresponding image paths (built with default configs, and with repaired configs respectively). Please select one sample image directory from the default directory.
 - **`repaired_config_image`**: The path to the kernel image built with the repaired configuration. Same as `default_config_image` option, but please select one sample from repaired directory.
+- **`relationship_test`**: Specifies the type of test to perform:
+  - **`reproducer`**: Does not process trace files but appends results to the CSV file. This mode checks whether the reproducer has crashed the VM or not. In the end it appends the result to the VM.
+  - **`kcov`**: Does similar thing to `reproducer` option, but in addition to that, it processes trace files for C-reproducers and skips trace processing for syz-reproducers. 
 - **`icse_path`**: Simply absolute path to the `icse25/` directory
 
 The other options do not need to be changed. 
@@ -182,4 +187,3 @@ They will be located inside `icse25/get_results_output/trace_files` directory
 - **`log_before_repro.log`**: Captures the state of VM logs before reproducer execution, stored in the `icse25/get_results_output` directory (as defined in the configuration file).
 - **QEMU Logs**:
   - Log files (`qemu.log`) for each VM are saved into the corresponding parent directory of images.
-
