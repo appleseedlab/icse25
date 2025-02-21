@@ -157,7 +157,7 @@ bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
     $tmp_csv_file \
     $dir_linux_next_default \
     $syzkaller_path \
-    $debian_image_path \
+    $debian_image_path_default \
     $kernel_images_path \
     $output_path \
     $fuzzing_time \
@@ -165,12 +165,14 @@ bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
     $vm_count \
     $cpu \
     $mem &
+pid1=$!
+
 bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
     prebuilt repaired \
     $tmp_csv_file \
     $dir_linux_next_repaired \
     $syzkaller_path \
-    $debian_image_path \
+    $debian_image_path_repaired \
     $kernel_images_path \
     $output_path \
     $fuzzing_time \
@@ -178,8 +180,9 @@ bash "$SCRIPT_DIR/fuzzing_experiments.sh" \
     $vm_count \
     $cpu \
     $mem &
+pid2=$!
 
-wait
+wait $pid1 $pid2
 
 echo "[+] Fuzzing experiments completed"
 echo "[+] Results are stored in $output_path"
